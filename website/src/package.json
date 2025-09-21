@@ -1,0 +1,14 @@
+{
+  "name": "dmathewwws-blog-generator",
+  "version": "1.0.0",
+  "description": "Static blog generator for dmathewwws.com",
+  "main": "generate-blog.js",
+  "license": "MIT",
+  "scripts": {
+    "generate": "node generate-blog.js"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "marked": "^11.1.1"
+  }
+} 
