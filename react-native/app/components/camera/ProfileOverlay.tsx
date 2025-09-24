@@ -14,15 +14,11 @@ import { Colors, LocalStorage } from '../../../lib';
 interface ProfileOverlayProps {
   userProfile: LocalStorage.UserProfile | null;
   onProfilePress: () => void;
-  onSettingsPress: () => void;
-  onSignOutPress: () => void;
 }
 
 export function ProfileOverlay({
   userProfile,
   onProfilePress,
-  onSettingsPress,
-  onSignOutPress,
 }: ProfileOverlayProps) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -54,24 +50,6 @@ export function ProfileOverlay({
           </View>
           <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
         </TouchableOpacity>
-
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={onSettingsPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="settings-outline" size={24} color="white" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={onSignOutPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="log-out-outline" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
       </View>
     </View>
   );

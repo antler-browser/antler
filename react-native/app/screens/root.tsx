@@ -75,7 +75,6 @@ const linking: LinkingOptions<Navigation.RootStackParamList> = {
         screens: {
           [Navigation.CAMERA_SCREEN]: 'camera',
           [Navigation.PROFILE_SCREEN]: 'profile',
-          [Navigation.SETTINGS_SCREEN]: 'settings',
         },
       },
     },
@@ -150,7 +149,15 @@ export default function App() {
             <Stack.Screen name={Navigation.ONBOARDING_SCREEN} component={OnboardingNavigator} />
           )}
           <Stack.Screen name={Navigation.CAMERA_SCREEN} component={CameraStack} />
-          <Stack.Screen name={Navigation.PROFILE_CREATION_SCREEN} component={ProfileNavigator} />
+          <Stack.Screen
+            name={Navigation.PROFILE_CREATION_SCREEN}
+            component={ProfileNavigator}
+            options={{
+              presentation: 'modal',
+              animation: Platform.OS === 'ios' ? 'default' : 'slide_from_bottom',
+              gestureEnabled: false,
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

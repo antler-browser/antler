@@ -4,15 +4,11 @@ import { SocialLink } from "./social-links";
 // Screen names
 export const CAMERA_SCREEN = "CameraScreen";
 export const PROFILE_SCREEN = "ProfileScreen";
-export const SETTINGS_SCREEN = "SettingsScreen";
 export const ONBOARDING_SCREEN = "OnboardingScreen";
 export const PROFILE_CREATION_SCREEN = "ProfileCreationScreen";
 
 // Profile mode type
 export type ProfileMode = 'create' | 'edit';
-
-// Screen parameter types
-export type SettingsScreenParams = undefined;
 export type ProfileScreenParams = { did: string };
 
 // Onboarding stack param list (simplified - just welcome)
@@ -43,7 +39,6 @@ export type ProfileCreationStackParamList = {
 export type RootStackParamList = {
   [CAMERA_SCREEN]: undefined;
   [PROFILE_SCREEN]: ProfileScreenParams;
-  [SETTINGS_SCREEN]: SettingsScreenParams;
   [ONBOARDING_SCREEN]: undefined;
   [PROFILE_CREATION_SCREEN]: undefined;
 };

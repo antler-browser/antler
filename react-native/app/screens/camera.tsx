@@ -133,18 +133,14 @@ export function CameraScreen() {
     }
   };
 
-  const handleSettingsPress = () => {
-    navigation.navigate(Navigation.SETTINGS_SCREEN);
-  };
-
   const handleSignOut = async () => {
     Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
+      'Reset App',
+      'Are you sure you want to delete all data and start over?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Sign Out',
+          text: 'Reset App',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -223,8 +219,6 @@ export function CameraScreen() {
             <ProfileOverlay
               userProfile={userProfile}
               onProfilePress={handleProfilePress}
-              onSettingsPress={handleSettingsPress}
-              onSignOutPress={handleSignOut}
             />
           )}
 

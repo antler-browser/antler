@@ -96,39 +96,32 @@ export function SocialsScreen() {
     }
   }, [mode, profile, isInitialized, additionalPlatforms]);
 
-  const handleInputChange = (index: number, value: string) => {
-    const updatedInputs = [...socialInputs];
-    const input = updatedInputs[index];
-
-    // Update value
-    input.value = value;
-
-    // Clear error when user starts typing
-    if (input.error) {
-      input.error = null;
-    }
-
-    setSocialInputs(updatedInputs);
+  const handleInputChange = (platform: SocialLinks.SocialPlatform, value: string) => {
+    setSocialInputs(prev => prev.map(input => {
+      if (input.platform !== platform) return input;
+      return { ...input, value, error: input.error ? null : input.error };
+    }));
   };
 
-  const handleInputBlur = (index: number) => {
-    const updatedInputs = [...socialInputs];
-    const input = updatedInputs[index];
+  const handleInputBlur = (platform: SocialLinks.SocialPlatform) => {
+    setSocialInputs(prev => prev.map(input => {
+      if (input.platform !== platform) return input;
+      
+      if (input.value.trim()) {
+        // Normalize the input
+        const normalized = SocialLinks.normalizeHandle(platform, input.value);
+        const value = normalized ?? '';
 
-    if (input.value.trim()) {
-      // Normalize the input
-      const normalized = SocialLinks.normalizeHandle(input.platform, input.value);
-      input.value = normalized ?? '';
+        // Validate the normalized input
+        const error = !SocialLinks.validateHandle(platform, value)
+          ? 'Invalid format for this platform'
+          : null;
 
-      // Validate the normalized input
-      if (!SocialLinks.validateHandle(input.platform, normalized ?? '')) {
-        input.error = 'Invalid format for this platform';
-      } else {
-        input.error = null;
+        return { ...input, value, error };
       }
-    }
-
-    setSocialInputs(updatedInputs);
+      
+      return input;
+    }));
   };
 
   const handleNext = () => {
@@ -180,37 +173,34 @@ export function SocialsScreen() {
       SocialLinks.SocialPlatform.WEBSITE,
     ]);
 
-    return filteredInputs.map((input) => {
-      const actualIndex = socialInputs.findIndex(si => si.platform === input.platform);
-      return (
-        <ThemedView key={input.platform} style={styles.inputGroup}>
-          <ThemedText style={styles.label}>
-            {SocialLinks.getPlatformDisplayName(input.platform)}
-          </ThemedText>
-          <ThemedView>
-            <ThemedTextInput
-              placeholder={SocialLinks.getPlatformPlaceholder(input.platform)}
-              value={input.value}
-              onChangeText={(text) => handleInputChange(actualIndex, text)}
-              onBlur={() => handleInputBlur(actualIndex)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={input.error ? styles.inputError : undefined}
-            />
-            {input.error && (
-              <ThemedText style={styles.errorText}>
-                {input.error}
-              </ThemedText>
-            )}
-            {input.value && !input.error && !previewNotNeededSet.has(input.platform) && (
-              <ThemedText style={styles.previewText}>
-                {SocialLinks.getFullURL(input.platform, input.value)}
-              </ThemedText>
-            )}
-          </ThemedView>
+    return filteredInputs.map((input) => (
+      <ThemedView key={input.platform} style={styles.inputGroup}>
+        <ThemedText style={styles.label}>
+          {SocialLinks.getPlatformDisplayName(input.platform)}
+        </ThemedText>
+        <ThemedView>
+          <ThemedTextInput
+            placeholder={SocialLinks.getPlatformPlaceholder(input.platform)}
+            value={input.value}
+            onChangeText={(text) => handleInputChange(input.platform, text)}
+            onBlur={() => handleInputBlur(input.platform)}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={input.error ? styles.inputError : undefined}
+          />
+          {input.error && (
+            <ThemedText style={styles.errorText}>
+              {input.error}
+            </ThemedText>
+          )}
+          {input.value && !input.error && !previewNotNeededSet.has(input.platform) && (
+            <ThemedText style={styles.previewText}>
+              {SocialLinks.getFullURL(input.platform, input.value)}
+            </ThemedText>
+          )}
         </ThemedView>
-      );
-    });
+      </ThemedView>
+    ));
   };
 
   if (mode === 'edit' && !profile) {
@@ -225,7 +215,7 @@ export function SocialsScreen() {
     <Screen edges={['top', 'bottom']}>
       <ThemedView style={styles.headerButtons}>
         <HeaderBackButton />
-        {mode === 'create' && <ProgressIndicator currentStep={2} totalSteps={3} />}
+        <ProgressIndicator currentStep={2} totalSteps={3} />
       </ThemedView>
       <KeyboardAvoidingView
         style={styles.keyboardView}

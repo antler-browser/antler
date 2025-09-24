@@ -27,7 +27,6 @@ export enum SocialPlatform {
 export interface SocialLink {
   platform: SocialPlatform;
   handle: string;
-  url: string;
 }
 
 const HTTPS = 'https://';
@@ -289,8 +288,7 @@ export function createSocialLink(platform: SocialPlatform, input: string): Socia
 
   return {
     platform,
-    handle: normalized,
-    url,
+    handle: normalized
   };
 }
 

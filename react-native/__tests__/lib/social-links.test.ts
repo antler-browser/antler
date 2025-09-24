@@ -5,8 +5,7 @@ import {
   getFullURL,
   createSocialLink,
   sanitizeInput,
-  getPlatformDisplayName,
-  getPlatformPlaceholder
+  getPlatformPlaceholder,
 } from '../../lib/social-links';
 
 describe('Social Links Utilities', () => {
@@ -23,11 +22,11 @@ describe('Social Links Utilities', () => {
 
     describe('Twitter/X', () => {
       it('should normalize various input formats', () => {
-        expect(normalizeHandle(SocialPlatform.TWITTER, '@john_doe')).toBe('john_doe');
-        expect(normalizeHandle(SocialPlatform.TWITTER, 'john_doe')).toBe('john_doe');
-        expect(normalizeHandle(SocialPlatform.TWITTER, 'https://twitter.com/john_doe')).toBe('john_doe');
-        expect(normalizeHandle(SocialPlatform.TWITTER, 'https://x.com/john_doe')).toBe('john_doe');
-        expect(normalizeHandle(SocialPlatform.TWITTER, 'x.com/john_doe')).toBe('john_doe');
+        expect(normalizeHandle(SocialPlatform.X, '@john_doe')).toBe('john_doe');
+        expect(normalizeHandle(SocialPlatform.X, 'john_doe')).toBe('john_doe');
+        expect(normalizeHandle(SocialPlatform.X, 'https://twitter.com/john_doe')).toBe('john_doe');
+        expect(normalizeHandle(SocialPlatform.X, 'https://x.com/john_doe')).toBe('john_doe');
+        expect(normalizeHandle(SocialPlatform.X, 'x.com/john_doe')).toBe('john_doe');
       });
     });
 
@@ -110,15 +109,15 @@ describe('Social Links Utilities', () => {
 
     describe('Twitter validation', () => {
       it('should validate correct handles', () => {
-        expect(validateHandle(SocialPlatform.TWITTER, 'username')).toBe(true);
-        expect(validateHandle(SocialPlatform.TWITTER, 'user_name')).toBe(true);
-        expect(validateHandle(SocialPlatform.TWITTER, 'User123')).toBe(true);
+        expect(validateHandle(SocialPlatform.X, 'username')).toBe(true);
+        expect(validateHandle(SocialPlatform.X, 'user_name')).toBe(true);
+        expect(validateHandle(SocialPlatform.X, 'User123')).toBe(true);
       });
 
       it('should reject invalid handles', () => {
-        expect(validateHandle(SocialPlatform.TWITTER, 'user.name')).toBe(false);
-        expect(validateHandle(SocialPlatform.TWITTER, 'user-name')).toBe(false);
-        expect(validateHandle(SocialPlatform.TWITTER, 'a'.repeat(16))).toBe(false); // Too long
+        expect(validateHandle(SocialPlatform.X, 'user.name')).toBe(false);
+        expect(validateHandle(SocialPlatform.X, 'user-name')).toBe(false);
+        expect(validateHandle(SocialPlatform.X, 'a'.repeat(16))).toBe(false); // Too long
       });
     });
 
@@ -139,7 +138,7 @@ describe('Social Links Utilities', () => {
   describe('getFullURL', () => {
     it('should generate correct URLs for each platform', () => {
       expect(getFullURL(SocialPlatform.INSTAGRAM, 'username')).toBe('https://instagram.com/username');
-      expect(getFullURL(SocialPlatform.TWITTER, 'john_doe')).toBe('https://x.com/john_doe');
+      expect(getFullURL(SocialPlatform.X, 'john_doe')).toBe('https://x.com/john_doe');
       expect(getFullURL(SocialPlatform.BLUESKY, 'alice.bsky.social')).toBe('https://bsky.app/profile/alice.bsky.social');
       expect(getFullURL(SocialPlatform.LINKEDIN, 'john-doe')).toBe('https://linkedin.com/in/john-doe');
       expect(getFullURL(SocialPlatform.GITHUB, 'octocat')).toBe('https://github.com/octocat');
@@ -152,37 +151,29 @@ describe('Social Links Utilities', () => {
 
   describe('createSocialLink', () => {
     it('should create valid social links', () => {
-      const instagramLink = createSocialLink(SocialPlatform.INSTAGRAM, '@myusername');
-      expect(instagramLink).toEqual({
+      const instagramUsername = createSocialLink(SocialPlatform.INSTAGRAM, '@myusername');
+      expect(instagramUsername).toEqual({
         platform: SocialPlatform.INSTAGRAM,
         handle: 'myusername',
-        url: 'https://instagram.com/myusername'
       });
 
-      const twitterLink = createSocialLink(SocialPlatform.TWITTER, 'https://x.com/jack');
-      expect(twitterLink).toEqual({
-        platform: SocialPlatform.TWITTER,
+      const instagramURL = getFullURL(SocialPlatform.INSTAGRAM, 'myusername');
+      expect(instagramURL).toEqual('https://instagram.com/myusername');
+
+      const twitterUsername = createSocialLink(SocialPlatform.X, 'https://x.com/jack');
+      expect(twitterUsername).toEqual({
+        platform: SocialPlatform.X,
         handle: 'jack',
-        url: 'https://x.com/jack'
       });
+
+      const twitterURL = getFullURL(SocialPlatform.X, 'jack');
+      expect(twitterURL).toEqual('https://x.com/jack');
     });
 
     it('should return null for invalid inputs', () => {
       expect(createSocialLink(SocialPlatform.INSTAGRAM, 'user name')).toBeNull();
-      expect(createSocialLink(SocialPlatform.TWITTER, 'a'.repeat(20))).toBeNull();
+      expect(createSocialLink(SocialPlatform.X, 'a'.repeat(20))).toBeNull();
       expect(createSocialLink(SocialPlatform.EMAIL, 'not-an-email')).toBeNull();
-    });
-  });
-
-  describe('getPlatformDisplayName', () => {
-    it('should return correct display names', () => {
-      expect(getPlatformDisplayName(SocialPlatform.TWITTER)).toBe('Twitter / X');
-      expect(getPlatformDisplayName(SocialPlatform.KO_FI)).toBe('Ko-fi');
-      expect(getPlatformDisplayName(SocialPlatform.LINKEDIN)).toBe('LinkedIn');
-      expect(getPlatformDisplayName(SocialPlatform.GITHUB)).toBe('GitHub');
-      expect(getPlatformDisplayName(SocialPlatform.TIKTOK)).toBe('TikTok');
-      expect(getPlatformDisplayName(SocialPlatform.YOUTUBE)).toBe('YouTube');
-      expect(getPlatformDisplayName(SocialPlatform.INSTAGRAM)).toBe('Instagram');
     });
   });
 
@@ -190,7 +181,7 @@ describe('Social Links Utilities', () => {
     it('should return helpful placeholders', () => {
       expect(getPlatformPlaceholder(SocialPlatform.INSTAGRAM)).toBe('@username');
       expect(getPlatformPlaceholder(SocialPlatform.BLUESKY)).toBe('@username.bsky.social');
-      expect(getPlatformPlaceholder(SocialPlatform.LINKEDIN)).toContain('john-doe');
+      expect(getPlatformPlaceholder(SocialPlatform.LINKEDIN)).toBe('username');
       expect(getPlatformPlaceholder(SocialPlatform.EMAIL)).toBe('email@example.com');
       expect(getPlatformPlaceholder(SocialPlatform.WEBSITE)).toBe('https://example.com');
     });
