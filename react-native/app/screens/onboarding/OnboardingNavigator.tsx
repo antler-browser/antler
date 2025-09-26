@@ -10,7 +10,6 @@ export function OnboardingNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
         gestureEnabled: false,
       }}
     >

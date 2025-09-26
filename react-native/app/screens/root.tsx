@@ -7,6 +7,7 @@ import { Colors, LocalStorage, Navigation } from '../../lib';
 
 import { CameraScreen } from './camera';
 import { OnboardingNavigator } from './onboarding/OnboardingNavigator';
+import { WelcomeScreen } from './onboarding/WelcomeScreen';
 import { ProfileNavigator } from './profile/ProfileNavigator';
 import { ProfileViewScreen } from './profile/ProfileViewScreen';
 
@@ -146,9 +147,21 @@ export default function App() {
           initialRouteName={hasCompletedWelcome ? Navigation.CAMERA_SCREEN : Navigation.ONBOARDING_SCREEN}
         >
           {!hasCompletedWelcome && (
-            <Stack.Screen name={Navigation.ONBOARDING_SCREEN} component={OnboardingNavigator} />
+            <Stack.Screen
+              name={Navigation.ONBOARDING_SCREEN}
+              component={WelcomeScreen}
+              options={{
+                gestureEnabled: false,
+              }}
+            />
           )}
-          <Stack.Screen name={Navigation.CAMERA_SCREEN} component={CameraStack} />
+          <Stack.Screen
+            name={Navigation.CAMERA_SCREEN}
+            component={CameraStack}
+            options={{
+              animation: 'slide_from_bottom',
+            }}
+          />
           <Stack.Screen
             name={Navigation.PROFILE_CREATION_SCREEN}
             component={ProfileNavigator}

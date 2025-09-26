@@ -66,6 +66,8 @@ export function AvatarScreen() {
         if (asset.base64) {
           const base64Image = `data:image/jpeg;base64,${asset.base64}`;
           setAvatar(base64Image);
+        }else{
+          throw new Error('Failed to pick image. Please try again.');
         }
       }
     } catch (error) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Dimensions, Image } from 'react-native';
 import { useColorScheme } from 'react-native';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 import { Screen, ThemedButton, ThemedView, ThemedText } from '../../components/ui';
 import { Colors, LocalStorage, Navigation } from '../../../lib';
@@ -28,13 +28,8 @@ export function WelcomeScreen() {
     // Mark welcome as completed
     await LocalStorage.setWelcomeCompleted();
 
-    // Navigate to camera screen and reset navigation stack
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: Navigation.CAMERA_SCREEN }],
-      })
-    );
+    // Navigate to camera screen with replace to respect animation
+    navigation.replace(Navigation.CAMERA_SCREEN);
   };
 
   return (

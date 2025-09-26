@@ -1,6 +1,5 @@
-import { CameraType, useCameraPermissions, Camera } from 'expo-camera';
+import { CameraType, useCameraPermissions } from 'expo-camera';
 import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
-import { Alert, Linking } from 'react-native';
 
 export interface QRCodeData {
   type: string;
@@ -19,24 +18,6 @@ export const CAMERA_SETTINGS = {
   animationDuration: 300,
   scanInterval: 1000,
 } as const;
-
-export async function requestCameraPermission(): Promise<boolean> {
-  const { status } = await Camera.requestCameraPermissionsAsync();
-
-  if (status === 'denied') {
-    Alert.alert(
-      'Camera Permission Required',
-      'Please enable camera access in your device settings to use this feature.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open Settings', onPress: () => Linking.openSettings() }
-      ]
-    );
-    return false;
-  }
-
-  return status === 'granted';
-}
 
 export function parseQRCode(scanningResult: BarcodeScanningResult): QRCodeData | null {
   if (!scanningResult || !scanningResult.data) {
@@ -79,21 +60,10 @@ export function handleScannedData(data: string): { type: 'url' | 'did' | 'text',
 export const useCameraPermission = () => {
   const [permission, requestPermission] = useCameraPermissions();
 
-  const hasPermission = permission?.granted ?? false;
-  const canAskAgain = permission?.canAskAgain ?? true;
-
   const requestCameraAccess = async (): Promise<boolean> => {
-    if (hasPermission) return true;
+    if (permission?.granted) return true;
 
-    if (!canAskAgain) {
-      Alert.alert(
-        'Camera Access Denied',
-        'You have previously denied camera access. Please enable it in your device settings.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() }
-        ]
-      );
+    if (!permission?.canAskAgain) {
       return false;
     }
 
@@ -102,8 +72,7 @@ export const useCameraPermission = () => {
   };
 
   return {
-    hasPermission,
-    canAskAgain,
-    requestCameraAccess
+    requestCameraAccess,
+    permission
   };
 };

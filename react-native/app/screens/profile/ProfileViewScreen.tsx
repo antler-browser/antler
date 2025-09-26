@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Alert,
   Image,
-  View,
   Text,
 } from 'react-native';
 import { useColorScheme } from 'react-native';
@@ -38,7 +37,7 @@ export function ProfileViewScreen() {
   if (!profile) {
     return (
       <Screen edges={['top', 'bottom']}>
-        <View />
+        <ThemedView />
       </Screen>
     );
   }
@@ -70,11 +69,14 @@ export function ProfileViewScreen() {
               if (did) {
                 await LocalStorage.deleteUserProfile(did);
 
-                // Navigate back to onboarding
+                // Clear welcome completed flag
+                await LocalStorage.clearAll();
+
+                // Navigate back to camera and reload
                 navigation.dispatch(
                   CommonActions.reset({
                     index: 0,
-                    routes: [{ name: Navigation.ONBOARDING_SCREEN }],
+                    routes: [{ name: Navigation.CAMERA_SCREEN }],
                   })
                 );
               }
@@ -108,11 +110,11 @@ export function ProfileViewScreen() {
                 });
               }
 
-              // Navigate back to onboarding
+              // Navigate back to camera screen
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{ name: Navigation.ONBOARDING_SCREEN }],
+                  routes: [{ name: Navigation.CAMERA_SCREEN }],
                 })
               );
             } catch (error) {
@@ -139,7 +141,7 @@ export function ProfileViewScreen() {
     };
 
     return (
-      <View key={platform} style={styles.socialItem}>
+      <ThemedView key={platform} style={styles.socialItem}>
         <Ionicons
           name={iconNames[platform] || 'link-outline'}
           size={20}
@@ -147,7 +149,7 @@ export function ProfileViewScreen() {
           style={styles.socialIcon}
         />
         <ThemedText style={styles.socialHandle}>{handle}</ThemedText>
-      </View>
+      </ThemedView>
     );
   };
 
@@ -202,9 +204,9 @@ export function ProfileViewScreen() {
             {profile.avatar ? (
               <Image source={{ uri: profile.avatar }} style={styles.avatar} />
             ) : (
-              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.tint }]}>
+              <ThemedView style={[styles.avatarPlaceholder, { backgroundColor: colors.tint }]}>
                 <Text style={styles.avatarPlaceholderText}>{getUserInitial()}</Text>
-              </View>
+              </ThemedView>
             )}
             <ThemedText type="title" style={styles.name}>{profile.name}</ThemedText>
           </ThemedView>
