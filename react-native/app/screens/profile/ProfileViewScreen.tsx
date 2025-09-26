@@ -90,37 +90,6 @@ export function ProfileViewScreen() {
     );
   };
 
-  const handleSignOut = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Clear current user from app state
-              await LocalStorage.clearAll();
-              
-              // Navigate back to camera screen
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: Navigation.ONBOARDING_SCREEN }],
-                })
-              );
-            } catch (error) {
-              console.error('Error signing out:', error);
-              Alert.alert('Error', 'Failed to sign out');
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const getUserInitial = () => {
     if (!profile?.name) return '?';
     return profile.name.charAt(0).toUpperCase();
@@ -219,11 +188,6 @@ export function ProfileViewScreen() {
 
           {/* Actions Section */}
           <ThemedView style={styles.actionsSection}>
-            <ThemedButton
-              title="Sign Out"
-              onPress={handleSignOut}
-              variant="secondary"
-            />
             <TouchableOpacity
               style={styles.deleteButton}
               onPress={handleDeleteProfile}

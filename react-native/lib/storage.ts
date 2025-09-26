@@ -1,6 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SocialLink } from './social-links';
 
+export const APP_STATE_VERSION = '1.0.0';
+
+// Stores references to DIDs
+export interface AppState {
+  version: string;
+  completedDids: string[];
+  currentDid?: string;
+  hasCompletedWelcome: boolean;
+}
+
+const DEFAULT_APP_STATE: AppState = {
+  version: APP_STATE_VERSION,
+  completedDids: [],
+  currentDid: undefined,
+  hasCompletedWelcome: false,
+};
+
+// Stores DID data
 export interface UserProfile {
   id: string;
   name: string;
@@ -8,18 +26,6 @@ export interface UserProfile {
   socials?: SocialLink[];
   avatar?: string;
 }
-
-export interface AppState {
-  completedDids: string[];
-  currentDid?: string;
-  hasCompletedWelcome: boolean;
-}
-
-const DEFAULT_APP_STATE: AppState = {
-  completedDids: [],
-  currentDid: undefined,
-  hasCompletedWelcome: false,
-};
 
 const STORAGE_KEYS = {
   APP_STATE: '@antler/app_state',
@@ -60,9 +66,7 @@ export async function getAppState(): Promise<AppState> {
   try {
     const key = getLocalStorageKey('APP_STATE');
     const jsonValue = await AsyncStorage.getItem(key);
-    if (!jsonValue) { 
-      await initializeAppState();
-    }
+    if (!jsonValue) { throw new Error('App state should have been initialized'); }
 
     return JSON.parse(jsonValue as string) as AppState;
   } catch (error) {
@@ -71,12 +75,34 @@ export async function getAppState(): Promise<AppState> {
   }
 }
 
-export async function saveAppState(appState: AppState): Promise<void> {
+async function saveAppState(appState: AppState): Promise<void> {
   try {
     const jsonValue = JSON.stringify(appState);
-    await AsyncStorage.setItem(STORAGE_KEYS.APP_STATE, jsonValue);
+    const key = getLocalStorageKey('APP_STATE');
+    await AsyncStorage.setItem(key, jsonValue);
   } catch (error) {
     console.error(`Error saving app state: ${(error as Error).message}`);
+    throw error;
+  }
+}
+
+export async function deleteDIDFromAppState(did: string): Promise<void> {
+  try {
+    const oldAppState = await getAppState();
+    const filteredDids = oldAppState.completedDids.filter(id => id !== did);
+    
+    // Update app state
+    const newAppState = { 
+      ...oldAppState,
+      completedDids: filteredDids,
+      currentDid: oldAppState.currentDid === did 
+        ? (filteredDids[0] || undefined)  // If deleting current DID, pick first remaining
+        : oldAppState.currentDid,         // Otherwise keep current DID unchanged
+    };
+    
+    await saveAppState(newAppState);
+  } catch (error) {
+    console.error(`Error deleting DID from app state: ${(error as Error).message}`);
     throw error;
   }
 }

@@ -1,9 +1,10 @@
-import * as React from 'react';
+import React from 'react';
 import { Platform, useColorScheme } from 'react-native';
 import { NavigationContainer, LinkingOptions, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Colors, LocalStorage, Navigation } from '../../lib';
+import { Colors, Navigation } from '../../lib';
+import { useOnboarding } from '../hooks';
 
 import { CameraScreen } from './CameraScreen';
 import { WelcomeScreen } from './onboarding/WelcomeScreen';
@@ -94,25 +95,7 @@ const linking: LinkingOptions<Navigation.RootStackParamList> = {
 export default function App() {
   const colorScheme = useColorScheme();
   const navigationRef = React.useRef<NavigationContainerRef<Navigation.RootStackParamList>>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [hasCompletedWelcome, setHasCompletedWelcome] = React.useState(false);
-
-  React.useEffect(() => {
-    checkOnboardingStatus();
-  }, []);
-
-  const checkOnboardingStatus = async () => {
-    try {
-      // Initialize AppState on app launch
-      await LocalStorage.initializeAppState();
-      const welcomeCompleted = await LocalStorage.hasCompletedWelcome();
-      setHasCompletedWelcome(welcomeCompleted);
-    } catch (error) {
-      console.error('Error checking onboarding status:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { isLoading, hasCompletedWelcome } = useOnboarding();
 
   if (isLoading) {
     return null;

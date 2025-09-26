@@ -21,7 +21,7 @@ export async function createUserWithDID(profile: Omit<LocalStorage.UserProfile, 
       avatar: profile.avatar,
     };
 
-    // Save to storage
+    // Save user data
     await LocalStorage.saveUserProfile(userProfile);
     await SecureStorage.saveDIDPrivateKey(didResult.did, didResult.privateKey);
     await LocalStorage.setCurrentUser(didResult.did);
@@ -37,21 +37,12 @@ export async function createUserWithDID(profile: Omit<LocalStorage.UserProfile, 
  */
 export async function deleteUser(did: string): Promise<void> {
   try {
-    // Delete private key from secure storage
+
+    // Delete user data
     await SecureStorage.deleteDIDPrivateKey(did);
-
-    // Delete user profile
     await LocalStorage.deleteUserProfile(did);
+    await LocalStorage.deleteDIDFromAppState(did);
 
-    // Update app state
-    const oldAppState = await LocalStorage.getAppState();
-    const newAppState = { 
-      ...oldAppState,
-      completedDids: oldAppState.completedDids.filter(id => id !== did),
-      currentDid: oldAppState.completedDids[0] || undefined,
-    };
-
-    await LocalStorage.saveAppState(newAppState);
   } catch (error) {
     throw new Error(`Error deleting user: ${(error as Error).message}`);
   }
