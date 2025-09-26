@@ -19,6 +19,11 @@ export const CAMERA_SETTINGS = {
   scanInterval: 1000,
 } as const;
 
+export type ScannedResult = {
+  type: 'url' | 'did' | 'text';
+  value: string;
+}
+
 export function parseQRCode(scanningResult: BarcodeScanningResult): QRCodeData | null {
   if (!scanningResult || !scanningResult.data) {
     return null;
@@ -45,7 +50,7 @@ export function isValidDID(string: string): boolean {
   return string.startsWith('did:');
 }
 
-export function handleScannedData(data: string): { type: 'url' | 'did' | 'text', value: string } {
+export function handleScannedData(data: string): ScannedResult {
   if (isValidURL(data)) {
     return { type: 'url', value: data };
   }

@@ -10,18 +10,19 @@ export function CameraScreen() {
   const navigation = useNavigation<Navigation.RootStackNavigationProp>();
   const isFocused = useIsFocused();
 
-  const [userProfile, setUserProfile] = useState<LocalStorage.UserProfile | null>(null);
+  const [allProfiles, setAllProfiles] = useState<LocalStorage.UserProfile[]>([]);
+  const [activeProfileIndex, setActiveProfileIndex] = useState<number>(0);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const { permission, requestCameraAccess } = Camera.useCameraPermission();
 
   useEffect(() => {
-    loadUserProfile();
+    loadAllProfiles();
   }, []);
 
   useEffect(() => {
     if (isFocused) {
-      loadUserProfile();
+      loadAllProfiles();
     }
   }, [isFocused]);
 
@@ -40,22 +41,43 @@ export function CameraScreen() {
     }
   };
 
-  const loadUserProfile = async () => {
+  const loadAllProfiles = async () => {
     try {
-      const profile = await LocalStorage.getCurrentUser();
-      if (profile) {
-        setUserProfile(profile);
+      const profiles = await LocalStorage.getAllUserProfiles();
+      setAllProfiles(profiles);
+
+      // Find the index of the current profile
+      const currentUser = await LocalStorage.getCurrentUser();
+      if (currentUser && profiles.length > 0) {
+        const currentIndex = profiles.findIndex(p => p.id === currentUser.id);
+        if (currentIndex >= 0) {
+          setActiveProfileIndex(currentIndex);
+        }
       }
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      console.error('Error loading profiles:', error);
     }
   };
 
 
   const handleProfilePress = () => {
-    if (userProfile?.id) {
-      navigation.navigate(Navigation.PROFILE_SCREEN, { did: userProfile.id });
+    if (allProfiles[activeProfileIndex]?.id) {
+      navigation.navigate(Navigation.PROFILE_SCREEN, { did: allProfiles[activeProfileIndex].id });
     }
+  };
+
+  const handleProfileSelect = async (index: number) => {
+    if (index >= 0 && index < allProfiles.length) {
+      setActiveProfileIndex(index);
+      const selectedProfile = allProfiles[index];
+      if (selectedProfile) {
+        await LocalStorage.setCurrentUser(selectedProfile.id);
+      }
+    }
+  };
+
+  const handleAddProfile = () => {
+    navigation.navigate(Navigation.PROFILE_CREATION_SCREEN);
   };
 
   // Check Camera permissions
@@ -82,8 +104,11 @@ export function CameraScreen() {
   // Show Camera view:
   return (
     <CameraView
-      userProfile={userProfile}
+      allProfiles={allProfiles}
+      activeProfileIndex={activeProfileIndex}
       onProfilePress={handleProfilePress}
+      onProfileSelect={handleProfileSelect}
+      onAddProfile={handleAddProfile}
       isFocused={isFocused}
     />
   );

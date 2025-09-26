@@ -10,20 +10,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView as ExpoCameraView, CameraType, FlashMode } from 'expo-camera';
 import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
 import { Ionicons } from '@expo/vector-icons';
-import { ThemedText } from '../ui/ThemedText';
-import { ProfileOverlay } from './ProfileOverlay';
-import { Camera, LocalStorage, Navigation } from '../../../lib';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 
+import { ProfileCarousel } from './ProfileCarousel';
+import { ThemedText } from '../ui';
+import { Camera, LocalStorage, Navigation } from '../../../lib';
+
 interface CameraViewProps {
-  userProfile: LocalStorage.UserProfile | null;
+  allProfiles: LocalStorage.UserProfile[];
+  activeProfileIndex: number;
   onProfilePress: () => void;
+  onProfileSelect: (index: number) => void;
+  onAddProfile: () => void;
   isFocused: boolean;
 }
 
 export function CameraView({
-  userProfile,
+  allProfiles,
+  activeProfileIndex,
   onProfilePress,
+  onProfileSelect,
+  onAddProfile,
   isFocused,
 }: CameraViewProps) {
   const [facing, setFacing] = useState<CameraType>(Camera.CAMERA_SETTINGS.defaultFacing);
@@ -94,8 +101,24 @@ export function CameraView({
     }
   };
 
+  const fakeQRCodeForDevMode = async () => {
+    if (!__DEV__) { return; }
 
-  const handleBarCodeScanned = ({ data }: BarcodeScanningResult) => {
+    const appState = await LocalStorage.getAppState();
+    const hasProfile = appState.currentDid;
+
+    if (!hasProfile) {
+      navigation.navigate(Navigation.PROFILE_CREATION_SCREEN, {
+        pendingUrl: "https://www.google.com"
+      });
+    } else {
+      navigation.navigate(Navigation.WEBVIEW_SCREEN, {
+        url: "https://www.google.com"
+      });
+    }
+  };
+
+  const handleBarCodeScanned = async ({ data }: BarcodeScanningResult) => {
     if (isScanning || !data || data === lastScannedData) return;
 
     setIsScanning(true);
@@ -103,37 +126,37 @@ export function CameraView({
 
     const scannedResult = Camera.handleScannedData(data);
 
-    let alertTitle = 'QR Code Scanned';
-    let alertMessage = '';
-
-    switch (scannedResult.type) {
-      case 'url':
-        alertTitle = 'URL Detected';
-        alertMessage = `Open ${scannedResult.value}?`;
-        break;
-      case 'did':
-        alertTitle = 'DID Detected';
-        alertMessage = `Decentralized ID: ${scannedResult.value}`;
-        break;
-      default:
-        alertMessage = scannedResult.value;
+    // Only handle URL type QR codes
+    if (scannedResult.type !== 'url') {
+      // Reset scanning state after interval
+      scanTimeoutRef.current = setTimeout(() => {
+        setIsScanning(false);
+        setLastScannedData(null);
+      }, Camera.CAMERA_SETTINGS.scanInterval);
+      return;
     }
 
-    Alert.alert(
-      alertTitle,
-      alertMessage,
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            scanTimeoutRef.current = setTimeout(() => {
-              setIsScanning(false);
-              setLastScannedData(null);
-            }, Camera.CAMERA_SETTINGS.scanInterval);
-          }
-        }
-      ]
-    );
+    // Check if user has a profile (currentDid)
+    const appState = await LocalStorage.getAppState();
+    const hasProfile = appState.currentDid;
+
+    if (!hasProfile) {
+      // No profile, navigate to profile creation with pending URL
+      navigation.navigate(Navigation.PROFILE_CREATION_SCREEN, {
+        pendingUrl: scannedResult.value
+      });
+    } else {
+      // Profile exists, navigate directly to WebView
+      navigation.navigate(Navigation.WEBVIEW_SCREEN, {
+        url: scannedResult.value
+      });
+    }
+
+    // Reset scanning state after navigation
+    scanTimeoutRef.current = setTimeout(() => {
+      setIsScanning(false);
+      setLastScannedData(null);
+    }, Camera.CAMERA_SETTINGS.scanInterval);
   };
 
   return (
@@ -147,6 +170,16 @@ export function CameraView({
         >
           <SafeAreaView style={styles.cameraOverlay}>
             <View style={styles.topControls}>
+              {__DEV__ && (
+                <TouchableOpacity
+                  style={styles.cameraControl}
+                  onPress={fakeQRCodeForDevMode}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="qr-code-outline" size={28} color="white" />
+                  <ThemedText style={styles.devModeText}>DEV</ThemedText>
+                </TouchableOpacity>
+              )}
               {__DEV__ && (
                 <TouchableOpacity
                   style={styles.cameraControl}
@@ -187,9 +220,11 @@ export function CameraView({
               </View>
             )}
           </SafeAreaView>
-          <ProfileOverlay
-            userProfile={userProfile}
-            onProfilePress={onProfilePress}
+          <ProfileCarousel
+            profiles={allProfiles}
+            activeProfileIndex={activeProfileIndex}
+            onProfileSelect={onProfileSelect}
+            onAddProfile={onAddProfile}
           />
         </ExpoCameraView>
       )}

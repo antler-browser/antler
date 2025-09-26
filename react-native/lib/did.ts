@@ -1,6 +1,6 @@
 import * as ed25519 from '@stablelib/ed25519';
 import { getRandomBytes } from 'expo-crypto';
-import base58 from 'base58-universal';
+import * as base58 from 'base58-universal';
 
 export interface DIDResult {
   did: string;
@@ -10,12 +10,10 @@ export interface DIDResult {
 
 // DID format constants
 const DID_KEY_PREFIX = 'did:key:z'; // 'z' indicates base58btc encoding
-const ED25519_MULTICODEC_PREFIX = 0xed; // Identifies Ed25519 keys in multicodec format
-const MULTICODEC_VARINT_VALUE = 0x01; // Variable integer encoding for key length
+const ED25519_MULTICODEC_PREFIX = 0xed01; // Ed25519 public key multicodec identifier
 
 // Key sizes
 const SEED_SIZE = 32; // Ed25519 seed size in bytes
-const MULTICODEC_HEADER_SIZE = 2; // Size of multicodec prefix
 
 /**
  * Generates a cryptographically secure random seed for key generation
@@ -31,10 +29,11 @@ async function generateRandomSeed(): Promise<Uint8Array> {
  * The prefix identifies the key type (Ed25519) when encoded
  */
 function addMulticodecPrefix(publicKey: Uint8Array): Uint8Array {
-  const prefixedKey = new Uint8Array(MULTICODEC_HEADER_SIZE + publicKey.length);
-  prefixedKey[0] = ED25519_MULTICODEC_PREFIX;
-  prefixedKey[1] = MULTICODEC_VARINT_VALUE;
-  prefixedKey.set(publicKey, MULTICODEC_HEADER_SIZE);
+  const prefixedKey = new Uint8Array(2 + publicKey.length);
+  // Set the two-byte Ed25519 multicodec prefix
+  prefixedKey[0] = (ED25519_MULTICODEC_PREFIX >> 8) & 0xff; // 0xed
+  prefixedKey[1] = ED25519_MULTICODEC_PREFIX & 0xff;        // 0x01
+  prefixedKey.set(publicKey, 2);
   return prefixedKey;
 }
 
@@ -125,6 +124,6 @@ export async function verifySignature<T = any>(
 
     return ed25519.verify(publicKeyBytes, dataBytes, signature);
   } catch (error) {
-    throw new Error('Signature verification failed:', error as Error);
+    throw new Error(`Signature verification failed: ${(error as Error).message}`);
   }
 }

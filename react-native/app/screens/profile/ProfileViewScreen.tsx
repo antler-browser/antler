@@ -102,19 +102,13 @@ export function ProfileViewScreen() {
           onPress: async () => {
             try {
               // Clear current user from app state
-              const appState = await LocalStorage.getAppState();
-              if (appState) {
-                await LocalStorage.saveAppState({
-                  ...appState,
-                  currentDid: undefined,
-                });
-              }
-
+              await LocalStorage.clearAll();
+              
               // Navigate back to camera screen
               navigation.dispatch(
                 CommonActions.reset({
                   index: 0,
-                  routes: [{ name: Navigation.CAMERA_SCREEN }],
+                  routes: [{ name: Navigation.ONBOARDING_SCREEN }],
                 })
               );
             } catch (error) {

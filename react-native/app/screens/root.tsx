@@ -5,11 +5,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Colors, LocalStorage, Navigation } from '../../lib';
 
-import { CameraScreen } from './camera';
-import { OnboardingNavigator } from './onboarding/OnboardingNavigator';
+import { CameraScreen } from './CameraScreen';
 import { WelcomeScreen } from './onboarding/WelcomeScreen';
 import { ProfileNavigator } from './profile/ProfileNavigator';
 import { ProfileViewScreen } from './profile/ProfileViewScreen';
+import { WebViewScreen } from './WebViewScreen';
 
 const Stack = createNativeStackNavigator<Navigation.RootStackParamList>();
 
@@ -64,6 +64,15 @@ function CameraStack() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name={Navigation.WEBVIEW_SCREEN}
+        component={WebViewScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+        }}
+      />
     </Stack.Navigator>
   );
 }
@@ -94,6 +103,8 @@ export default function App() {
 
   const checkOnboardingStatus = async () => {
     try {
+      // Initialize AppState on app launch
+      await LocalStorage.initializeAppState();
       const welcomeCompleted = await LocalStorage.hasCompletedWelcome();
       setHasCompletedWelcome(welcomeCompleted);
     } catch (error) {
@@ -111,37 +122,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer
         ref={navigationRef}
-        linking={linking}
-        theme={{
-          dark: colorScheme === 'dark',
-          colors: {
-            primary: Colors[colorScheme ?? 'light'].tint,
-            background: Colors[colorScheme ?? 'light'].background,
-            card: Colors[colorScheme ?? 'light'].card,
-            text: Colors[colorScheme ?? 'light'].text,
-            border: Colors[colorScheme ?? 'light'].border,
-            notification: Colors[colorScheme ?? 'light'].notification,
-          },
-          fonts: {
-            regular: {
-              fontFamily: 'System',
-              fontWeight: 'normal' as const,
-            },
-            medium: {
-              fontFamily: 'System',
-              fontWeight: '500' as const,
-            },
-            bold: {
-              fontFamily: 'System',
-              fontWeight: 'bold' as const,
-            },
-            heavy: {
-              fontFamily: 'System',
-              fontWeight: '700' as const,
-            },
-          },
-        }}
-      >
+        linking={linking}>
         <Stack.Navigator
           screenOptions={{ headerShown: false }}
           initialRouteName={hasCompletedWelcome ? Navigation.CAMERA_SCREEN : Navigation.ONBOARDING_SCREEN}

@@ -17,10 +17,11 @@ export function NameScreen() {
 
   const mode = route.params?.mode || 'create';
   const did = route.params?.did;
+  const pendingUrl = route.params?.pendingUrl;
 
   // Use useProfile hook to get profile data when in edit mode
-  const { profile, isLoading } = did 
-    ? useProfile(did) 
+  const { profile, isLoading } = did
+    ? useProfile(did)
     : { profile: null, isLoading: false };
 
   const [name, setName] = useState('');
@@ -45,6 +46,7 @@ export function NameScreen() {
       mode,
       name: trimmedName,
       did,
+      pendingUrl,
     });
   };
 

@@ -23,6 +23,7 @@ export function SocialsScreen() {
 
   const mode = route.params.mode;
   const did = route.params.did;
+  const pendingUrl = route.params.pendingUrl;
 
   // Use useProfile hook to get profile data when in edit mode
   const { profile, isLoading } = did
@@ -163,6 +164,7 @@ export function SocialsScreen() {
       name: route.params.name,
       socials: socials.length > 0 ? socials : undefined,
       did,
+      pendingUrl,
     });
   };
 

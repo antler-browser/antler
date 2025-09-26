@@ -17,6 +17,7 @@ export function AvatarScreen() {
 
   const mode = route.params.mode;
   const did = route.params.did;
+  const pendingUrl = route.params.pendingUrl;
 
   // Use useProfile hook to get profile data when in edit mode
   const { profile, isLoading } = did 
@@ -105,22 +106,27 @@ export function AvatarScreen() {
 
         await LocalStorage.saveUserProfile(updatedProfile);
 
-        // Simply dismiss the modal after profile creation
+        // Simply dismiss the modal after profile edit
         navigation.getParent()?.goBack();
       } else {
-        // Create new profile
-        const profile = await User.createUserWithDID(route.params.name);
 
-        const updatedProfile: LocalStorage.UserProfile = {
-          ...profile,
+        // Create new profile
+        await User.createUserWithDID({
+          name: route.params.name,
           socials: route.params.socials,
           avatar: avatar || undefined,
-        };
+        });
 
-        await LocalStorage.saveUserProfile(updatedProfile);
-
-        // Simply dismiss the modal after profile creation
-        navigation.getParent()?.goBack();
+        // If there's a pending URL, navigate to WebView, otherwise dismiss the modal
+        if (pendingUrl) {
+          // Navigate to WebView with the pending URL
+          navigation.getParent()?.navigate(Navigation.WEBVIEW_SCREEN, {
+            url: pendingUrl
+          });
+        } else {
+          // Simply dismiss the modal after profile creation
+          navigation.getParent()?.goBack();
+        }
       }
     } catch (err) {
       console.error('Error completing profile:', err);

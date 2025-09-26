@@ -12,8 +12,14 @@ export interface UserProfile {
 export interface AppState {
   completedDids: string[];
   currentDid?: string;
-  hasCompletedWelcome?: boolean;
+  hasCompletedWelcome: boolean;
 }
+
+const DEFAULT_APP_STATE: AppState = {
+  completedDids: [],
+  currentDid: undefined,
+  hasCompletedWelcome: false,
+};
 
 const STORAGE_KEYS = {
   APP_STATE: '@antler/app_state',
@@ -27,16 +33,41 @@ function getLocalStorageKey(type: keyof typeof STORAGE_KEYS, did?: string): stri
       return `${STORAGE_KEYS[type]}${did}`;
     default:
       return STORAGE_KEYS[type];
-  } 
+  }
 }
 
-export async function getAppState(): Promise<AppState | null> {
+/**
+ * Initializes AppState if it doesn't exist
+ */
+export async function initializeAppState(): Promise<void> {
   try {
-    const jsonValue = await AsyncStorage.getItem(getLocalStorageKey('APP_STATE'));
-    return jsonValue != null ? JSON.parse(jsonValue) : null;
+    const key = getLocalStorageKey('APP_STATE');
+    const jsonValue = await AsyncStorage.getItem(key);
+    if (!jsonValue) {
+      await saveAppState(DEFAULT_APP_STATE);
+      return;
+    }
   } catch (error) {
-    console.error('Error reading app state:', error);
-    return null;
+    console.error(`Error initializing app state: ${(error as Error).message}`);
+    throw error;
+  }
+}
+
+/**
+ * Gets AppState, always returning a valid state (never null)
+ */
+export async function getAppState(): Promise<AppState> {
+  try {
+    const key = getLocalStorageKey('APP_STATE');
+    const jsonValue = await AsyncStorage.getItem(key);
+    if (!jsonValue) { 
+      await initializeAppState();
+    }
+
+    return JSON.parse(jsonValue as string) as AppState;
+  } catch (error) {
+    console.error(`Error reading app state: ${(error as Error).message}`);
+    throw error;
   }
 }
 
@@ -45,7 +76,7 @@ export async function saveAppState(appState: AppState): Promise<void> {
     const jsonValue = JSON.stringify(appState);
     await AsyncStorage.setItem(STORAGE_KEYS.APP_STATE, jsonValue);
   } catch (error) {
-    console.error('Error saving app state:', error);
+    console.error(`Error saving app state: ${(error as Error).message}`);
     throw error;
   }
 }
@@ -56,7 +87,7 @@ export async function getUserProfile(did: string): Promise<UserProfile | null> {
     const jsonValue = await AsyncStorage.getItem(key);
     return jsonValue != null ? JSON.parse(jsonValue) : null;
   } catch (error) {
-    console.error('Error reading user profile:', error);
+    console.error(`Error reading user profile: ${(error as Error).message}`);
     return null;
   }
 }
@@ -67,7 +98,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<void> {
     const jsonValue = JSON.stringify(profile);
     await AsyncStorage.setItem(key, jsonValue);
   } catch (error) {
-    console.error('Error saving user profile:', error);
+    console.error(`Error saving user profile: ${(error as Error).message}`);
     throw error;
   }
 }
@@ -77,7 +108,7 @@ export async function deleteUserProfile(did: string): Promise<void> {
     const key = getLocalStorageKey('USER_PROFILE', did);
     await AsyncStorage.removeItem(key);
   } catch (error) {
-    console.error('Error deleting user profile:', error);
+    console.error(`Error deleting user profile: ${(error as Error).message}`);
     throw error;
   }
 }
@@ -85,28 +116,29 @@ export async function deleteUserProfile(did: string): Promise<void> {
 export async function getCurrentUser(): Promise<UserProfile | null> {
   try {
     const appState = await getAppState();
-    if (!appState?.currentDid) {
-      return null;
-    }
+    if (!appState.currentDid) { return null; }
     return await getUserProfile(appState.currentDid);
   } catch (error) {
-    console.error('Error getting current user:', error);
+    console.error(`Error getting current user: ${(error as Error).message}`);
     return null;
   }
 }
 
 export async function setCurrentUser(did: string): Promise<void> {
   try {
-    const appState = await getAppState() || { completedDids: [] };
-    appState.currentDid = did;
+    const oldAppState = await getAppState();
+    
+    const newAppState = { 
+      ...oldAppState,
+      currentDid: did,
+      completedDids: oldAppState.completedDids?.includes(did) 
+        ? oldAppState.completedDids 
+        : [...(oldAppState.completedDids || []), did],
+    };
 
-    if (!appState.completedDids.includes(did)) {
-      appState.completedDids.push(did);
-    }
-
-    await saveAppState(appState);
+    await saveAppState(newAppState);
   } catch (error) {
-    console.error('Error setting current user:', error);
+    console.error(`Error setting current user: ${(error as Error).message}`);
     throw error;
   }
 }
@@ -114,41 +146,62 @@ export async function setCurrentUser(did: string): Promise<void> {
 export async function hasCompletedOnboarding(): Promise<boolean> {
   try {
     const appState = await getAppState();
-    return appState ? appState.completedDids.length > 0 : false;
+    return appState.completedDids.length > 0;
   } catch (error) {
-    console.error('Error checking onboarding status:', error);
+    console.error(`Error checking onboarding status: ${(error as Error).message}`);
     return false;
+  }
+}
+export async function setWelcomeCompleted(): Promise<void> {
+  try {
+    const oldAppState = await getAppState();
+    const newAppState = { 
+      ...oldAppState,
+      hasCompletedWelcome: true,
+    };
+    await saveAppState(newAppState);
+  } catch (error) {
+    console.error(`Error setting welcome completed: ${(error as Error).message}`);
+    throw error;
   }
 }
 
 export async function hasCompletedWelcome(): Promise<boolean> {
   try {
     const appState = await getAppState();
-    return appState?.hasCompletedWelcome === true;
+    return appState.hasCompletedWelcome;
   } catch (error) {
-    console.error('Error checking welcome status:', error);
+    console.error(`Error checking welcome status: ${(error as Error).message}`);
     return false;
   }
 }
 
-export async function setWelcomeCompleted(): Promise<void> {
-  try {
-    const appState = await getAppState() || { completedDids: [] };
-    appState.hasCompletedWelcome = true;
-    await saveAppState(appState);
-  } catch (error) {
-    console.error('Error setting welcome completed:', error);
-    throw error;
-  }
-}
 
 export async function hasCompletedProfileCreation(): Promise<boolean> {
   try {
     const appState = await getAppState();
-    return appState ? appState.completedDids.length > 0 : false;
+    return appState.completedDids.length > 0;
   } catch (error) {
-    console.error('Error checking profile creation status:', error);
+    console.error(`Error checking profile creation status: ${(error as Error).message}`);
     return false;
+  }
+}
+
+export async function getAllUserProfiles(): Promise<UserProfile[]> {
+  try {
+    const appState = await getAppState();
+    if (appState.completedDids.length === 0) {
+      return [];
+    }
+
+    const profiles = await Promise.all(
+      appState.completedDids.map(did => getUserProfile(did))
+    );
+
+    return profiles.filter((profile): profile is UserProfile => profile !== null);
+  } catch (error) {
+    console.error(`Error getting all user profiles: ${(error as Error).message}`);
+    return [];
   }
 }
 
@@ -158,7 +211,7 @@ export async function clearAll(): Promise<void> {
     const antlerKeys = keys.filter(key => key.startsWith('@antler/'));
     await AsyncStorage.multiRemove(antlerKeys);
   } catch (error) {
-    console.error('Error clearing storage:', error);
+    console.error(`Error clearing storage: ${(error as Error).message}`);
     throw error;
   }
 }

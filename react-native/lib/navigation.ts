@@ -6,6 +6,7 @@ export const CAMERA_SCREEN = "CameraScreen";
 export const PROFILE_SCREEN = "ProfileScreen";
 export const ONBOARDING_SCREEN = "OnboardingScreen";
 export const PROFILE_CREATION_SCREEN = "ProfileCreationScreen";
+export const WEBVIEW_SCREEN = "WebViewScreen";
 
 // Profile mode type
 export type ProfileMode = 'create' | 'edit';
@@ -21,17 +22,20 @@ export type ProfileCreationStackParamList = {
   Name: {
     mode: ProfileMode;
     did?: string;
+    pendingUrl?: string;
   } | undefined;
   Socials: {
     mode: ProfileMode;
     name: string;
     did?: string;
+    pendingUrl?: string;
   };
   Avatar: {
     mode: ProfileMode;
     name: string;
     socials?: SocialLink[];
     did?: string;
+    pendingUrl?: string;
   };
 };
 
@@ -40,7 +44,8 @@ export type RootStackParamList = {
   [CAMERA_SCREEN]: undefined;
   [PROFILE_SCREEN]: ProfileScreenParams;
   [ONBOARDING_SCREEN]: undefined;
-  [PROFILE_CREATION_SCREEN]: undefined;
+  [PROFILE_CREATION_SCREEN]: { pendingUrl?: string } | undefined;
+  [WEBVIEW_SCREEN]: { url: string };
 };
 
 // Navigation prop types
