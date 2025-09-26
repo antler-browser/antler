@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Screen, ThemedView, ThemedText, ThemedButton, ThemedTextInput, ProgressIndicator, HeaderBackButton } from '../../components/ui';
+import { Screen, ThemedView, ThemedText, ThemedButton, ThemedTextInput, ProgressIndicator, HeaderBackButton, HeaderCloseButton } from '../../components/ui';
 import { Colors, Navigation } from '../../../lib';
 import { useProfile } from '../../hooks';
 
@@ -69,13 +69,18 @@ export function NameScreen() {
   return (
     <Screen edges={['top', 'bottom']}>
       <ThemedView style={styles.headerButtons}>
-        <HeaderBackButton />
         <ProgressIndicator currentStep={1} totalSteps={3} />
+        <HeaderCloseButton />
       </ThemedView>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ThemedView style={styles.content}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          <ThemedView style={styles.content}>
           <ThemedView style={styles.header}>
             <ThemedText type="title" style={styles.title}>
               What's your name?
@@ -117,6 +122,7 @@ export function NameScreen() {
             />
           </ThemedView>
         </ThemedView>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -125,14 +131,18 @@ export function NameScreen() {
 const styles = StyleSheet.create({
   headerButtons: {
     gap: 12,
+    marginTop: 10,
   },
   keyboardView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 20,
     paddingBottom: 30,
   },
   header: {

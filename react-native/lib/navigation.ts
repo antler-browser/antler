@@ -4,10 +4,10 @@ import { SocialLink } from "./social-links";
 // Screen names
 export const CAMERA_SCREEN = "CameraScreen";
 export const PROFILE_SCREEN = "ProfileScreen";
-export const ONBOARDING_SCREEN = "OnboardingScreen";
 export const PROFILE_CREATION_SCREEN = "ProfileCreationScreen";
 export const WEBVIEW_SCREEN = "WebViewScreen";
 export const MODAL_STACK = "ModalStack";
+export const WELCOME_SCREEN = "WelcomeScreen";
 
 // Profile mode type
 export type ProfileMode = 'create' | 'edit';
@@ -50,7 +50,7 @@ export type ModalStackParamList = {
 export type RootStackParamList = {
   [CAMERA_SCREEN]: undefined;
   [PROFILE_SCREEN]: ProfileScreenParams;
-  [ONBOARDING_SCREEN]: undefined;
+  [WELCOME_SCREEN]: undefined;
   [MODAL_STACK]: {
     screen: keyof ModalStackParamList;
     params?: ModalStackParamList[keyof ModalStackParamList];

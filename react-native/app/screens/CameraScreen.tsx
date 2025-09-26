@@ -1,17 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Alert, View, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useIsFocused } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { CameraPermissions } from '../components/camera/CameraPermissions';
 import { CameraView } from '../components/camera/CameraView';
+import { ProfileCarousel } from '../components/camera/ProfileCarousel';
 import { LocalStorage, Camera, Navigation } from '../../lib';
+import * as Haptics from 'expo-haptics';
 
 export function CameraScreen() {
   const navigation = useNavigation<Navigation.RootStackNavigationProp>();
   const isFocused = useIsFocused();
 
   const [allProfiles, setAllProfiles] = useState<LocalStorage.UserProfile[]>([]);
-  const [activeProfileIndex, setActiveProfileIndex] = useState<number>(0);
+  const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
   const { permission, requestCameraAccess } = Camera.useCameraPermission();
@@ -51,7 +52,7 @@ export function CameraScreen() {
       if (currentUser && profiles.length > 0) {
         const currentIndex = profiles.findIndex(p => p.id === currentUser.id);
         if (currentIndex >= 0) {
-          setActiveProfileIndex(currentIndex);
+          setCurrentProfileIndex(currentIndex);
         }
       }
     } catch (error) {
@@ -60,21 +61,19 @@ export function CameraScreen() {
   };
 
 
-  const handleProfilePress = () => {
-    if (allProfiles[activeProfileIndex]?.id) {
-      navigation.navigate(Navigation.PROFILE_SCREEN, { did: allProfiles[activeProfileIndex].id });
-    }
-  };
+  const handleProfileChange = useCallback(async (index: number) => {
+    if (index >= 0 && index < allProfiles.length && index !== currentProfileIndex) {
+      setCurrentProfileIndex(index);
 
-  const handleProfileSelect = async (index: number) => {
-    if (index >= 0 && index < allProfiles.length) {
-      setActiveProfileIndex(index);
+      // Update LocalStorage
       const selectedProfile = allProfiles[index];
       if (selectedProfile) {
         await LocalStorage.setCurrentUser(selectedProfile.id);
+        // Small haptic feedback on profile selection
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
     }
-  };
+  }, [allProfiles, currentProfileIndex]);
 
   const handleAddProfile = () => {
     navigation.navigate(Navigation.MODAL_STACK, {
@@ -103,20 +102,24 @@ export function CameraScreen() {
     );
   }
 
-  // Show Camera view:
   return (
-    <CameraView
-      allProfiles={allProfiles}
-      activeProfileIndex={activeProfileIndex}
-      onProfilePress={handleProfilePress}
-      onProfileSelect={handleProfileSelect}
-      onAddProfile={handleAddProfile}
-      isFocused={isFocused}
-    />
+    <View style={styles.container}>
+      <CameraView isFocused={isFocused} />
+      <ProfileCarousel
+        profiles={allProfiles}
+        currentIndex={currentProfileIndex}
+        onProfileChange={handleProfileChange}
+        onAddProfile={handleAddProfile}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
   emptyContainer: {
     flex: 1,
     backgroundColor: 'black',

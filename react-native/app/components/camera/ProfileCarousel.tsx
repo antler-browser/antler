@@ -1,193 +1,193 @@
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Dimensions,
   TouchableOpacity,
   Platform,
-  Vibration,
+  ScrollView,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Animated,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  interpolate,
-  SharedValue,
-} from 'react-native-reanimated';
 import { LocalStorage } from '../../../lib';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = 120;
-const CARD_HEIGHT = 160;
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH * 0.8;
+const CARD_HEIGHT = 110;
 const CARD_MARGIN = 10;
+const CARD_TOTAL_WIDTH = CARD_WIDTH + CARD_MARGIN * 2;
+const CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.75;
 
 interface ProfileCarouselProps {
   profiles: LocalStorage.UserProfile[];
-  activeProfileIndex: number;
-  onProfileSelect: (index: number) => void;
+  currentIndex: number;
+  onProfileChange: (index: number) => void;
   onAddProfile: () => void;
 }
 
 interface ProfileCardProps {
-  profile?: LocalStorage.UserProfile;
-  isAdd?: boolean;
-  isActive: boolean;
+  profile: LocalStorage.UserProfile;
   onPress: () => void;
   index: number;
-  scrollX: SharedValue<number>;
+  scrollX: Animated.Value;
+  isActive?: boolean;
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
-  isAdd,
-  isActive,
   onPress,
   index,
   scrollX,
 }) => {
-  const animatedStyle = useAnimatedStyle(() => {
-    const inputRange = [
-      (index - 1) * (CARD_WIDTH + CARD_MARGIN * 2),
-      index * (CARD_WIDTH + CARD_MARGIN * 2),
-      (index + 1) * (CARD_WIDTH + CARD_MARGIN * 2),
-    ];
-
-    const scale = interpolate(
-      scrollX.value,
-      inputRange,
-      [0.85, 1, 0.85],
-      'clamp'
-    );
-
-    const opacity = interpolate(
-      scrollX.value,
-      inputRange,
-      [0.6, 1, 0.6],
-      'clamp'
-    );
-
-    return {
-      transform: [{ scale }],
-      opacity,
-    };
-  });
-
   const getUserInitial = () => {
     if (!profile?.name) return '?';
     return profile.name.charAt(0).toUpperCase();
   };
 
+  // Simple scale and opacity animations based on scroll position
+  const inputRange = [
+    (index - 1) * CARD_TOTAL_WIDTH,
+    index * CARD_TOTAL_WIDTH,
+    (index + 1) * CARD_TOTAL_WIDTH,
+  ];
+
+
+  const opacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.6, 1, 0.6],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <Animated.View style={[styles.cardContainer, animatedStyle]}>
+    <Animated.View style={[
+      styles.cardContainer,
+      { opacity }
+    ]}>
       <TouchableOpacity
-        style={[
-          styles.card,
-          isActive && styles.activeCard,
-          isAdd && styles.addCard,
-        ]}
+        style={styles.card}
         onPress={onPress}
         activeOpacity={0.8}
       >
-        {isAdd ? (
-          <View style={styles.addCardContent}>
-            <Ionicons name="add-circle-outline" size={48} color="white" />
-            <Text style={styles.addText}>Add Profile</Text>
+        <View style={styles.profileCardContent}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{getUserInitial()}</Text>
           </View>
-        ) : (
-          <View style={styles.profileCardContent}>
-            <View style={[styles.avatar, isActive && styles.activeAvatar]}>
-              <Text style={styles.avatarText}>{getUserInitial()}</Text>
+          <Text style={styles.profileName} numberOfLines={1}>
+            {profile?.name || 'User'}
+          </Text>
+          {/* {isActive && (
+            <View style={styles.activeIndicator}>
+              <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
             </View>
-            <Text style={styles.profileName} numberOfLines={1}>
-              {profile?.name || 'User'}
-            </Text>
-            {isActive && (
-              <View style={styles.activeIndicator}>
-                <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-              </View>
-            )}
-          </View>
-        )}
+          )} */}
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-export function ProfileCarousel({
+interface AddProfileCardProps {
+  onPress: () => void;
+}
+
+const AddProfileCard: React.FC<AddProfileCardProps> = ({onPress}) => {
+  return (
+    <View style={styles.cardContainer}>
+      <TouchableOpacity
+        style={[styles.card, styles.addCard]}
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.addCardContent}>
+          <Ionicons name="add-circle-outline" size={48} color="white" />
+          <Text style={styles.addText}>Add Profile</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   profiles,
-  activeProfileIndex,
-  onProfileSelect,
+  currentIndex,
+  onProfileChange,
   onAddProfile,
-}: ProfileCarouselProps) {
-  const insets = useSafeAreaInsets();
+}) => {
   const scrollViewRef = useRef<ScrollView>(null);
-  const scrollX = useSharedValue(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
-  const handleScroll = useCallback((event: any) => {
-    scrollX.value = event.nativeEvent.contentOffset.x;
-  }, []);
-
-  const handleMomentumScrollEnd = useCallback((event: any) => {
+  // Handle scroll end to update current profile
+  const handleScrollEnd = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / (CARD_WIDTH + CARD_MARGIN * 2));
+    const index = Math.round(offsetX / CARD_TOTAL_WIDTH);
 
-    if (index < profiles.length && index !== activeProfileIndex) {
-      if (Platform.OS === 'ios') {
-        Vibration.vibrate(1);
-      }
-      onProfileSelect(index);
+    if (index >= 0 && index < profiles.length) {
+      onProfileChange(index);
     }
-  }, [profiles.length, activeProfileIndex, onProfileSelect]);
+  }, [profiles.length, onProfileChange]);
 
-  useEffect(() => {
-    // Scroll to active profile when it changes
-    if (scrollViewRef.current) {
+  // Handle profile card tap
+  const handleProfilePress = useCallback((index: number) => {
+    if (index !== currentIndex && scrollViewRef.current) {
       scrollViewRef.current.scrollTo({
-        x: activeProfileIndex * (CARD_WIDTH + CARD_MARGIN * 2),
+        x: index * CARD_TOTAL_WIDTH,
         animated: true,
       });
+      onProfileChange(index);
     }
-  }, [activeProfileIndex]);
+  }, [currentIndex, onProfileChange]);
+
+  // Scroll to current index when it changes externally
+  useEffect(() => {
+    if (scrollViewRef.current && currentIndex >= 0) {
+      scrollViewRef.current.scrollTo({
+        x: currentIndex * CARD_TOTAL_WIDTH,
+        animated: false,
+      });
+      // Also update the animated value
+      scrollX.setValue(currentIndex * CARD_TOTAL_WIDTH);
+    }
+  }, [currentIndex, scrollX]);
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.container]} pointerEvents="box-none">
       <View style={styles.overlay}>
-        <ScrollView
+        <Animated.ScrollView
           ref={scrollViewRef}
           horizontal
+          pagingEnabled
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
+          snapToInterval={CARD_TOTAL_WIDTH}
           decelerationRate="fast"
-          onScroll={handleScroll}
-          onMomentumScrollEnd={handleMomentumScrollEnd}
+          contentContainerStyle={[styles.scrollContent, { alignItems: 'flex-end' }]}
+          style={styles.scrollView}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: true }
+          )}
+          onMomentumScrollEnd={handleScrollEnd}
           scrollEventThrottle={16}
         >
           {profiles.map((profile, index) => (
             <ProfileCard
               key={profile.id}
               profile={profile}
-              isActive={index === activeProfileIndex}
-              onPress={() => onProfileSelect(index)}
               index={index}
               scrollX={scrollX}
+              onPress={() => handleProfilePress(index)}
             />
           ))}
-          <ProfileCard
-            isAdd
-            isActive={false}
-            onPress={onAddProfile}
-            index={profiles.length}
-            scrollX={scrollX}
-          />
-        </ScrollView>
+          {profiles.length > 0 && (
+            <AddProfileCard onPress={onAddProfile}/>
+          )}
+        </Animated.ScrollView>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -195,34 +195,32 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    height: CAROUSEL_HEIGHT,
+    marginBottom: 16,
   },
   overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    flex: 1,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingBottom: 20,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.1, // Lighter shadow
         shadowRadius: 12,
       },
       android: {
-        elevation: 12,
+        elevation: 8,
       },
     }),
   },
-  title: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 16,
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: (SCREEN_WIDTH - CARD_WIDTH) / 2,
+    height: CAROUSEL_HEIGHT,
+    paddingBottom: 20,
   },
   cardContainer: {
     marginHorizontal: CARD_MARGIN,
@@ -230,23 +228,19 @@ const styles = StyleSheet.create({
   card: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Darker background for better visibility
     borderRadius: 16,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  activeCard: {
-    borderColor: '#4CAF50',
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   addCard: {
     borderStyle: 'dashed',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    backgroundColor: 'transparent',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   profileCardContent: {
     alignItems: 'center',
@@ -260,13 +254,10 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-  },
-  activeAvatar: {
-    backgroundColor: 'rgba(76, 175, 80, 0.3)',
   },
   avatarText: {
     color: 'white',

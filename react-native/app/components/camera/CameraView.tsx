@@ -11,26 +11,14 @@ import { CameraView as ExpoCameraView, CameraType, FlashMode } from 'expo-camera
 import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
-
-import { ProfileCarousel } from './ProfileCarousel';
 import { ThemedText } from '../ui';
 import { Camera, LocalStorage, Navigation } from '../../../lib';
 
 interface CameraViewProps {
-  allProfiles: LocalStorage.UserProfile[];
-  activeProfileIndex: number;
-  onProfilePress: () => void;
-  onProfileSelect: (index: number) => void;
-  onAddProfile: () => void;
   isFocused: boolean;
 }
 
 export function CameraView({
-  allProfiles,
-  activeProfileIndex,
-  onProfilePress,
-  onProfileSelect,
-  onAddProfile,
   isFocused,
 }: CameraViewProps) {
   const [facing, setFacing] = useState<CameraType>(Camera.CAMERA_SETTINGS.defaultFacing);
@@ -64,12 +52,13 @@ export function CameraView({
           onPress: async () => {
             try {
               await LocalStorage.clearAll();
+              await LocalStorage.initializeAppState();
               // Force app to reload by resetting to camera screen
               // The app will check onboarding status on reload
               navigation.dispatch(
                 CommonActions.reset({
                 index: 0,
-                routes: [{ name: Navigation.ONBOARDING_SCREEN }],
+                routes: [{ name: Navigation.WELCOME_SCREEN }],
               }));
             } catch (error) {
               console.error('Error signing out:', error);
@@ -232,12 +221,6 @@ export function CameraView({
               </View>
             )}
           </SafeAreaView>
-          <ProfileCarousel
-            profiles={allProfiles}
-            activeProfileIndex={activeProfileIndex}
-            onProfileSelect={onProfileSelect}
-            onAddProfile={onAddProfile}
-          />
         </ExpoCameraView>
       )}
     </View>
@@ -326,3 +309,4 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+

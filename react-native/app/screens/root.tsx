@@ -86,11 +86,11 @@ export default function App() {
         linking={linking}>
         <Stack.Navigator
           screenOptions={{ headerShown: false }}
-          initialRouteName={hasCompletedWelcome ? Navigation.CAMERA_SCREEN : Navigation.ONBOARDING_SCREEN}
+          initialRouteName={hasCompletedWelcome ? Navigation.CAMERA_SCREEN : Navigation.WELCOME_SCREEN}
         >
           {!hasCompletedWelcome && (
             <Stack.Screen
-              name={Navigation.ONBOARDING_SCREEN}
+              name={Navigation.WELCOME_SCREEN}
               component={WelcomeScreen}
               options={{
                 gestureEnabled: false,

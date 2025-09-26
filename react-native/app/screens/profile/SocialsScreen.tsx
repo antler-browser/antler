@@ -222,8 +222,10 @@ export function SocialsScreen() {
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}
       >
         <ScrollView
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -290,9 +292,13 @@ export function SocialsScreen() {
 const styles = StyleSheet.create({
   headerButtons: {
     gap: 12,
+    marginTop: 10,
   },
   keyboardView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
@@ -345,7 +351,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     gap: 12,
-    marginBottom: 20,
+    paddingBottom: 30,
   },
   moreOptionsText: {
     fontSize: 14,

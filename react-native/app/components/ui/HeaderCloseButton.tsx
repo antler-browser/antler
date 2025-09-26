@@ -6,11 +6,11 @@ import { Navigation, Colors } from '../../../lib';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
 
-interface HeaderBackButtonProps {
+interface HeaderCloseButtonProps {
   onPress?: () => void;
 }
 
-export function HeaderBackButton({ onPress }: HeaderBackButtonProps) {
+export function HeaderCloseButton({ onPress }: HeaderCloseButtonProps) {
   const navigation = useNavigation<NativeStackNavigationProp<Navigation.ModalStackParamList>>();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
@@ -28,7 +28,7 @@ export function HeaderBackButton({ onPress }: HeaderBackButtonProps) {
       onPress={onPress || (() => navigation.goBack())}
       activeOpacity={0.7}>
       <Ionicons
-        name="arrow-back"
+        name="close"
         size={24}
         color={colors.text}
       />
@@ -39,7 +39,7 @@ export function HeaderBackButton({ onPress }: HeaderBackButtonProps) {
 const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
-    left: 20,
+    right: 20,
     zIndex: 1,
     width: 40,
     height: 40,

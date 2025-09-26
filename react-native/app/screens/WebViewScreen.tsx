@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { ThemedText, ThemedView } from '../components/ui';
+import { ThemedText, ThemedView, Screen } from '../components/ui';
 import { Navigation } from '../../lib';
 
 type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, 'WebViewScreen'>;
@@ -63,25 +63,6 @@ export function WebViewScreen() {
       <SafeAreaView style={styles.header}>
         <View style={styles.headerContent}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.closeButton}
-          >
-            <Ionicons name="close" size={24} color="black" />
-          </TouchableOpacity>
-
-          <View style={styles.urlContainer}>
-            <ThemedText style={styles.urlText} numberOfLines={1}>
-              {formatUrl(currentUrl)}
-            </ThemedText>
-          </View>
-
-          <TouchableOpacity onPress={reload} style={styles.actionButton}>
-            <Ionicons name="refresh" size={20} color="black" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.navigationBar}>
-          <TouchableOpacity
             onPress={goBack}
             disabled={!canGoBack}
             style={[styles.navButton, !canGoBack && styles.navButtonDisabled]}
@@ -103,6 +84,17 @@ export function WebViewScreen() {
               size={24}
               color={canGoForward ? 'black' : '#ccc'}
             />
+          </TouchableOpacity>
+          <View style={styles.urlContainer}>
+            <ThemedText style={styles.urlText} numberOfLines={1}>
+              {formatUrl(currentUrl)}
+            </ThemedText>
+          </View>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.closeButton}
+          >
+            <Ionicons name="close" size={24} color="black" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
