@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Image, Alert, TouchableOpacity } from 'react-native';
 import { Screen, ThemedView, ThemedText, ThemedButton, ProgressIndicator, HeaderBackButton } from '../../components/ui';
 import { Colors, Navigation, User, LocalStorage } from '../../../lib';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { useProfile } from '../../hooks';
@@ -106,8 +106,8 @@ export function AvatarScreen() {
 
         await LocalStorage.saveUserProfile(updatedProfile);
 
-        // Simply dismiss the modal after profile edit
-        navigation.getParent()?.goBack();
+        // Simply dismiss the entire modal stack after profile edit
+        navigation.getParent()?.getParent()?.goBack();
       } else {
 
         // Create new profile
@@ -116,16 +116,24 @@ export function AvatarScreen() {
           socials: route.params.socials,
           avatar: avatar || undefined,
         });
-
-        // If there's a pending URL, navigate to WebView, otherwise dismiss the modal
+        
+        // If there's a pending URL, navigate to WebView within the same modal stack
         if (pendingUrl) {
-          // Navigate to WebView with the pending URL
-          navigation.getParent()?.navigate(Navigation.WEBVIEW_SCREEN, {
-            url: pendingUrl
-          });
+          // Reset the modal stack to show WebView instead of profile creation
+          navigation.getParent()?.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [
+                {
+                  name: Navigation.WEBVIEW_SCREEN,
+                  params: { url: pendingUrl }
+                }
+              ]
+            })
+          );
         } else {
-          // Simply dismiss the modal after profile creation
-          navigation.getParent()?.goBack();
+          // Simply dismiss the entire modal stack after profile creation
+          navigation.getParent()?.getParent()?.goBack();
         }
       }
     } catch (err) {

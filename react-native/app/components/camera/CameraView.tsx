@@ -108,12 +108,18 @@ export function CameraView({
     const hasProfile = appState.currentDid;
 
     if (!hasProfile) {
-      navigation.navigate(Navigation.PROFILE_CREATION_SCREEN, {
-        pendingUrl: "https://www.google.com"
+      navigation.navigate(Navigation.MODAL_STACK, {
+        screen: Navigation.PROFILE_CREATION_SCREEN,
+        params: {
+          pendingUrl: "https://www.google.com"
+        }
       });
     } else {
-      navigation.navigate(Navigation.WEBVIEW_SCREEN, {
-        url: "https://www.google.com"
+      navigation.navigate(Navigation.MODAL_STACK, {
+        screen: Navigation.WEBVIEW_SCREEN,
+        params: {
+          url: "https://www.google.com"
+        }
       });
     }
   };
@@ -142,13 +148,19 @@ export function CameraView({
 
     if (!hasProfile) {
       // No profile, navigate to profile creation with pending URL
-      navigation.navigate(Navigation.PROFILE_CREATION_SCREEN, {
-        pendingUrl: scannedResult.value
+      navigation.navigate(Navigation.MODAL_STACK, {
+        screen: Navigation.PROFILE_CREATION_SCREEN,
+        params: {
+          pendingUrl: scannedResult.value
+        }
       });
     } else {
       // Profile exists, navigate directly to WebView
-      navigation.navigate(Navigation.WEBVIEW_SCREEN, {
-        url: scannedResult.value
+      navigation.navigate(Navigation.MODAL_STACK, {
+        screen: Navigation.WEBVIEW_SCREEN,
+        params: {
+          url: scannedResult.value
+        }
       });
     }
 

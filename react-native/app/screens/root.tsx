@@ -8,70 +8,42 @@ import { useOnboarding } from '../hooks';
 
 import { CameraScreen } from './CameraScreen';
 import { WelcomeScreen } from './onboarding/WelcomeScreen';
-import { ProfileNavigator } from './profile/ProfileNavigator';
 import { ProfileViewScreen } from './profile/ProfileViewScreen';
-import { WebViewScreen } from './WebViewScreen';
+import { ModalStackNavigator } from './ModalStackNavigator';
 
 const Stack = createNativeStackNavigator<Navigation.RootStackParamList>();
 
-const stackScreenOptions = {
-  ...Platform.select({
-    android: {
-      animation: 'slide_from_right' as const,
-      freezeOnBlur: true,
-    },
-    ios: {
-      // iOS keeps default behavior
-    }
-  }),
-  gestureEnabled: true,
-  gestureDirection: 'horizontal' as const,
-  gestureResponseDistance: Platform.select({
-    android: {
-      start: 40,
-      end: 200,
-    },
-    ios: {
-      start: 50,
-    },
-  }),
-};
-
 function CameraStack() {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-
   return (
     <Stack.Navigator
       screenOptions={{
-        ...stackScreenOptions,
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTintColor: colors.text,
+        headerShown: false,
       }}
     >
       <Stack.Screen
         name={Navigation.CAMERA_SCREEN}
         component={CameraScreen}
         options={{
-          headerShown: false,
+          animation: 'none',
         }}
       />
       <Stack.Screen
         name={Navigation.PROFILE_SCREEN}
         component={ProfileViewScreen}
         options={{
-          headerShown: false,
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       />
       <Stack.Screen
-        name={Navigation.WEBVIEW_SCREEN}
-        component={WebViewScreen}
+        name={Navigation.MODAL_STACK}
+        component={ModalStackNavigator}
         options={{
-          headerShown: false,
           presentation: 'modal',
-          animation: 'slide_from_bottom',
+          animation: Platform.OS === 'ios' ? 'default' : 'slide_from_bottom',
+          gestureEnabled: false,
         }}
       />
     </Stack.Navigator>
@@ -86,6 +58,12 @@ const linking: LinkingOptions<Navigation.RootStackParamList> = {
         screens: {
           [Navigation.CAMERA_SCREEN]: 'camera',
           [Navigation.PROFILE_SCREEN]: 'profile',
+          [Navigation.MODAL_STACK]: {
+            screens: {
+              [Navigation.PROFILE_CREATION_SCREEN]: 'profile-creation',
+              [Navigation.WEBVIEW_SCREEN]: 'webview',
+            },
+          },
         },
       },
     },
@@ -123,16 +101,7 @@ export default function App() {
             name={Navigation.CAMERA_SCREEN}
             component={CameraStack}
             options={{
-              animation: 'slide_from_bottom',
-            }}
-          />
-          <Stack.Screen
-            name={Navigation.PROFILE_CREATION_SCREEN}
-            component={ProfileNavigator}
-            options={{
-              presentation: 'modal',
-              animation: Platform.OS === 'ios' ? 'default' : 'slide_from_bottom',
-              gestureEnabled: false,
+              animation: hasCompletedWelcome ? 'none' : 'slide_from_bottom',
             }}
           />
         </Stack.Navigator>

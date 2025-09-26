@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText, ThemedView } from '../components/ui';
 import { Navigation } from '../../lib';
 
-type WebViewScreenRouteProp = RouteProp<Navigation.RootStackParamList, 'WebViewScreen'>;
+type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, 'WebViewScreen'>;
 
 export function WebViewScreen() {
   const navigation = useNavigation();

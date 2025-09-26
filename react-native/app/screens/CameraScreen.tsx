@@ -77,7 +77,9 @@ export function CameraScreen() {
   };
 
   const handleAddProfile = () => {
-    navigation.navigate(Navigation.PROFILE_CREATION_SCREEN);
+    navigation.navigate(Navigation.MODAL_STACK, {
+      screen: Navigation.PROFILE_CREATION_SCREEN,
+    });
   };
 
   // Check Camera permissions
