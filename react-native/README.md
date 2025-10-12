@@ -1,6 +1,6 @@
 # Antler
 
-A camera-first, local-first React Native mobile application for iOS and Android. Antler enables users to create visual profiles, share social links, and connect through QR code scanning using decentralized identity (DID) technology.
+Antler is a React Native and Expo app, available on iOS and Android. It is a super-powered QR scanner useful for IRL hangouts. You create profiles (with DIDs), scan QR codes and pass data between the Antler app to complementary mini apps through a WebView. 
 
 ## Tech Stack
 

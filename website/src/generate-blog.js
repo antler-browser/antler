@@ -79,6 +79,16 @@ async function processMarkdownFile(filePath) {
   // Convert markdown to HTML
   const htmlContent = marked.parse(preprocessedContent);
   
+  // Generate author section HTML if author is provided
+  const authorSection = data.author ? `
+        <footer class="author-info">
+          <img src="${data.author_image || ''}" alt="${data.author}" />
+          <div class="author-details">
+            <p class="author-name"><a href="${data.author_url || ''}" target="_blank">${data.author}</a></p>
+            <p class="post-date">Written on ${formatDate(date)}</p>
+          </div>
+        </footer>` : '';
+  
   return {
     title,
     date: dateStr,
@@ -88,7 +98,8 @@ async function processMarkdownFile(filePath) {
     description: data.description || '',
     author: data.author || '',
     author_image: data.author_image || '',
-    author_url: data.author_url || ''
+    author_url: data.author_url || '',
+    author_section: authorSection
   };
 }
 

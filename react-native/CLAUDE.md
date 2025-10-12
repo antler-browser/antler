@@ -3,8 +3,9 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with the React Native app code in this repository.
 
 ## Project Overview
+Antler is a super-powered QR scanner for IRL hangouts. Available on iOS and Android (React Native + Expo), it lets users create profiles (with DIDs), scan QR codes, and instantly access mini web apps through a WebView — no signup required.
 
-The React Native app is the mobile app for Antler, available on iOS and Android. It's a camera-first application and a local-first application. You can create profiles, and share social links.
+For developers, Antler is a mobile SDK that provides a WebView environment for mini apps. Build simple, self-contained web apps that know users are physically present and can scan QR codes — no native code, no app stores, no auth systems needed.
 
 ## Key Files and Directories
 

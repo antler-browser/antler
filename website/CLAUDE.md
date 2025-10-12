@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a the website for Antler, the local browser (antlerbrowser.com). The site is built as a static website with a custom page generation system that converts markdown files to HTML.
+This is a the website for Antler, the IRL browser (antlerbrowser.com). The site is built as a static website with a custom page generation system that converts markdown files to HTML.
 
 ## Architecture
 
@@ -59,7 +59,6 @@ npm install
 
 ## Key Technical Details
 
-- The site uses Glitch-style CSS with CSS variables for theming
 - External links in blog posts automatically get `target="_blank"` and `rel="noopener noreferrer"`
 - Blog URLs are generated from slugified titles
 - The generator removes duplicate H1 titles (uses frontmatter title instead)
