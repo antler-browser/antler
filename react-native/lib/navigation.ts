@@ -4,8 +4,8 @@ import { SocialLink } from "./social-links";
 // Screen names
 export const CAMERA_SCREEN = "CameraScreen";
 export const PROFILE_SCREEN = "ProfileScreen";
-export const PROFILE_CREATION_SCREEN = "ProfileCreationScreen";
-export const WEBVIEW_SCREEN = "WebViewScreen";
+export const PROFILE_CREATE_OR_EDIT_SCREEN = "ProfileCreateOrEditScreen ";
+export const WEBVIEW_SCREEN = "WebviewScreen";
 export const MODAL_STACK = "ModalStack";
 export const WELCOME_SCREEN = "WelcomeScreen";
 
@@ -18,8 +18,8 @@ export type OnboardingStackParamList = {
   Welcome: undefined;
 };
 
-// Profile creation stack param list (phase 2)
-export type ProfileCreationStackParamList = {
+// Profile form stack param list
+export type ProfileCreateOrEditStackParamList = {
   Name: {
     mode: ProfileMode;
     did?: string;
@@ -39,13 +39,6 @@ export type ProfileCreationStackParamList = {
     pendingUrl?: string;
   };
 };
-
-// Modal stack param list
-export type ModalStackParamList = {
-  [PROFILE_CREATION_SCREEN]: { pendingUrl?: string } | undefined;
-  [WEBVIEW_SCREEN]: { url: string };
-};
-
 // Root stack param list
 export type RootStackParamList = {
   [CAMERA_SCREEN]: undefined;
@@ -56,6 +49,18 @@ export type RootStackParamList = {
     params?: ModalStackParamList[keyof ModalStackParamList];
   } | undefined;
 };
+
+// Modal stack param list
+export type ModalStackParamList = {
+  [PROFILE_CREATE_OR_EDIT_SCREEN]: {
+    pendingUrl?: string;
+    mode?: ProfileMode;
+    did?: string;
+    initialScreen?: keyof ProfileCreateOrEditStackParamList;
+  } | undefined;
+  [WEBVIEW_SCREEN]: { url: string };
+};
+
 
 // Navigation prop types
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;

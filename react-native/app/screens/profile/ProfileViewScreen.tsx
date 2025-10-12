@@ -1,14 +1,12 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
-  Text,
+  useColorScheme,
 } from 'react-native';
-import { useColorScheme } from 'react-native';
-import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
+import { useNavigation, useRoute, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,9 +16,10 @@ import {
   ThemedView,
   ThemedText,
   ThemedButton,
-  HeaderBackButton
+  HeaderCloseButton
 } from '../../components/ui';
-import { Colors, Navigation, LocalStorage } from '../../../lib';
+import { ProfileAvatar } from '../../components/profile';
+import { Colors, Navigation, User } from '../../../lib';
 import { useProfile } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<Navigation.RootStackParamList>;
@@ -32,7 +31,14 @@ export function ProfileViewScreen() {
   const { did } = route.params;
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { profile, isLoading, error } = useProfile(did);
+  const { profile, isLoading, error, refetch } = useProfile(did);
+
+  // Refetch profile data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [did])
+  );
 
   if (!profile) {
     return (
@@ -46,8 +52,8 @@ export function ProfileViewScreen() {
     if (!profile) return;
 
     // Navigate to profile editing
-    navigation.navigate(Navigation.PROFILE_CREATION_SCREEN as any, {
-      screen: 'Name',
+    navigation.navigate(Navigation.MODAL_STACK, {
+      screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
       params: {
         mode: 'edit',
         did: did,
@@ -57,8 +63,8 @@ export function ProfileViewScreen() {
 
   const handleDeleteProfile = () => {
     Alert.alert(
-      'Delete Profile',
-      'Are you sure you want to delete your profile? This action cannot be undone.',
+      'Delete this profile?',
+      'Are you sure you want to delete this profile? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -67,10 +73,7 @@ export function ProfileViewScreen() {
           onPress: async () => {
             try {
               if (did) {
-                await LocalStorage.deleteUserProfile(did);
-
-                // Clear welcome completed flag
-                await LocalStorage.clearAll();
+                await User.deleteUser(did);
 
                 // Navigate back to camera and reload
                 navigation.dispatch(
@@ -88,11 +91,6 @@ export function ProfileViewScreen() {
         },
       ]
     );
-  };
-
-  const getUserInitial = () => {
-    if (!profile?.name) return '?';
-    return profile.name.charAt(0).toUpperCase();
   };
 
   const renderSocialLink = (platform: string, handle: string) => {
@@ -148,8 +146,7 @@ export function ProfileViewScreen() {
   return (
     <Screen edges={['top', 'bottom']}>
       <ThemedView style={styles.header}>
-        <HeaderBackButton />
-        <ThemedText type="title" style={styles.headerTitle}>Profile</ThemedText>
+        <HeaderCloseButton />
         <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
           <ThemedText style={[styles.editButtonText, { color: colors.tint }]}>
             Edit
@@ -164,13 +161,12 @@ export function ProfileViewScreen() {
         <ThemedView style={styles.content}>
           {/* Avatar Section */}
           <ThemedView style={styles.avatarSection}>
-            {profile.avatar ? (
-              <Image source={{ uri: profile.avatar }} style={styles.avatar} />
-            ) : (
-              <ThemedView style={[styles.avatarPlaceholder, { backgroundColor: colors.tint }]}>
-                <Text style={styles.avatarPlaceholderText}>{getUserInitial()}</Text>
-              </ThemedView>
-            )}
+            <ProfileAvatar
+              avatar={profile.avatar}
+              name={profile.name}
+              size={120}
+              style={styles.avatarMargin}
+            />
             <ThemedText type="title" style={styles.name}>{profile.name}</ThemedText>
           </ThemedView>
 
@@ -247,24 +243,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  avatarMargin: {
     marginBottom: 16,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  avatarPlaceholderText: {
-    fontSize: 48,
-    color: 'white',
-    fontWeight: 'bold',
   },
   name: {
     fontSize: 28,

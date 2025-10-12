@@ -6,13 +6,15 @@ import { SocialsScreen } from './SocialsScreen';
 import { AvatarScreen } from './AvatarScreen';
 import { Navigation } from '../../../lib';
 
-const Stack = createNativeStackNavigator<Navigation.ProfileCreationStackParamList>();
-
-type ProfileNavigatorRoute = RouteProp<Navigation.ModalStackParamList, 'ProfileCreationScreen'>;
+const Stack = createNativeStackNavigator<Navigation.ProfileCreateOrEditStackParamList>();
+type ProfileNavigatorRoute = RouteProp<Navigation.ModalStackParamList, typeof Navigation.PROFILE_CREATE_OR_EDIT_SCREEN>;
 
 export function ProfileNavigator() {
   const route = useRoute<ProfileNavigatorRoute>();
   const pendingUrl = route.params?.pendingUrl;
+  const mode = route.params?.mode || 'create';
+  const did = route.params?.did;
+  const initialScreen = route.params?.initialScreen || 'Name';
 
   return (
     <Stack.Navigator
@@ -21,13 +23,15 @@ export function ProfileNavigator() {
         animation: 'slide_from_right',
         gestureEnabled: false,
       }}
+      initialRouteName={initialScreen}
     >
       <Stack.Screen
         name="Name"
         component={NameScreen}
         initialParams={{
-          mode: 'create' as Navigation.ProfileMode,
-          pendingUrl
+          mode: mode as Navigation.ProfileMode,
+          pendingUrl,
+          did,
         }}
       />
       <Stack.Screen name="Socials" component={SocialsScreen} />

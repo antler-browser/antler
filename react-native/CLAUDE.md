@@ -81,8 +81,8 @@ yarn lint
 - Deep linking support through Expo Linking
 - Navigation param lists:
   - `RootStackParamList`: Main app navigation
-  - `ModalStackParamList`: Modal screens (profile creation, webview)
-  - `ProfileCreationStackParamList`: Profile creation flow (Name → Socials → Avatar)
+  - `ModalStackParamList`: Modal screens (profile form, webview)
+  - `ProfileCreateOrEditStackParamList`: Profile form flow (Name → Socials → Avatar) - used for both creating and editing profiles
   - `OnboardingStackParamList`: Onboarding screens
 
 ### Component Organization

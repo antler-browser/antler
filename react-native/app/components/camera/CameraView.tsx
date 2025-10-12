@@ -53,8 +53,7 @@ export function CameraView({
             try {
               await LocalStorage.clearAll();
               await LocalStorage.initializeAppState();
-              // Force app to reload by resetting to camera screen
-              // The app will check onboarding status on reload
+              // Reset to welcome screen after clearing all data
               navigation.dispatch(
                 CommonActions.reset({
                 index: 0,
@@ -98,7 +97,7 @@ export function CameraView({
 
     if (!hasProfile) {
       navigation.navigate(Navigation.MODAL_STACK, {
-        screen: Navigation.PROFILE_CREATION_SCREEN,
+        screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
         params: {
           pendingUrl: "https://www.google.com"
         }
@@ -138,7 +137,7 @@ export function CameraView({
     if (!hasProfile) {
       // No profile, navigate to profile creation with pending URL
       navigation.navigate(Navigation.MODAL_STACK, {
-        screen: Navigation.PROFILE_CREATION_SCREEN,
+        screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
         params: {
           pendingUrl: scannedResult.value
         }

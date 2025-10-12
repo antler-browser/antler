@@ -56,11 +56,8 @@ const linking: LinkingOptions<Navigation.RootStackParamList> = {
     screens: {
       [Navigation.CAMERA_SCREEN]: {
         screens: {
-          [Navigation.CAMERA_SCREEN]: 'camera',
-          [Navigation.PROFILE_SCREEN]: 'profile',
           [Navigation.MODAL_STACK]: {
             screens: {
-              [Navigation.PROFILE_CREATION_SCREEN]: 'profile-creation',
               [Navigation.WEBVIEW_SCREEN]: 'webview',
             },
           },
@@ -88,15 +85,13 @@ export default function App() {
           screenOptions={{ headerShown: false }}
           initialRouteName={hasCompletedWelcome ? Navigation.CAMERA_SCREEN : Navigation.WELCOME_SCREEN}
         >
-          {!hasCompletedWelcome && (
-            <Stack.Screen
-              name={Navigation.WELCOME_SCREEN}
-              component={WelcomeScreen}
-              options={{
-                gestureEnabled: false,
-              }}
-            />
-          )}
+          <Stack.Screen
+            name={Navigation.WELCOME_SCREEN}
+            component={WelcomeScreen}
+            options={{
+              gestureEnabled: false,
+            }}
+          />
           <Stack.Screen
             name={Navigation.CAMERA_SCREEN}
             component={CameraStack}

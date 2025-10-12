@@ -15,7 +15,7 @@ export function ModalStackNavigator() {
       }}
     >
       <Stack.Screen
-        name={Navigation.PROFILE_CREATION_SCREEN}
+        name={Navigation.PROFILE_CREATE_OR_EDIT_SCREEN}
         component={ProfileNavigator}
       />
       <Stack.Screen

@@ -3,7 +3,7 @@ import { Alert, View, StyleSheet } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { CameraPermissions } from '../components/camera/CameraPermissions';
 import { CameraView } from '../components/camera/CameraView';
-import { ProfileCarousel } from '../components/camera/ProfileCarousel';
+import { ProfileCarousel } from '../components/profile';
 import { LocalStorage, Camera, Navigation } from '../../lib';
 import * as Haptics from 'expo-haptics';
 
@@ -77,9 +77,15 @@ export function CameraScreen() {
 
   const handleAddProfile = () => {
     navigation.navigate(Navigation.MODAL_STACK, {
-      screen: Navigation.PROFILE_CREATION_SCREEN,
+      screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
     });
   };
+
+  const handleViewProfile = useCallback((profile: LocalStorage.UserProfile) => {
+    navigation.navigate(Navigation.PROFILE_SCREEN, {
+      did: profile.id,
+    });
+  }, [navigation]);
 
   // Check Camera permissions
   if (!permission) {
@@ -110,6 +116,7 @@ export function CameraScreen() {
         currentIndex={currentProfileIndex}
         onProfileChange={handleProfileChange}
         onAddProfile={handleAddProfile}
+        onViewProfile={handleViewProfile}
       />
     </View>
   );

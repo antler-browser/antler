@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LocalStorage } from '../../../lib';
+import { ProfileAvatar } from './ProfileAvatar';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.8;
@@ -26,6 +27,7 @@ interface ProfileCarouselProps {
   currentIndex: number;
   onProfileChange: (index: number) => void;
   onAddProfile: () => void;
+  onViewProfile: (profile: LocalStorage.UserProfile) => void;
 }
 
 interface ProfileCardProps {
@@ -42,11 +44,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   index,
   scrollX,
 }) => {
-  const getUserInitial = () => {
-    if (!profile?.name) return '?';
-    return profile.name.charAt(0).toUpperCase();
-  };
-
   // Simple scale and opacity animations based on scroll position
   const inputRange = [
     (index - 1) * CARD_TOTAL_WIDTH,
@@ -72,9 +69,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         activeOpacity={0.8}
       >
         <View style={styles.profileCardContent}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{getUserInitial()}</Text>
-          </View>
+          <ProfileAvatar
+            avatar={profile.avatar}
+            name={profile.name}
+            size={64}
+            style={styles.avatarMargin}
+          />
           <Text style={styles.profileName} numberOfLines={1}>
             {profile?.name || 'User'}
           </Text>
@@ -115,6 +115,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   currentIndex,
   onProfileChange,
   onAddProfile,
+  onViewProfile,
 }) => {
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -131,14 +132,18 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
 
   // Handle profile card tap
   const handleProfilePress = useCallback((index: number) => {
-    if (index !== currentIndex && scrollViewRef.current) {
+    if (index === currentIndex) {
+      // Tapping the current profile opens the profile view
+      onViewProfile(profiles[index]);
+    } else if (scrollViewRef.current) {
+      // Tapping a different profile scrolls to it
       scrollViewRef.current.scrollTo({
         x: index * CARD_TOTAL_WIDTH,
         animated: true,
       });
       onProfileChange(index);
     }
-  }, [currentIndex, onProfileChange]);
+  }, [currentIndex, onProfileChange, onViewProfile, profiles]);
 
   // Scroll to current index when it changes externally
   useEffect(() => {
@@ -250,19 +255,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  avatarMargin: {
     marginBottom: 8,
-  },
-  avatarText: {
-    color: 'white',
-    fontSize: 28,
-    fontWeight: 'bold',
   },
   profileName: {
     color: 'white',

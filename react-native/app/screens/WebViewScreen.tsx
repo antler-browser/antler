@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText, ThemedView, Screen } from '../components/ui';
 import { Navigation } from '../../lib';
 
-type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, 'WebViewScreen'>;
+type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, typeof Navigation.WEBVIEW_SCREEN>;
 
 export function WebViewScreen() {
   const navigation = useNavigation();
@@ -102,7 +102,7 @@ export function WebViewScreen() {
       <View style={styles.webViewContainer}>
         <WebView
           ref={webViewRef}
-          source={{ uri: route.params?.url }}
+          source={{ uri: route.params?.url as string }}
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}
           onNavigationStateChange={handleNavigationStateChange}

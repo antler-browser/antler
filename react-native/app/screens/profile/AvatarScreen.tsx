@@ -7,8 +7,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { useProfile } from '../../hooks';
 
-type NavigationProp = NativeStackNavigationProp<Navigation.ProfileCreationStackParamList, 'Avatar'>;
-type RouteProps = RouteProp<Navigation.ProfileCreationStackParamList, 'Avatar'>;
+type NavigationProp = NativeStackNavigationProp<Navigation.ProfileCreateOrEditStackParamList, 'Avatar'>;
+type RouteProps = RouteProp<Navigation.ProfileCreateOrEditStackParamList, 'Avatar'>;
 
 export function AvatarScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -17,6 +17,8 @@ export function AvatarScreen() {
 
   const mode = route.params.mode;
   const did = route.params.did;
+  const name = route.params.name;
+  const socials = route.params.socials;
   const pendingUrl = route.params.pendingUrl;
 
   // Use useProfile hook to get profile data when in edit mode
@@ -52,6 +54,7 @@ export function AvatarScreen() {
       }
 
       const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.9,
@@ -65,9 +68,10 @@ export function AvatarScreen() {
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
         if (asset.base64) {
-          const base64Image = `data:image/jpeg;base64,${asset.base64}`;
+          const mimeType = asset.mimeType || 'image/jpeg';
+          const base64Image = `data:${mimeType};base64,${asset.base64}`;
           setAvatar(base64Image);
-        }else{
+        } else {
           throw new Error('Failed to pick image. Please try again.');
         }
       }
@@ -99,8 +103,8 @@ export function AvatarScreen() {
 
         const updatedProfile: LocalStorage.UserProfile = {
           ...existingProfile,
-          name: route.params.name,
-          socials: route.params.socials,
+          name,
+          socials,
           avatar: avatar || undefined,
         };
 
@@ -112,8 +116,8 @@ export function AvatarScreen() {
 
         // Create new profile
         await User.createUserWithDID({
-          name: route.params.name,
-          socials: route.params.socials,
+          name,
+          socials,
           avatar: avatar || undefined,
         });
         

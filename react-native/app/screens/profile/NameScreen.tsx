@@ -7,8 +7,8 @@ import { Screen, ThemedView, ThemedText, ThemedButton, ThemedTextInput, Progress
 import { Colors, Navigation } from '../../../lib';
 import { useProfile } from '../../hooks';
 
-type NavigationProp = NativeStackNavigationProp<Navigation.ProfileCreationStackParamList, 'Name'>;
-type RouteProps = RouteProp<Navigation.ProfileCreationStackParamList, 'Name'>;
+type NavigationProp = NativeStackNavigationProp<Navigation.ProfileCreateOrEditStackParamList, 'Name'>;
+type RouteProps = RouteProp<Navigation.ProfileCreateOrEditStackParamList, 'Name'>;
 
 export function NameScreen() {
   const navigation = useNavigation<NavigationProp>();

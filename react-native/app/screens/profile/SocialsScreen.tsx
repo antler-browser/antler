@@ -7,8 +7,8 @@ import { Screen, ThemedView, ThemedText, ThemedButton, ThemedTextInput, Progress
 import { Colors, Navigation, SocialLinks } from '../../../lib';
 import { useProfile } from '../../hooks';
 
-type NavigationProp = NativeStackNavigationProp<Navigation.ProfileCreationStackParamList, 'Socials'>;
-type RouteProps = RouteProp<Navigation.ProfileCreationStackParamList, 'Socials'>;
+type NavigationProp = NativeStackNavigationProp<Navigation.ProfileCreateOrEditStackParamList, 'Socials'>;
+type RouteProps = RouteProp<Navigation.ProfileCreateOrEditStackParamList, 'Socials'>;
 
 interface SocialInput {
   value: string;
