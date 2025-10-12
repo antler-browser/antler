@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Alert, View, StyleSheet } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { CameraPermissions } from '../components/camera/CameraPermissions';
@@ -14,6 +14,7 @@ export function CameraScreen() {
   const [allProfiles, setAllProfiles] = useState<LocalStorage.UserProfile[]>([]);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const hasAtLeastOneProfile = useMemo(() => allProfiles.length > 0, [allProfiles]);
 
   const { permission, requestCameraAccess } = Camera.useCameraPermission();
 
@@ -110,13 +111,17 @@ export function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <CameraView isFocused={isFocused} />
+      <CameraView 
+        isFocused={isFocused} 
+        hasAtLeastOneProfile={hasAtLeastOneProfile}
+      />
       <ProfileCarousel
         profiles={allProfiles}
         currentIndex={currentProfileIndex}
         onProfileChange={handleProfileChange}
         onAddProfile={handleAddProfile}
         onViewProfile={handleViewProfile}
+      
       />
     </View>
   );

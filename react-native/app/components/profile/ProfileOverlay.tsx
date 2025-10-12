@@ -57,11 +57,12 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             avatar={profile.avatar}
             name={profile.name}
             size={64}
-            style={styles.avatarMargin}
           />
-          <Text style={styles.profileName} numberOfLines={1}>
-            {profile?.name || 'User'}
-          </Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.profileName} numberOfLines={1}>
+              {profile?.name || 'User'}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -119,7 +120,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   profileCard: {
-    backgroundColor: 'rgba(255, 0, 102, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   addCard: {
     borderStyle: 'dashed',
@@ -127,21 +130,31 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   profileCardContent: {
+    flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
+    gap: 12,
+  },
+  textContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
   addCardContent: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarMargin: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   profileName: {
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
-    marginTop: 4,
+  },
+  internalDescription: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 11,
+    marginTop: 2,
   },
   addText: {
     color: 'white',

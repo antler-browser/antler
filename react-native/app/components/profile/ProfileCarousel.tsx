@@ -99,7 +99,6 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
               profile={profile}
               index={index}
               scrollX={scrollX}
-              isActive={index === currentIndex}
               onPress={() => handleProfilePress(index)}
             />
           ))}
@@ -108,7 +107,6 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
               index={profiles.length}
               scrollX={scrollX}
               onPress={onAddProfile}
-              isActive={profiles.length === currentIndex}
             />
           )}
         </Animated.ScrollView>

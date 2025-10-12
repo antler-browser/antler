@@ -16,10 +16,12 @@ import { Camera, LocalStorage, Navigation } from '../../../lib';
 
 interface CameraViewProps {
   isFocused: boolean;
+  hasAtLeastOneProfile: boolean;
 }
 
 export function CameraView({
   isFocused,
+  hasAtLeastOneProfile,
 }: CameraViewProps) {
   const [facing, setFacing] = useState<CameraType>(Camera.CAMERA_SETTINGS.defaultFacing);
   const [flash, setFlash] = useState<FlashMode>('off');
@@ -212,6 +214,11 @@ export function CameraView({
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
             </View>
+            {!hasAtLeastOneProfile && (
+              <View style={styles.scanningTextContainer}>
+                <ThemedText style={styles.scanningText}>Scan a QR code to get started</ThemedText>
+              </View>
+            )}
 
             {isScanning && (
               <View style={styles.scanningIndicator}>
@@ -301,6 +308,14 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '500',
+  },
+  scanningTextContainer: {
+    position: 'absolute',
+    top: '70%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   devModeText: {
     color: 'white',
