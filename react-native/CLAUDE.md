@@ -11,7 +11,7 @@ For developers, Antler is a mobile SDK that provides a WebView environment for m
 
 ### Application Structure
 - `/app/screens/`: Screen components for each route
-  - `/profile/`: Profile creation and viewing screens (NameScreen, SocialsScreen, AvatarScreen, ProfileViewScreen)
+  - `/profile/`: Profile creation and viewing screens (NameScreen, SocialsScreen, AvatarScreen, ProfileScreen)
   - `/onboarding/`: Onboarding flow screens (WelcomeScreen, OnboardingNavigator)
   - `CameraScreen.tsx`: Main camera screen with QR scanning
   - `WebViewScreen.tsx`: In-app browser for external links
@@ -45,6 +45,9 @@ yarn install
 
 # Start development server
 yarn dev
+
+# Add new package
+yarn add <package-name>
 
 # Type checking
 yarn build

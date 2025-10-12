@@ -8,7 +8,7 @@ import { useOnboarding } from '../hooks';
 
 import { CameraScreen } from './CameraScreen';
 import { WelcomeScreen } from './onboarding/WelcomeScreen';
-import { ProfileViewScreen } from './profile/ProfileViewScreen';
+import { ProfileScreen } from './profile/ProfileScreen';
 import { ModalStackNavigator } from './ModalStackNavigator';
 
 const Stack = createNativeStackNavigator<Navigation.RootStackParamList>();
@@ -29,7 +29,7 @@ function CameraStack() {
       />
       <Stack.Screen
         name={Navigation.PROFILE_SCREEN}
-        component={ProfileViewScreen}
+        component={ProfileScreen}
         options={{
           presentation: 'modal',
           animation: 'slide_from_bottom',

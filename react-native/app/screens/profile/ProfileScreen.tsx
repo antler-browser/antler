@@ -5,12 +5,11 @@ import {
   TouchableOpacity,
   Alert,
   useColorScheme,
+  Linking,
 } from 'react-native';
 import { useNavigation, useRoute, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-
 import {
   Screen,
   ThemedView,
@@ -18,14 +17,15 @@ import {
   ThemedButton,
   HeaderCloseButton
 } from '../../components/ui';
-import { ProfileAvatar } from '../../components/profile';
-import { Colors, Navigation, User } from '../../../lib';
+import { Ionicons } from '@expo/vector-icons';
+import { ProfileAvatar, SocialIcon } from '../../components/profile';
+import { Colors, Navigation, User, SocialLinks } from '../../../lib';
 import { useProfile } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<Navigation.RootStackParamList>;
 type RouteProps = RouteProp<Navigation.RootStackParamList, typeof Navigation.PROFILE_SCREEN>;
 
-export function ProfileViewScreen() {
+export function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { did } = route.params;
@@ -94,22 +94,33 @@ export function ProfileViewScreen() {
   };
 
   const renderSocialLink = (platform: string, handle: string) => {
-    const iconNames: { [key: string]: keyof typeof Ionicons.glyphMap } = {
-      twitter: 'logo-twitter',
-      instagram: 'logo-instagram',
-      linkedin: 'logo-linkedin',
-      bluesky: 'cloud-outline',
+    const handlePress = () => {
+      const url = SocialLinks.getFullURL(platform as SocialLinks.SocialPlatform, handle);
+      if (url) {
+        Linking.openURL(url).catch(err => {
+          console.error('Failed to open URL:', err);
+        });
+      }
     };
 
     return (
       <ThemedView key={platform} style={styles.socialItem}>
-        <Ionicons
-          name={iconNames[platform] || 'link-outline'}
-          size={20}
-          color={colors.text}
-          style={styles.socialIcon}
-        />
+        <ThemedView style={styles.socialIcon}>
+          <SocialIcon
+            platform={platform as SocialLinks.SocialPlatform}
+            size={20}
+            color={colors.text}
+          />
+        </ThemedView>
         <ThemedText style={styles.socialHandle}>{handle}</ThemedText>
+        <TouchableOpacity style={styles.externalLinkIcon} onPress={handlePress}>
+          <Ionicons
+            name="open-outline"
+            size={18}
+            color={colors.text}
+            style={{ opacity: 0.7 }}
+          />
+        </TouchableOpacity>
       </ThemedView>
     );
   };
@@ -145,14 +156,7 @@ export function ProfileViewScreen() {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <ThemedView style={styles.header}>
-        <HeaderCloseButton />
-        <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
-          <ThemedText style={[styles.editButtonText, { color: colors.tint }]}>
-            Edit
-          </ThemedText>
-        </TouchableOpacity>
-      </ThemedView>
+      <HeaderCloseButton />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -173,7 +177,6 @@ export function ProfileViewScreen() {
           {/* Social Links Section */}
           {profile.socials && profile.socials.length > 0 && (
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>Social Profiles</ThemedText>
               <ThemedView style={[styles.socialsContainer, { backgroundColor: colors.card }]}>
                 {profile.socials.map((social) =>
                   renderSocialLink(social.platform, social.handle)
@@ -184,6 +187,14 @@ export function ProfileViewScreen() {
 
           {/* Actions Section */}
           <ThemedView style={styles.actionsSection}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={handleEditProfile}
+            >
+              <ThemedText style={[styles.editButtonText, { color: colors.tint }]}>
+                Edit Profile
+              </ThemedText>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.deleteButton}
               onPress={handleDeleteProfile}
@@ -200,30 +211,19 @@ export function ProfileViewScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 16,
-  },
   editButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    alignItems: 'center',
+    paddingVertical: 12,
   },
   editButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
+    marginTop: 40,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 40,
@@ -281,6 +281,9 @@ const styles = StyleSheet.create({
   socialItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+    borderRadius: 8,
   },
   socialIcon: {
     marginRight: 12,
@@ -288,6 +291,10 @@ const styles = StyleSheet.create({
   },
   socialHandle: {
     fontSize: 16,
+    flex: 1,
+  },
+  externalLinkIcon: {
+    marginLeft: 8,
   },
   actionsSection: {
     marginTop: 40,

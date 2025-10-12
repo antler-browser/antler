@@ -1,6 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ProfileNavigator } from './profile/ProfileNavigator';
+import { ProfileCreateOrEditNavigator } from './profile/ProfileCreateOrEditNavigator';
 import { WebViewScreen } from './WebViewScreen';
 import { Navigation } from '../../lib';
 
@@ -16,7 +16,7 @@ export function ModalStackNavigator() {
     >
       <Stack.Screen
         name={Navigation.PROFILE_CREATE_OR_EDIT_SCREEN}
-        component={ProfileNavigator}
+        component={ProfileCreateOrEditNavigator}
       />
       <Stack.Screen
         name={Navigation.WEBVIEW_SCREEN}

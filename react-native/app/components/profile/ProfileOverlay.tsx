@@ -8,8 +8,9 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LocalStorage } from '../../../lib';
+import { LocalStorage, SocialLinks } from '../../../lib';
 import { ProfileAvatar } from './ProfileAvatar';
+import { SocialIcon } from './SocialIcon';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.8;
@@ -62,6 +63,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             <Text style={styles.profileName} numberOfLines={1}>
               {profile?.name || 'User'}
             </Text>
+            {profile.socials && profile.socials.length > 0 && (
+              <View style={styles.socialIconsContainer}>
+                {profile.socials.map((social, index) => (
+                  <View key={`${social.platform}-${index}`} style={styles.socialIconWrapper}>
+                    <SocialIcon
+                      platform={social.platform as SocialLinks.SocialPlatform}
+                      size={16}
+                      color="rgba(255, 255, 255, 0.9)"
+                    />
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -138,6 +152,17 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
     justifyContent: 'center',
+  },
+  socialIconsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 8,
+    rowGap: 6,
+  },
+  socialIconWrapper: {
+    opacity: 0.9,
   },
   addCardContent: {
     alignItems: 'center',

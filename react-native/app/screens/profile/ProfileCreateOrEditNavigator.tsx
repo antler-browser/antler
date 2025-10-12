@@ -7,10 +7,10 @@ import { AvatarScreen } from './AvatarScreen';
 import { Navigation } from '../../../lib';
 
 const Stack = createNativeStackNavigator<Navigation.ProfileCreateOrEditStackParamList>();
-type ProfileNavigatorRoute = RouteProp<Navigation.ModalStackParamList, typeof Navigation.PROFILE_CREATE_OR_EDIT_SCREEN>;
+type ProfileCreateOrEditNavigatorRoute = RouteProp<Navigation.ModalStackParamList, typeof Navigation.PROFILE_CREATE_OR_EDIT_SCREEN>;
 
-export function ProfileNavigator() {
-  const route = useRoute<ProfileNavigatorRoute>();
+export function ProfileCreateOrEditNavigator() {
+  const route = useRoute<ProfileCreateOrEditNavigatorRoute>();
   const pendingUrl = route.params?.pendingUrl;
   const mode = route.params?.mode || 'create';
   const did = route.params?.did;
