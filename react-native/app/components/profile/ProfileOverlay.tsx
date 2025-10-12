@@ -2,127 +2,151 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  useColorScheme,
-  Platform,
+  Dimensions,
+  TouchableOpacity,
+  Animated,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, LocalStorage } from '../../../lib';
+import { LocalStorage } from '../../../lib';
+import { ProfileAvatar } from './ProfileAvatar';
 
-interface ProfileOverlayProps {
-  userProfile: LocalStorage.UserProfile | null;
-  onProfilePress: () => void;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH * 0.8;
+const CARD_HEIGHT = 110;
+const CARD_MARGIN = 10;
+const CARD_TOTAL_WIDTH = CARD_WIDTH + CARD_MARGIN * 2;
+  
+interface ProfileCardProps {
+  profile: LocalStorage.UserProfile;
+  onPress: () => void;
+  index: number;
+  scrollX: Animated.Value;
 }
 
-export function ProfileOverlay({
-  userProfile,
-  onProfilePress,
-}: ProfileOverlayProps) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-  const insets = useSafeAreaInsets();
+export const ProfileCard: React.FC<ProfileCardProps> = ({
+  profile,
+  onPress,
+  index,
+  scrollX,
+}) => {
+  const inputRange = [
+    (index - 1) * CARD_TOTAL_WIDTH,
+    index * CARD_TOTAL_WIDTH,
+    (index + 1) * CARD_TOTAL_WIDTH,
+  ];
 
-  const getUserInitial = () => {
-    if (!userProfile?.name) return 'U';
-    return userProfile.name.charAt(0).toUpperCase();
-  };
+  const opacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.6, 1, 0.6],
+    extrapolate: 'clamp',
+  });
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <View style={styles.overlay}>
-        <TouchableOpacity
-          style={styles.profileSection}
-          onPress={onProfilePress}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.avatar, { backgroundColor: colors.tint }]}>
-            <Text style={styles.avatarText}>{getUserInitial()}</Text>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={[styles.name, { color: 'white' }]} numberOfLines={1}>
-              {userProfile?.name || 'User'}
-            </Text>
-            <Text style={[styles.did, { color: 'rgba(255,255,255,0.7)' }]} numberOfLines={1}>
-              {userProfile?.id ? `${userProfile.id.substring(0, 20)}...` : 'No DID'}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
-        </TouchableOpacity>
-      </View>
-    </View>
+    <Animated.View style={[
+      styles.cardContainer,
+      { opacity }
+    ]}>
+      <TouchableOpacity
+        style={[styles.card, styles.profileCard]}
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.profileCardContent}>
+          <ProfileAvatar
+            avatar={profile.avatar}
+            name={profile.name}
+            size={64}
+            style={styles.avatarMargin}
+          />
+          <Text style={styles.profileName} numberOfLines={1}>
+            {profile?.name || 'User'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
+};
+
+interface AddProfileCardProps {
+  index: number;
+  scrollX: Animated.Value;
+  onPress: () => void;
 }
 
+export const AddProfileCard: React.FC<AddProfileCardProps> = ({index, scrollX, onPress}) => {
+  const inputRange = [
+    (index - 1) * CARD_TOTAL_WIDTH,
+    index * CARD_TOTAL_WIDTH,
+    (index + 1) * CARD_TOTAL_WIDTH,
+  ];
+
+  const opacity = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.6, 1, 0.6],
+    extrapolate: 'clamp',
+  });
+  
+  return (
+    <Animated.View style={[
+      styles.cardContainer,
+      { opacity }
+    ]}>
+      <TouchableOpacity
+        style={[styles.card, styles.addCard]}
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <View style={styles.addCardContent}>
+          <Ionicons name="add-circle-outline" size={48} color="white" />
+          <Text style={styles.addText}>Add Profile</Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  cardContainer: {
+    marginHorizontal: CARD_MARGIN,
   },
-  overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
-  },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  card: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 16,
+    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
-  avatarText: {
+  profileCard: {
+    backgroundColor: 'rgba(255, 0, 102, 0.5)',
+  },
+  addCard: {
+    borderStyle: 'dashed',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  profileCardContent: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  addCardContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarMargin: {
+    marginBottom: 8,
+  },
+  profileName: {
     color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  profileInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
-  name: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 2,
+    marginTop: 4,
   },
-  did: {
-    fontSize: 12,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 16,
-  },
-  actionButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  addText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
   },
 });

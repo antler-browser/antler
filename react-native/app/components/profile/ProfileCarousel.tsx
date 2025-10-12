@@ -1,19 +1,16 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Dimensions,
-  TouchableOpacity,
   Platform,
   ScrollView,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { LocalStorage } from '../../../lib';
-import { ProfileAvatar } from './ProfileAvatar';
+import { ProfileCard, AddProfileCard } from './ProfileOverlay';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.8;
@@ -29,86 +26,6 @@ interface ProfileCarouselProps {
   onAddProfile: () => void;
   onViewProfile: (profile: LocalStorage.UserProfile) => void;
 }
-
-interface ProfileCardProps {
-  profile: LocalStorage.UserProfile;
-  onPress: () => void;
-  index: number;
-  scrollX: Animated.Value;
-  isActive?: boolean;
-}
-
-const ProfileCard: React.FC<ProfileCardProps> = ({
-  profile,
-  onPress,
-  index,
-  scrollX,
-}) => {
-  // Simple scale and opacity animations based on scroll position
-  const inputRange = [
-    (index - 1) * CARD_TOTAL_WIDTH,
-    index * CARD_TOTAL_WIDTH,
-    (index + 1) * CARD_TOTAL_WIDTH,
-  ];
-
-
-  const opacity = scrollX.interpolate({
-    inputRange,
-    outputRange: [0.6, 1, 0.6],
-    extrapolate: 'clamp',
-  });
-
-  return (
-    <Animated.View style={[
-      styles.cardContainer,
-      { opacity }
-    ]}>
-      <TouchableOpacity
-        style={styles.card}
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
-        <View style={styles.profileCardContent}>
-          <ProfileAvatar
-            avatar={profile.avatar}
-            name={profile.name}
-            size={64}
-            style={styles.avatarMargin}
-          />
-          <Text style={styles.profileName} numberOfLines={1}>
-            {profile?.name || 'User'}
-          </Text>
-          {/* {isActive && (
-            <View style={styles.activeIndicator}>
-              <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-            </View>
-          )} */}
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
-interface AddProfileCardProps {
-  onPress: () => void;
-}
-
-const AddProfileCard: React.FC<AddProfileCardProps> = ({onPress}) => {
-  return (
-    <View style={styles.cardContainer}>
-      <TouchableOpacity
-        style={[styles.card, styles.addCard]}
-        onPress={onPress}
-        activeOpacity={0.8}
-      >
-        <View style={styles.addCardContent}>
-          <Ionicons name="add-circle-outline" size={48} color="white" />
-          <Text style={styles.addText}>Add Profile</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
 
 export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
   profiles,
@@ -182,11 +99,17 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
               profile={profile}
               index={index}
               scrollX={scrollX}
+              isActive={index === currentIndex}
               onPress={() => handleProfilePress(index)}
             />
           ))}
           {profiles.length > 0 && (
-            <AddProfileCard onPress={onAddProfile}/>
+            <AddProfileCard
+              index={profiles.length}
+              scrollX={scrollX}
+              onPress={onAddProfile}
+              isActive={profiles.length === currentIndex}
+            />
           )}
         </Animated.ScrollView>
       </View>
@@ -233,19 +156,14 @@ const styles = StyleSheet.create({
   card: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Darker background for better visibility
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 16,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  addCard: {
     borderStyle: 'dashed',
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.5)',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   profileCardContent: {
     alignItems: 'center',

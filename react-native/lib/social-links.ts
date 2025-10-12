@@ -295,30 +295,3 @@ export function createSocialLink(platform: SocialPlatform, input: string): Socia
 export function getHandleFromURL(platform: SocialPlatform, url: string): string | null {
   return normalizeHandle(platform, url);
 }
-
-// Helper function to check if a URL is safe
-export function isSafeURL(url: string): boolean {
-  if (!url) return false;
-
-  const lowercaseUrl = url.toLowerCase();
-
-  // Block dangerous protocols
-  const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:', 'about:', 'blob:'];
-  for (const protocol of dangerousProtocols) {
-    if (lowercaseUrl.startsWith(protocol)) {
-      return false;
-    }
-  }
-
-  // Allow mailto: for email
-  if (lowercaseUrl.startsWith('mailto:')) {
-    return true;
-  }
-
-  // Only allow http and https
-  if (!lowercaseUrl.startsWith('http://') && !lowercaseUrl.startsWith('https://')) {
-    return false;
-  }
-
-  return true;
-}
