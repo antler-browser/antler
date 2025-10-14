@@ -154,7 +154,6 @@ yarn lint
 
 ## Third Party Libraries
 - Expo Camera for QR scanning and photo capture
-- Expo Barcode Scanner for QR scanning
 - Expo Image Picker for avatar selection
 - react-native-webview for WebView screen
 - Expo AsyncStorage for app data persistence

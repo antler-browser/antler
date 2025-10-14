@@ -4,13 +4,12 @@ export default {
     slug: "antler",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/antler-icon.png",
     scheme: "antler",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     jsEngine: "hermes",
     ios: {
-      icon: "./assets/images/antler-icon.png",
+      icon: "./assets/images/antler-icon.icon",
       bundleIdentifier: "com.antlerbrowser",
       supportsTablet: true,
       infoPlist: {
@@ -18,6 +17,7 @@ export default {
       }
     },
     android: {
+      package: "com.antlerbrowser",
       adaptiveIcon: {
         foregroundImage: "./assets/images/antler-icon.png",
         backgroundImage: "./assets/images/android-background.png",
@@ -31,13 +31,11 @@ export default {
     },
     plugins: [
       "expo-camera",
-      "expo-barcode-scanner",
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/antler-icon.png",
-          imageWidth: 200,
-          resizeMode: "contain",
+          image: "./assets/images/antler-splash.png",
+          resizeMode: "cover",
           backgroundColor: "#ffffff",
         }
       ],
@@ -52,8 +50,10 @@ export default {
         }
       ]
     ],
-    experiments: {
-      reactCompiler: true
-    }
+    extra: {
+      eas: {
+        projectId: "8b359e82-8f99-4253-bf36-2a6e10ed5a9a"
+      }
+    },
   }
 };

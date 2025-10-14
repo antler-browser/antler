@@ -156,7 +156,9 @@ export function ProfileScreen() {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <HeaderCloseButton />
+      <ThemedView style={styles.headerButtons}>
+        <HeaderCloseButton />
+      </ThemedView>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -211,6 +213,10 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerButtons: {
+    gap: 12,
+    marginTop: 10,
+  },
   editButton: {
     alignItems: 'center',
     paddingVertical: 12,
