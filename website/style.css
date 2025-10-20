@@ -24,7 +24,7 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 60px;
 }
 
 /* Hero Section */
@@ -128,7 +128,7 @@ body {
 .phone-mockup {
     max-width: 300px;
     position: relative;
-    animation: float 6s ease-in-out infinite;
+    /* animation: float 6s ease-in-out infinite; */
 }
 
 .phone-mockup img {
