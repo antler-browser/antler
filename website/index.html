@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
     <meta name="description" content="Antler - A super-powered QR scanner useful for IRL hangouts. Explore local events and places with our mobile browser app.">
     <meta name="keywords" content="IRL browser, QR scanner, QR reader, QR code scanner, QR code reader, mobile app, iOS, Android, local events">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://antlerbrowser.com/">
-    <meta property="og:title" content="Antler - The fun way to scan QR codes">
+    <meta property="og:title" content="Antler - QR scanner specifically for IRL hangouts">
     <meta property="og:description" content="Explore local events and places with our QR code scanning mobile browser.">
     <meta property="og:image" content="https://antlerbrowser.com/public/og-image.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://antlerbrowser.com/">
-    <meta property="twitter:title" content="Antler - A super-powered QR scanner useful for IRL hangouts">
+    <meta property="twitter:title" content="Antler - QR scanner built for IRL hangouts">
     <meta property="twitter:description" content="Explore local events and places with our QR code scanning mobile browser.">
     <meta property="twitter:image" content="https://antlerbrowser.com/public/og-image.png">
 
-    <title>Antler - The fun way to scan QR codes</title>
+    <title>Antler - A QR scanner for IRL hangouts</title>
 
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="public/apple-touch-icon.png">
@@ -32,6 +32,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://ax0.taddy.org/general/apple-app-store-badge.png" as="image" type="image/png">
+    <link rel="preload" href="https://ax0.taddy.org/general/google-play-badge.png" as="image" type="image/png">
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css" />
@@ -45,21 +49,21 @@
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text">
-                    <h1 class="hero-title">
-                        A QR scanner <br>
-                        <span class="gradient-text">for IRL hangouts</span>
-                    </h1>
-                    <p class="hero-subtitle">
-                        Connect with others in your community through our QR code scanning browser.
-                    </p>
+                    <div class="brand-name-container">
+                        <h1 class="brand-name">Antler</h1>
+                    </div>
+                    <h2 class="hero-title">
+                        A QR scanner for<br>
+                        <span class="gradient-text">IRL hangouts</span>
+                    </h2>
 
                     <!-- Download Buttons -->
                     <div class="download-section">
                         <div class="download-buttons">
-                          <a href="https://inkverse.co/ios" target="_blank" rel="noopener noreferrer" class="app-badge">
+                          <a href="#" target="_blank" rel="noopener noreferrer" class="app-badge">
                             <img src="https://ax0.taddy.org/general/apple-app-store-badge.png" alt="Download on the App Store" />
                           </a>
-                          <a href="https://inkverse.co/android" target="_blank" rel="noopener noreferrer" class="app-badge">
+                          <a href="#" target="_blank" rel="noopener noreferrer" class="app-badge">
                             <img src="https://ax0.taddy.org/general/google-play-badge.png" alt="Download on Google Play" />
                           </a>
                         </div>
@@ -69,23 +73,55 @@
                 <!-- Hero Image/Mockup -->
                 <div class="hero-image">
                     <div class="phone-mockup">
-                        <div class="phone-screen">
-                            <div class="app-preview">
-                                <span class="app-icon-preview">🦌</span>
-                                <p>Antler Browser</p>
-                            </div>
-                        </div>
+                        <img src="https://ax0.taddy.org/antler/antler-icon.webp" alt="Antler Phone Mockup" />
                     </div>
                 </div>
             </div>
         </div>
 
     </section>
+  </div>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="how-it-works-title">How it Works</h2>
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-number">1</div>
+                        <h3 class="step-title">Create a profile on your device</h3>
+                    </div>
+                    <div class="step-icon">
+                        <img class="step-icon-image" src="https://ax0.taddy.org/antler/create-your-profile-2.png" alt="Create your profile" />
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-number">2</div>
+                        <h3 class="step-title">Scan a QR code to share your profile</h3>
+                    </div>
+                    <div class="step-icon">
+                        <img class="step-icon-image" src="https://ax0.taddy.org/antler/scan-qr-code-2.png" alt="Scan a QR code" />
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <h3 class="step-title">Instant access. No signup needed.</h3>
+                    </div>
+                    <div class="step-icon">
+                        <img class="step-icon-image" src="https://ax0.taddy.org/antler/no-signup-needed-2.png" alt="No signup needed" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
      <!-- Developer Section -->
      <div class="container">
       <div class="developer-content">
-        <h2 class="developer-title">Are you a Web Developer?</h2>
+        <h2 class="developer-title">Are you a Developer?</h2>
         <p class="developer-subtitle">
           Antler passes in profile data between a user scans a QR code and a complementary mini app through a WebView. So they don't have to sign up for an account.
         </p>

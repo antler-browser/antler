@@ -13,7 +13,13 @@ export default {
       bundleIdentifier: "com.antlerbrowser",
       supportsTablet: true,
       infoPlist: {
-        NSCameraUsageDescription: "Antler uses the camera to scan QR codes."
+        NSCameraUsageDescription: "Antler uses the camera to scan QR codes.",
+        LSApplicationQueriesSchemes: [
+          "https",
+          "mailto",
+          "itms-apps"
+        ],
+        ITSAppUsesNonExemptEncryption: false
       }
     },
     android: {
@@ -34,8 +40,9 @@ export default {
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/antler-splash.png",
-          resizeMode: "cover",
+          image: "./assets/images/antler-mascot.png",
+          imageWidth: 200,
+          resizeMode: "contain",
           backgroundColor: "#ffffff",
         }
       ],

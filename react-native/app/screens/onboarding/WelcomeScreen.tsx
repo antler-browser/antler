@@ -8,7 +8,6 @@ import { Colors, LocalStorage, Navigation } from '../../../lib';
 
 const { width, height } = Dimensions.get('window');
 const isSmallScreen = width < 375;
-const isLargeScreen = width > 414;
 
 // Simple device-based mascot sizing
 const mascotSize = Math.max(
@@ -40,7 +39,7 @@ export function WelcomeScreen() {
             Welcome to Antler!
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            Antler is a super-powered QR code scanner that connects you with people around you.
+            Antler is a <ThemedText type="link" style={styles.subtitleLink}>QR scanner</ThemedText> for <ThemedText type="link" style={styles.subtitleLink}>IRL hangouts</ThemedText>. Connect with others around you.
           </ThemedText>
         </ThemedView>
 
@@ -69,7 +68,7 @@ export function WelcomeScreen() {
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    paddingHorizontal: isSmallScreen ? 16 : isLargeScreen ? 32 : 24,
+    paddingHorizontal: 16,
     paddingTop: Math.max(height * 0.04, 20),
     paddingBottom: Math.max(height * 0.04, 20),
     justifyContent: 'space-between',
@@ -85,8 +84,12 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     textAlign: 'center',
+    fontSize: 18,
     paddingHorizontal: isSmallScreen ? 8 : 16,
-    lineHeight: isSmallScreen ? 20 : 22,
+    lineHeight: 26,
+  },
+  subtitleLink: {
+    fontSize: 18,
   },
   middle: {
     marginTop: isSmallScreen ? 0 : -40,
