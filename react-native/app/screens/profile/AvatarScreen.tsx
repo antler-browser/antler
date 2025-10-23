@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Image, Alert, TouchableOpacity } from 'react-native';
 import { Screen, ThemedView, ThemedText, ThemedButton, ProgressIndicator, HeaderBackButton } from '../../components/ui';
-import { Colors, Navigation, User, LocalStorage } from '../../../lib';
+import { Colors, Navigation, UserProfileFns, DID, SecureStorage } from '../../../lib';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
@@ -96,31 +96,30 @@ export function AvatarScreen() {
           throw new Error('Profile ID is required for edit mode');
         }
 
-        const existingProfile = await LocalStorage.getUserProfile(did);
-        if (!existingProfile) {
-          throw new Error('Profile not found');
-        }
-
-        const updatedProfile: LocalStorage.UserProfile = {
-          ...existingProfile,
+        // Update the profile
+        await UserProfileFns.updateProfileByDID(did, {
           name,
-          socials,
-          avatar: avatar || undefined,
-        };
-
-        await LocalStorage.saveUserProfile(updatedProfile);
+          socialLinks: socials,
+          avatar,
+        });
 
         // Simply dismiss the entire modal stack after profile edit
         navigation.getParent()?.getParent()?.goBack();
       } else {
 
-        // Create new profile
-        await User.createUserWithDID({
-          name,
-          socials,
-          avatar: avatar || undefined,
-        });
-        
+        // Create new DID and profile
+        // 1. Generate DID
+        const didResult = await DID.generateDID();
+
+        // 2. Save private key to SecureStorage
+        await SecureStorage.saveDIDPrivateKey(didResult.did, didResult.privateKey);
+
+        // 3. Create profile in database
+        await UserProfileFns.createProfileByDid(didResult.did, name, socials ?? [], avatar ?? null);
+
+        // 4. Set as current profile
+        await UserProfileFns.setCurrentProfile(didResult.did);
+
         // If there's a pending URL, navigate to WebView within the same modal stack
         if (pendingUrl) {
           // Reset the modal stack to show WebView instead of profile creation

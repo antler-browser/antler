@@ -4,7 +4,7 @@ import { useColorScheme } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 import { Screen, ThemedButton, ThemedView, ThemedText } from '../../components/ui';
-import { Colors, LocalStorage, Navigation } from '../../../lib';
+import { Colors, AppStateFns, Navigation } from '../../../lib';
 
 const { width, height } = Dimensions.get('window');
 const isSmallScreen = width < 375;
@@ -25,7 +25,7 @@ export function WelcomeScreen() {
 
   const handleContinue = async () => {
     // Mark welcome as completed
-    await LocalStorage.setWelcomeCompleted();
+    await AppStateFns.setWelcomeCompleted();
 
     // Navigate to camera screen with replace to respect animation
     navigation.replace(Navigation.CAMERA_SCREEN);

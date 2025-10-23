@@ -8,7 +8,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LocalStorage, SocialLinks } from '../../../lib';
+import { UserProfile, SocialLinks } from '../../../lib';
 import { ProfileAvatar } from './ProfileAvatar';
 import { SocialIcon } from './SocialIcon';
 
@@ -17,9 +17,9 @@ const CARD_WIDTH = SCREEN_WIDTH * 0.8;
 const CARD_HEIGHT = 110;
 const CARD_MARGIN = 10;
 const CARD_TOTAL_WIDTH = CARD_WIDTH + CARD_MARGIN * 2;
-  
+
 interface ProfileCardProps {
-  profile: LocalStorage.UserProfile;
+  profile: UserProfile;
   onPress: () => void;
   index: number;
   scrollX: Animated.Value;
@@ -61,11 +61,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           />
           <View style={styles.textContainer}>
             <Text style={styles.profileName} numberOfLines={1}>
-              {profile?.name || 'User'}
+              {profile.name}
             </Text>
-            {profile.socials && profile.socials.length > 0 && (
+            {profile.socialLinks && profile.socialLinks.length > 0 && (
               <View style={styles.socialIconsContainer}>
-                {profile.socials.map((social, index) => (
+                {profile.socialLinks.map((social, index) => (
                   <View key={`${social.platform}-${index}`} style={styles.socialIconWrapper}>
                     <SocialIcon
                       platform={social.platform as SocialLinks.SocialPlatform}

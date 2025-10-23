@@ -72,17 +72,18 @@ export function SocialsScreen() {
 
   // Load existing profile data if in edit mode
   useEffect(() => {
-    if (mode === 'edit' && profile && profile.socials && !isInitialized) {
+    if (mode === 'edit' && profile && profile.socialLinks && !isInitialized) {
       const updatedInputs = [...socialInputs];
+      // Provides good UX for users who have data in additional platforms, so they don't have to manually expand the list to see their data.
       let hasAdditionalPlatformData = false;
 
-      profile.socials.forEach(social => {
+      profile.socialLinks.forEach(social => {
         const inputIndex = updatedInputs.findIndex(input => input.platform === social.platform);
         if (inputIndex !== -1) {
           updatedInputs[inputIndex].value = social.handle;
 
           // Check if this is an additional platform with data
-          if (additionalPlatforms.includes(social.platform)) {
+          if (additionalPlatforms.includes(social.platform as SocialLinks.SocialPlatform)) {
             hasAdditionalPlatformData = true;
           }
         }

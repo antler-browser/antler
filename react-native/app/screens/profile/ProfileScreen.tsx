@@ -19,7 +19,7 @@ import {
 } from '../../components/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { ProfileAvatar, SocialIcon } from '../../components/profile';
-import { Colors, Navigation, User, SocialLinks } from '../../../lib';
+import { Colors, Navigation, SecureStorage, SocialLinks, UserProfileFns } from '../../../lib';
 import { useProfile } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<Navigation.RootStackParamList>;
@@ -73,7 +73,8 @@ export function ProfileScreen() {
           onPress: async () => {
             try {
               if (did) {
-                await User.deleteUser(did);
+                await UserProfileFns.removeProfileByDID(did);
+                await SecureStorage.deleteDIDPrivateKey(did);
 
                 // Navigate back to camera and reload
                 navigation.dispatch(
@@ -177,10 +178,10 @@ export function ProfileScreen() {
           </ThemedView>
 
           {/* Social Links Section */}
-          {profile.socials && profile.socials.length > 0 && (
+          {profile.socialLinks && profile.socialLinks.length > 0 && (
             <ThemedView style={styles.section}>
               <ThemedView style={[styles.socialsContainer, { backgroundColor: colors.card }]}>
-                {profile.socials.map((social) =>
+                {profile.socialLinks.map((social) =>
                   renderSocialLink(social.platform, social.handle)
                 )}
               </ThemedView>

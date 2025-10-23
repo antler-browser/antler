@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { LocalStorage } from '../../lib';
+import { UserProfile, UserProfileFns } from '../../lib';
 
 interface UseProfileResult {
-  profile: LocalStorage.UserProfile | null;
+  profile: UserProfile | null;
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 }
 
 export function useProfile(did: string): UseProfileResult {
-  const [profile, setProfile] = useState<LocalStorage.UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -17,7 +17,7 @@ export function useProfile(did: string): UseProfileResult {
     try {
       setIsLoading(true);
       setError(null);
-      const userProfile = await LocalStorage.getUserProfile(did);
+      const userProfile = await UserProfileFns.getProfileByDID(did);
       setProfile(userProfile);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load profile'));

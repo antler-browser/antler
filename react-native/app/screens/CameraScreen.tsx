@@ -4,14 +4,14 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { CameraPermissions } from '../components/camera/CameraPermissions';
 import { CameraView } from '../components/camera/CameraView';
 import { ProfileCarousel } from '../components/profile';
-import { LocalStorage, Camera, Navigation } from '../../lib';
+import { UserProfile, UserProfileFns, Camera, Navigation } from '../../lib';
 import * as Haptics from 'expo-haptics';
 
 export function CameraScreen() {
   const navigation = useNavigation<Navigation.RootStackNavigationProp>();
   const isFocused = useIsFocused();
 
-  const [allProfiles, setAllProfiles] = useState<LocalStorage.UserProfile[]>([]);
+  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const hasAtLeastOneProfile = useMemo(() => allProfiles.length > 0, [allProfiles]);
@@ -45,13 +45,13 @@ export function CameraScreen() {
 
   const loadAllProfiles = async () => {
     try {
-      const profiles = await LocalStorage.getAllUserProfiles();
-      setAllProfiles(profiles);
+      const profiles = await UserProfileFns.getAllProfiles();
+      setAllProfiles(profiles as UserProfile[]);
 
       // Find the index of the current profile
-      const currentUser = await LocalStorage.getCurrentUser();
+      const currentUser = await UserProfileFns.getCurrentProfile();
       if (currentUser && profiles.length > 0) {
-        const currentIndex = profiles.findIndex(p => p.id === currentUser.id);
+        const currentIndex = profiles.findIndex((p) => p.did === currentUser.did);
         if (currentIndex >= 0) {
           setCurrentProfileIndex(currentIndex);
         }
@@ -66,10 +66,10 @@ export function CameraScreen() {
     if (index >= 0 && index < allProfiles.length && index !== currentProfileIndex) {
       setCurrentProfileIndex(index);
 
-      // Update LocalStorage
+      // Update current user
       const selectedProfile = allProfiles[index];
       if (selectedProfile) {
-        await LocalStorage.setCurrentUser(selectedProfile.id);
+        await UserProfileFns.setCurrentProfile(selectedProfile.did);
         // Small haptic feedback on profile selection
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
@@ -82,9 +82,9 @@ export function CameraScreen() {
     });
   };
 
-  const handleViewProfile = useCallback((profile: LocalStorage.UserProfile) => {
+  const handleViewProfile = useCallback((profile: UserProfile) => {
     navigation.navigate(Navigation.PROFILE_SCREEN, {
-      did: profile.id,
+      did: profile.did,
     });
   }, [navigation]);
 

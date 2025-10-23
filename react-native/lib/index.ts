@@ -1,9 +1,12 @@
 // Single exports
 export { Colors } from './colors';
-export * as LocalStorage from './storage';
+
+// Database models - export namespaces and types
+export * from './db/models';
+
+// Other namespaces
 export * as DID from './did';
 export * as SecureStorage from './secure-storage';
-export * as User from './user';
 
 // Navigation - export as a namespace object
 export * as Navigation from './navigation';

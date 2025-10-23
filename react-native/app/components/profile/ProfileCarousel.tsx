@@ -9,7 +9,7 @@ import {
   NativeSyntheticEvent,
   Animated,
 } from 'react-native';
-import { LocalStorage } from '../../../lib';
+import { UserProfile } from '../../../lib';
 import { ProfileCard, AddProfileCard } from './ProfileOverlay';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -20,11 +20,11 @@ const CARD_TOTAL_WIDTH = CARD_WIDTH + CARD_MARGIN * 2;
 const CAROUSEL_HEIGHT = SCREEN_HEIGHT * 0.75;
 
 interface ProfileCarouselProps {
-  profiles: LocalStorage.UserProfile[];
+  profiles: UserProfile[];
   currentIndex: number;
   onProfileChange: (index: number) => void;
   onAddProfile: () => void;
-  onViewProfile: (profile: LocalStorage.UserProfile) => void;
+  onViewProfile: (profile: UserProfile) => void;
 }
 
 export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
@@ -95,7 +95,7 @@ export const ProfileCarousel: React.FC<ProfileCarouselProps> = ({
         >
           {profiles.map((profile, index) => (
             <ProfileCard
-              key={profile.id}
+              key={profile.did}
               profile={profile}
               index={index}
               scrollX={scrollX}

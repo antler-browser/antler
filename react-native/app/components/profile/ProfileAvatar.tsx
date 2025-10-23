@@ -3,7 +3,7 @@ import { Image, View, Text, StyleSheet, StyleProp, ImageStyle, useColorScheme } 
 import { Colors } from '../../../lib';
 
 export interface ProfileAvatarProps {
-  avatar?: string;
+  avatar?: string | null;
   name?: string;
   size: number;
   style?: StyleProp<ImageStyle>;

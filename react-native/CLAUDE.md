@@ -28,10 +28,13 @@ For developers, Antler is a mobile SDK that provides a WebView environment for m
   - `did.ts`: Decentralized identity (DID) utilities
   - `secure-storage.ts`: Secure storage operations
   - `social-links.ts`: Social media link validation and formatting
-  - `storage.ts`: AsyncStorage utilities
-  - `user.ts`: User data management
   - `colors.ts`: Color constants
   - `navigation.ts`: Navigation types and constants
+  - `/db/`: Database schema, migrations, and model operations
+    - `schema.ts`: Drizzle schema definitions
+    - `index.ts`: Database connection and migration runner
+    - `/migrations/`: SQL migration files
+    - `/models/`: Database model operations (AppStateFns, UserProfileFns, ScanHistoryFns)
 - `/assets/`: Static assets (fonts, icons, images)
 - `index.tsx`: App entry point
 - `app.config.js`: Expo configuration
@@ -96,14 +99,35 @@ yarn lint
 
 ### State Management
 - Custom hooks for feature-specific state (`useOnboarding`, `useProfile`)
-- AsyncStorage for non-sensitive data persistence
-- SecureStorage for sensitive data (keys, credentials)
+- SQLite database for app data persistence
+- SecureStorage for sensitive data (DID private keys, credentials)
 - Context providers for theme
 
 ### Storage Architecture
-- **AsyncStorage**: User profiles, onboarding state, non-sensitive settings
-- **SecureStorage**: Private keys, sensitive credentials
-- Storage utilities in `/lib/storage.ts` and `/lib/secure-storage.ts`
+- **SQLite Database**: User profiles, app state, social links, scan history
+- **SecureStorage**: DID private keys, sensitive credentials
+- Database managed with Drizzle ORM for type-safe queries
+- Database model operations in `/lib/db/models/` organized by entity:
+  - `app-state.ts`: AppStateFns namespace for app state operations
+  - `user-profile.ts`: UserProfileFns namespace for profile CRUD
+  - `scan-history.ts`: ScanHistoryFns namespace for scan tracking
+- Secure storage utilities in `/lib/secure-storage.ts`
+
+### Database Structure
+- **`app_state`**: Global application state (current DID, welcome completion)
+- **`user_profiles`**: User profile data (DID, name, avatar, position, timestamps)
+- **`social_links`**: Social media links (platform, handle, profile DID)
+- **`scan_history`**: QR scan history (URL, profile DID, timestamp)
+- Automatic migrations run on app startup
+- Foreign key constraints with cascade deletes
+- Position-based ordering for profiles
+
+### Database API
+Database operations are organized into function namespaces by entity:
+- `UserProfileFns`: Profile CRUD operations
+- `AppStateFns`: App state CRUD operations
+- `ScanHistoryFns`: Scan history CRUD operations
+- `SocialLinkFns`: Social media link CRUD operations
 
 ## Development Workflow
 
@@ -131,13 +155,15 @@ yarn lint
 ### Onboarding for new app downloads
 - Onboarding state managed by `useOnboarding` hook
 - First-time user experience starts with WelcomeScreen
-- Completion state persisted in AsyncStorage
+- Completion state persisted in SQLite database
+- Database migrations run automatically during initialization
 
 ### Creating a Profile
-- The profile creation flow is a three-step modal flow (Name → Socials → Avatar) with progress indicator, data validation at each step, and AsyncStorage persistence
-- If a user does not have a profile, the first time you scan a QR code, the app will navigate to the profile creation flow.
-- At the end of the profile creation flow, the user will have a generated DID (Decentralized Identifier) and it will be stored securely in SecureStorage.
-- Profiles are a visual wrapper around a user's DID.
+- The profile creation flow is a three-step modal flow (Name → Socials → Avatar) with progress indicator, data validation at each step, and SQLite database persistence
+- If a user does not have a profile, the first time you scan a QR code, the app will navigate to the profile creation flow
+- Profile creation generates a DID (Decentralized Identifier) stored securely in SecureStorage
+- Profile data (name, avatar, social links) stored in SQLite via `UserProfileFns.createProfileByDid()`
+- Profiles are a visual wrapper around a user's DID
 
 ### Camera & QR Scanning
 - Camera permissions handled by `CameraPermissions` component
@@ -156,8 +182,8 @@ yarn lint
 - Expo Camera for QR scanning and photo capture
 - Expo Image Picker for avatar selection
 - react-native-webview for WebView screen
-- Expo AsyncStorage for app data persistence
-- Expo SecureStore for sensitive data
+- expo-sqlite with Drizzle ORM for local database (type-safe queries and migrations)
+- Expo SecureStore for sensitive data (DID private keys)
 
 ## Troubleshooting
 
@@ -165,7 +191,8 @@ yarn lint
 - **Theme Issues**: Ensure components use themed components from UI directory
 - **Navigation Problems**: Check route params and navigation structure; verify param lists in `/lib/navigation.ts`
 - **Build Errors**: Update Expo SDK or check TypeScript errors with `yarn build`
-- **Storage Issues**: Check AsyncStorage and SecureStorage utilities; ensure data is properly serialized
+- **Database Issues**: Check migration logs in console; ensure schema matches migration files in `/lib/db/migrations/`
+- **API Issues**: Use function namespaces (`AppStateFns`, `UserProfileFns`, `ScanHistoryFns`) for database operations
 
 ### Debugging Tools
 - React Native Debugger for runtime inspection

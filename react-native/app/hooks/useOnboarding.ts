@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LocalStorage } from '../../lib';
+import { initializeDatabase } from '../../lib/db';
+import { AppStateFns } from '../../lib';
 
 interface UseOnboardingResult {
   isLoading: boolean;
@@ -15,9 +16,12 @@ export function useOnboarding(): UseOnboardingResult {
 
     const checkOnboardingStatus = async () => {
       try {
+        // Initialize database (run migrations)
+        initializeDatabase();
+
         // Initialize AppState on app launch
-        await LocalStorage.initializeAppState();
-        const welcomeCompleted = await LocalStorage.hasCompletedWelcome();
+        await AppStateFns.initAppState();
+        const welcomeCompleted = await AppStateFns.hasCompletedWelcome();
 
         if (isMounted) {
           setHasCompletedWelcome(welcomeCompleted);

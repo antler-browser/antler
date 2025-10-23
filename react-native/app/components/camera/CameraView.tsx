@@ -12,7 +12,7 @@ import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { ThemedText } from '../ui';
-import { Camera, LocalStorage, Navigation } from '../../../lib';
+import { Camera, Navigation, AppStateFns } from '../../../lib';
 
 interface CameraViewProps {
   isFocused: boolean;
@@ -53,8 +53,8 @@ export function CameraView({
           style: 'destructive',
           onPress: async () => {
             try {
-              await LocalStorage.clearAll();
-              await LocalStorage.initializeAppState();
+              await AppStateFns.resetAllData();
+              await AppStateFns.initAppState();
               // Reset to welcome screen after clearing all data
               navigation.dispatch(
                 CommonActions.reset({
@@ -94,7 +94,7 @@ export function CameraView({
   const fakeQRCodeForDevMode = async () => {
     if (!__DEV__) { return; }
 
-    const appState = await LocalStorage.getAppState();
+    const appState = await AppStateFns.getAppState();
     const hasProfile = appState.currentDid;
 
     if (!hasProfile) {
@@ -133,7 +133,7 @@ export function CameraView({
     }
 
     // Check if user has a profile (currentDid)
-    const appState = await LocalStorage.getAppState();
+    const appState = await AppStateFns.getAppState();
     const hasProfile = appState.currentDid;
 
     if (!hasProfile) {
