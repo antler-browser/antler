@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="public/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="public/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="public/favicon-16x16.png">
+    <link rel="manifest" href="public/site.webmanifest">
+    <link rel="shortcut icon" href="public/favicon.ico">
+    
+    <!-- SEO Meta Tags -->
+    <title>IRL Browser Standard - Antler Browser</title>
+    <meta name="description" content="Technical specification for the IRL Browser Standard" />
+    <meta name="author" content="Daniel Mathews" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="IRL Browser Standard" />
+    <meta property="og:description" content="Technical specification for the IRL Browser Standard" />
+    <meta property="og:url" content="https://antlerbrowser.com/irl-browser-standard.html" />
+    <meta property="og:type" content="article" />
+    <meta property="article:published_time" content="2025-10-20" />
+    <meta property="article:author" content="https://bsky.app/profile/dmathewwws.com" />
+    
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="blog-style.css" />
+  </head>
+  <body>
+    <div class="blog-wrapper">
+      <nav class="blog-nav">
+        <a href="/" class="back-home">← Back to Home</a>
+      </nav>
+      <article class="blog-content">
+        <header class="blog-header">
+          <h1>IRL Browser Standard</h1>
+        </header>
+        <div class="blog-body">
+          <h2>Overview</h2>
+<p>The IRL Browser Standard defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this standard defines how their profile and other data gets securely passed between the IRL Browser and the mini app.</p>
+<h2>User Benefits</h2>
+<p>When a user downloads an IRL Browser (like Antler), they create a profile that is stored locally on their device. Whenever a user scans a QR code, their profile gets shared with the mini app. This means users don’t have to go through account creation and immediately gets logged in. </p>
+<h2>Developer Benefits</h2>
+<p>The benefit of integrating with an IRL Browser is it transforms a regular QR code and allows you to:</p>
+<ul>
+<li><strong>Skip auth</strong> – no auth systems, no user management, no password resets</li>
+<li><strong>Instant UX</strong> – users scan and start using your app immediately</li>
+<li><strong>Deploy a website</strong> – no app store submissions, no native code, no review process</li>
+</ul>
+<p>There will always be a need for native mobile apps. IRL Browser mini apps fill a gap where building and maintaining a native app doesn’t make sense e.g.) social clubs, local community events, venues, pop-ups, game nights with friends, or any lightweight gathering where people are physically present.</p>
+<h2>Lifecycle</h2>
+<pre><code>1. User scans QR code using an IRL Browser (e.g., Antler)
+ 2. IRL Browser loads URL in WebView
+ 3. IRL Browser injects window.irlBrowser JavaScript object
+ 4. IRL Browser immediately sends signed data in a JWT using postMessage
+ 5. Mini app verifies JWT signature and uses profile data
+
+ // Fetches IRL Manifest in the background
+ 6. IRL Browser parses HTML for &lt;link rel=&quot;irl-manifest&quot;&gt; tag
+ 7. IRL Browser fetches manifest in background
+
+ // If you require additional permissions at a later time
+ 8. Mini app calls window.irlBrowser.requestPermission(&#39;location&#39;)
+ 9. IRL Browser validates permission is declared in manifest
+ 10. If declared → IRL Browser shows user consent prompt
+ 11. If NOT declared → request is rejected (security)
+ 12. If user approves → IRL Browser sends location data via postMessage
+</code></pre>
+<h2>IRL Manifest</h2>
+<p>Every IRL mini app has a manifest file. The purpose is to showcase basic details about the mini app and explicitly state which permissions your mini app needs.</p>
+<h3>Discovery</h3>
+<p>Mini apps declare their manifest using a <code>&lt;link&gt;</code> tag in the HTML <code>&lt;head&gt;</code>.</p>
+<pre><code class="language-html">&lt;link rel=&quot;irl-manifest&quot; href=&quot;/irl-manifest.json&quot;&gt;
+</code></pre>
+<h3>manifest.json Schema</h3>
+<pre><code class="language-json">{  
+    &quot;version&quot;: &quot;1.0&quot;,
+    &quot;name&quot;: &quot;Coffee Shop&quot;,
+    &quot;description&quot;: &quot;Cozy little bakery and coffee shop&quot;,
+    &quot;location&quot;: &quot;123 Davie Street, Vancouver, BC&quot;,
+    &quot;icon&quot;: &quot;https://example.com/icon.png&quot;,
+    &quot;type&quot;: &quot;place&quot;,
+    &quot;permissions&quot;: [&quot;profile&quot;] //profile is granted by default
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>version</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>IRL Browser Standard version (e.g., “1.0”)</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>Display name of the mini app</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td>No</td>
+<td>Short description of the mini app</td>
+</tr>
+<tr>
+<td><code>icon</code></td>
+<td>string (URL)</td>
+<td>No</td>
+<td>App icon URL (recommended: 512x512px)</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td>No</td>
+<td>Context type: “place”, “event”, “club”, etc.</td>
+</tr>
+<tr>
+<td><code>permissions</code></td>
+<td>array</td>
+<td>No</td>
+<td>Requested permissions. “profile” is granted by default.</td>
+</tr>
+</tbody></table>
+<p><strong>Note:</strong> Currently, this spec just supports the profile permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini app. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user has been explicit permission).</p>
+<h2><strong>Decentralized Identifiers</strong></h2>
+<p>When a user downloads an IRL Browser, they create a profile on the app. Under the hood, each profile is a DID (<a href="https://www.w3.org/TR/did-1.0/" target="_blank" rel="noopener noreferrer">Decentralized Identifier</a> - a W3C standard) with additional details (like name, avatar, and links to socials). </p>
+<p>A DID is a text string that is used to identify a user. Here&#39;s an example:</p>
+<p><img src="https://ax0.taddy.org/antler/did-explain.png" alt="did-explain.png"></p>
+<p>IRL Browsers use the <code>did:key</code> method, where the public key is the last part of the DID.</p>
+<p>When you create a profile on an IRL Browser, your DID (which includes a public key) and a corresponding private key are generated and stored locally on your device. Whenever an IRL Browser sends data to a mini app, the payload is signed using the DID&#39;s private key, ensuring it came from the DID owner.</p>
+<h2>JavaScript API</h2>
+<p>There are two ways IRL Browsers and mini apps communicate: </p>
+<ol>
+<li><code>window.postMessage</code>: Useful when you want to receive data from an IRL Browser</li>
+<li><code>window.irlBrowser</code>: Useful when you want to initiate an action inside an IRL Browser</li>
+</ol>
+<h3>Use <code>window.postMessage</code> to receive data from IRL Browser</h3>
+<p>All user data passed from an IRL Browser to a mini app is sent via <code>window.postMessage</code> and signed using JWTs.</p>
+<pre><code class="language-jsx">window.addEventListener(&#39;message&#39;, async (event) =&gt; {
+  try {
+      if (!event.data?.jwt) { return }
+      
+      // verify JWT is valid 
+      const payload = await decodeAndVerifyJWT(event.data.jwt);
+
+        // process message based on the type
+      switch (payload.data.type) {
+          case &#39;irl:profile:connected&#39;:
+              const { type, ...profile } = payload.data;
+              console.log(&#39;User DID:&#39;, payload.iss);
+              console.log(&#39;User Name:&#39;, profile.name);
+              break;
+            default:
+                console.warn(&#39;Unknown message type:&#39;, payload.data.type);
+        }
+    } catch (error) {
+        console.error(&#39;Error processing message:&#39;, error);
+    }
+});
+</code></pre>
+<p>Check out this example code if you want to add decodeAndVerifyJWT to your project.</p>
+<h3>Message Types</h3>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Requred Permission</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>irl:profile:connected</code></td>
+<td>User launched mini app</td>
+<td>profile</td>
+</tr>
+<tr>
+<td><code>irl:profile:disconnected</code></td>
+<td>User closed WebView</td>
+<td>profile</td>
+</tr>
+<tr>
+<td><code>irl:error</code></td>
+<td>Error data</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>Profile Data</strong></p>
+<p><code>irl:profile:connected</code> and <code>irl:profile:disconnected</code> return profile details in the following format.</p>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;irl:profile:connected&quot;,
+    &quot;name&quot;: &quot;Danny Mathews&quot;,
+  &quot;avatar&quot;: &quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...&quot;,
+    &quot;socials&quot;: [
+        { &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }
+    ]  
+}
+</code></pre>
+<p>For security reasons, it is best to reconstruct all items in the socials array on the client side. Check out this code.</p>
+<p><strong>Error Handling</strong></p>
+<p><code>irl:error</code> returns errors from an IRL Browser in the following format.</p>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;irl:error&quot;,
+    &quot;code&quot;: &quot;PERMISSION_NOT_DECLARED&quot;,
+    &quot;message&quot;: &quot;Permission not in manifestn&quot;,
+}
+</code></pre>
+<h3>The <code>window.irlBrowser</code> Object</h3>
+<p>When your mini app loads inside an IRL Browser, a global <code>window.irlBrowser</code> object is injected. This allows you to 1) check that the user is using an IRL browser and 2) initiate an on an IRL Browser</p>
+<h3>Checking for an IRL Browser</h3>
+<pre><code class="language-jsx">if (typeof window.irlBrowser !== &#39;undefined&#39;) {
+  // Running in an IRL Browser 
+  const info = window.irlBrowser.getInfo();
+  console.log(`Running in ${info.name} v${info.version}`);
+} else {
+  // Regular web browser - show message to download an IRL Browser
+  body.innerHTML = `&lt;h1&gt;Scan with an IRL Browser&lt;/h1&gt;
+      &lt;p&gt;Download Antler or another IRL Browser to access this experience&lt;/p&gt;
+  `;
+}
+</code></pre>
+<h3>Initiate an action</h3>
+<pre><code class="language-tsx">interface IRLBrowser {
+  // Get information about the IRL Browser
+  getInfo(): IRLBrowserInfo;
+  
+  // Request additional permissions (in the future)
+  requestPermission(permission: string): Promise&lt;boolean&gt;;
+  
+  // Close the WebView (return to QR scanner)
+  close(): void;
+}
+</code></pre>
+<pre><code class="language-tsx">interface IRLBrowserInfo {
+  name: string;        // e.g., &quot;Antler&quot;
+  version: string;     // e.g., &quot;1.0.0&quot;
+  platform: &quot;ios&quot; | &quot;android&quot;;
+  supportedPermissions: string[];
+}
+</code></pre>
+<h2>JWT Structure</h2>
+<p>All data passed from the IRL Browser to a mini app is done via signed JWTs (<a href="https://datatracker.ietf.org/doc/html/rfc7519" target="_blank" rel="noopener noreferrer">JSON Web Tokens</a>).</p>
+<h3>JWT Header</h3>
+<p>Useful to know what algorithm to use to decode the JWT. If you use a JWT library, this part is usually done behind the scenes for you. </p>
+<pre><code class="language-json">{  
+    &quot;alg&quot;: &quot;EdDSA&quot;,  
+    &quot;typ&quot;: &quot;JWT&quot;,
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>alg</code></td>
+<td>Algorithm used to sign the JWT.</td>
+</tr>
+<tr>
+<td><code>typ</code></td>
+<td>Type of the JWT. Always “JWT”.</td>
+</tr>
+</tbody></table>
+<h3>JWT Payload</h3>
+<p>Decoded Data inside the JWT Payload.</p>
+<pre><code class="language-json">{  
+    &quot;iss&quot;: &quot;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&quot;,
+    &quot;iat&quot;: 1728393600,  
+    &quot;exp&quot;: 1728397200,
+  &quot;data&quot;: 
+      {
+          &quot;type&quot;: &quot;irl:profile:connected&quot;,
+          &quot;name&quot;: &quot;Danny Mathews&quot;,
+          &quot;avatar&quot;: &quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...&quot;,
+          &quot;socials&quot;: [
+              { &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }
+            ]  
+        }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>iss</code></td>
+<td>Issuer - Public key of the user’s DID. Use this when verifying the JWT.</td>
+</tr>
+<tr>
+<td><code>iat</code></td>
+<td>Issued at timestamp</td>
+</tr>
+<tr>
+<td><code>exp</code></td>
+<td>Expiration timestamp (default is 2 minutes)</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>Type-specific payload</td>
+</tr>
+</tbody></table>
+<h3>Best Practices</h3>
+<ol>
+<li><strong>Decoding &amp; verifying the JWT</strong> - Never trust unverified data. Decode JWTs using the <code>alg</code>. Verify that the JWT has been signed by the user’s public key (<code>iss</code> field). </li>
+<li><strong>Validate expiration</strong> - Reject expired tokens. Check the <code>exp</code> field.</li>
+</ol>
+<p><strong>License</strong>: <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</a></p>
+<p><strong>Author</strong>: <a href="https://dmathewwws.com" target="_blank" rel="noopener noreferrer">Daniel Mathews</a> (<code>danny@antlerbrowser.com</code>)</p>
+<p><strong>Last Modified</strong>: 2025-10-23</p>
+
+        </div>
+      </article>
+      <nav class="blog-nav">
+        <a href="/" class="back-home">← Back to Home</a>
+      </nav>
+    </div>
+  </body>
+</html> 

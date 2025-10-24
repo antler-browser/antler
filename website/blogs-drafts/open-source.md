@@ -8,7 +8,6 @@ author_url: "https://bsky.app/profile/dmathewwws.com"
 ---
 
 # Open-Source
-
 Antler is an [open-source](https://github.com/antler-browser/antler) monorepo with multiple applications:
 
 [Mobile App](https://github.com/antler-browser/antler/blob/main/react-native/README.md) - React Native  / Expo app.
@@ -17,12 +16,10 @@ Antler is an [open-source](https://github.com/antler-browser/antler) monorepo wi
 
 ## IRL Browser Standard
 
-Antler uses an open standard to pass data between the app to your website. When users scan your QR code, their profile details on Antler get shared to your site - no auth friction, no account creation, instant login.
+Antler uses an [open standard](./irl-browser-standard.html) to pass data between the app to your website. When users scan your QR code, their profile details on Antler get shared to your site - no auth friction, instant login, no account creation.
 
-Check out our [how-to guide](./irl-browser-standard-technical-specification.html) to see how to receive data from Antler in your web app, or dive into the code examples below.
+**Why open standards matter:** Being an open-standard means anyone can create an alternative to Antler. This means you gets the benefits of integrating with Antler and know you are not locked into a closed platform.
 
-**Why open standards matter:** Being an open-standard means anyone can create an alternative to Antler. This means you are not locked into a closed platform.
-
-## Example Websites (Mini Apps)
+## Examples:
 
 Here are some example apps you can fork to get started:

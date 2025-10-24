@@ -4,7 +4,7 @@
   margin: 0 auto;
   padding: 2rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-  line-height: 1.6;
+  line-height: 1.5;
   color: #403B51;
 }
 
@@ -54,7 +54,7 @@ article + .blog-nav {
 
 .blog-body h2 {
   font-size: 1.8rem;
-  margin-top: 3rem;
+  margin-top: 2rem;
   margin-bottom: 1rem;
   font-weight: 600;
   color: #403B51;
@@ -62,13 +62,13 @@ article + .blog-nav {
 
 .blog-body h3 {
   font-size: 1.4rem;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   margin-bottom: 0.8rem;
   font-weight: 600;
 }
 
 .blog-body p {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .blog-body a {
@@ -92,6 +92,7 @@ article + .blog-nav {
   overflow-x: auto;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-size: 0.9rem;
+  margin: 1.5rem 0;
 }
 
 .blog-body code {
@@ -108,7 +109,7 @@ article + .blog-nav {
 }
 
 .blog-body li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .blog-body img {
@@ -175,4 +176,30 @@ article + .blog-nav {
 
 .blog-body aside p:last-child {
   margin-bottom: 0;
+}
+
+/* Table styling */
+.blog-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.blog-body table th {
+  background: #FFF5EB;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #FF8C42;
+  color: #403B51;
+}
+
+.blog-body table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.blog-body table tr:last-child td {
+  border-bottom: none;
 } 
