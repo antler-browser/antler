@@ -1,6 +1,7 @@
 import * as ed25519 from '@stablelib/ed25519';
 import { getRandomBytes } from 'expo-crypto';
 import * as base58 from 'base58-universal';
+import * as base64 from 'base64-js';
 
 export interface DIDResult {
   did: string;
@@ -53,7 +54,7 @@ function encodePublicKeyAsDID(publicKey: Uint8Array): string {
  * @returns Object containing:
  *   - did: The generated DID identifier
  *   - publicKey: Base58-encoded public key
- *   - privateKey: Base58-encoded private key (includes public key)
+ *   - privateKey: Base64-encoded private key (includes public key)
  *
  * @example
  * const identity = await generateDID();
@@ -68,62 +69,15 @@ export async function generateDID(): Promise<DIDResult> {
   // Create the DID identifier
   const did = encodePublicKeyAsDID(keyPair.publicKey);
 
-  // Encode keys for storage/transmission
+  // Encode publickey for storage/transmission
   const publicKey = base58.encode(keyPair.publicKey);
-  const privateKey = base58.encode(keyPair.secretKey);
+
+  // Ed25519 secretKey is 64 bytes (includes 32-byte seed + 32-byte public key)
+  const privateKey = base64.fromByteArray(keyPair.secretKey);
 
   return {
     did,
     publicKey,
     privateKey,
   };
-}
-
-
-/**
- * Signs JSON data using an Ed25519 private key
- *
- * @param privateKey - Base58-encoded private key
- * @param data - JSON data to sign (will be converted to UTF-8 bytes)
- * @returns Digital signature
- */
-export async function signData<T = any>(
-  privateKey: string,
-  data: T
-): Promise<Uint8Array> {
-  const privateKeyBytes = base58.decode(privateKey);
-
-  // Convert JSON data to Uint8Array for signing
-  const jsonString = JSON.stringify(data);
-  const encoder = new TextEncoder();
-  const dataBytes = encoder.encode(jsonString);
-
-  return ed25519.sign(privateKeyBytes, dataBytes);
-}
-
-/**
- * Verifies a digital signature using an Ed25519 public key
- *
- * @param publicKey - Base58-encoded public key
- * @param signature - Signature to verify
- * @param data - Original JSON data that was signed (will be converted to UTF-8 bytes)
- * @returns True if signature is valid, false otherwise
- */
-export async function verifySignature<T = any>(
-  publicKey: string,
-  signature: Uint8Array,
-  data: T
-): Promise<boolean> {
-  try {
-    const publicKeyBytes = base58.decode(publicKey);
-
-    // Convert JSON data to Uint8Array for verification
-    const jsonString = JSON.stringify(data);
-    const encoder = new TextEncoder();
-    const dataBytes = encoder.encode(jsonString);
-
-    return ed25519.verify(publicKeyBytes, dataBytes, signature);
-  } catch (error) {
-    throw new Error(`Signature verification failed: ${(error as Error).message}`);
-  }
 }
