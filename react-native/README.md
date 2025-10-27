@@ -42,6 +42,30 @@ yarn ios
 yarn android
 ```
 
+## Development
+
+### Building & Type Checking
+```bash
+# Type check and build (includes WebView minification)
+yarn build
+
+# Minify WebView JavaScript (run after editing /lib/*.raw.js files)
+yarn minify-webview
+```
+
+### WebView JavaScript
+The `window.irlBrowser` API injected into mini apps is pre-minified at build time for optimal performance:
+- **Raw templates:** `lib/webview-injected.raw.js`, `lib/webview-console-intercept.raw.js`
+- **Minified outputs:** Auto-generated `.min.ts` files (59% smaller)
+- Run `yarn minify-webview` after editing raw templates
+
+### Debugging WebView Mini Apps
+Console logging from WebView to React Native is **disabled by default** for better performance (~20-30ms faster load). Instead, use:
+- **iOS:** Safari → Develop → [Your Device] → WebView Inspector
+- **Android:** Chrome → `chrome://inspect` → Inspect WebView
+
+To re-enable console forwarding, see [`/docs/webview-console-forwarding.md`](./docs/webview-console-forwarding.md).
+
 ## IRL Browser Standard
 
 Antler implements the IRL Browser Standard, which defines how IRL Browser apps communicate with third-party mini apps. Key features:

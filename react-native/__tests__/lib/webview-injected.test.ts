@@ -173,12 +173,12 @@ describe('webview-injected', () => {
       expect(result).toContain('ios');
     });
 
-    it('should include console interception code when isDev is true', () => {
-      const devCode = getInjectedJavaScript(testPublicKey, testBrowserInfo, true);
-      const prodCode = getInjectedJavaScript(testPublicKey, testBrowserInfo, false);
+    it('should not include console interception code (removed for performance)', () => {
+      const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
 
-      expect(devCode).toContain('Intercept console methods');
-      expect(prodCode).not.toContain('Intercept console methods');
+      // Console interception removed for better WebView load performance
+      expect(code).not.toContain('Intercept console');
+      expect(code).not.toContain('console forwarding');
     });
 
     it('should return valid JavaScript that can be evaluated', () => {
@@ -607,32 +607,15 @@ describe('webview-injected', () => {
     });
   });
 
-  describe('Console Interception (Dev Mode)', () => {
-    it('should intercept console.log in dev mode', () => {
-      const code = getInjectedJavaScript(testPublicKey, testBrowserInfo, true);
-      eval(code);
-
-      console.log('test message', { foo: 'bar' });
-
-      // Should have posted console message to React Native
-      const consoleMessages = mockPostMessage.mock.calls.filter((call) => {
-        const msg = JSON.parse(call[0] as string);
-        return msg.type === 'console';
-      });
-
-      expect(consoleMessages.length).toBeGreaterThan(0);
-      const lastConsoleMessage = JSON.parse(consoleMessages[consoleMessages.length - 1][0] as string);
-      expect(lastConsoleMessage.method).toBe('log');
-      expect(lastConsoleMessage.args).toContain('test message');
-    });
-
-    it('should not intercept console in production mode', () => {
-      const code = getInjectedJavaScript(testPublicKey, testBrowserInfo, false);
+  describe('Console Interception (Disabled)', () => {
+    it('should not intercept console methods (removed for performance)', () => {
+      const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
       eval(code);
 
       mockPostMessage.mockClear();
       console.log('test message');
 
+      // Console interception is disabled for better performance
       // Should not have posted console message
       const consoleMessages = mockPostMessage.mock.calls.filter((call) => {
         try {
