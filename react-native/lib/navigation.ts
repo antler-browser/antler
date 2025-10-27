@@ -58,7 +58,7 @@ export type ModalStackParamList = {
     did?: string;
     initialScreen?: keyof ProfileCreateOrEditStackParamList;
   } | undefined;
-  [WEBVIEW_SCREEN]: { url: string };
+  [WEBVIEW_SCREEN]: { url: string, did: string };
 };
 
 

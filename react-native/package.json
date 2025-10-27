@@ -23,7 +23,6 @@
     "@stablelib/ed25519": "^1.0.3",
     "base58-universal": "^2.0.0",
     "base64-js": "^1.5.1",
-    "did-jwt": "^8.0.4",
     "drizzle-orm": "^0.44.6",
     "expo": "54.0.13",
     "expo-camera": "~17.0.8",

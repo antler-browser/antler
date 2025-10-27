@@ -16,3 +16,6 @@ export * as Camera from './camera';
 
 // Social Links - export as a namespace object
 export * as SocialLinks from './social-links';
+
+// WebView data communication - export as a namespace object
+export * as SendData from './send-data';

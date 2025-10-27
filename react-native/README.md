@@ -9,7 +9,7 @@ Antler is a React Native and Expo app, available on iOS and Android. It is a sup
 - **React Navigation** - Navigation library
 - **Expo Camera** - QR scanning and photo capture
 - **DID** - Decentralized identity
-- **Did-JWT** - For passing infomation verified infomation between the app and the web
+- **JWT** - For passing infomation verified infomation between the app and the web
 - **SQLite + Drizzle ORM** - Local database with type-safe queries and migrations
 - **Expo SecureStore** - Secure credential storage
 

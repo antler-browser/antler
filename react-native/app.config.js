@@ -15,11 +15,13 @@ export default {
       infoPlist: {
         NSCameraUsageDescription: "Antler uses the camera to scan QR codes.",
         LSApplicationQueriesSchemes: [
-          "https",
           "mailto",
           "itms-apps"
         ],
-        ITSAppUsesNonExemptEncryption: false
+        ITSAppUsesNonExemptEncryption: false,
+        NSAppTransportSecurity: {
+          NSAllowsArbitraryLoadsInWebContent: true
+        }
       }
     },
     android: {

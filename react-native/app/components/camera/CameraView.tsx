@@ -95,20 +95,22 @@ export function CameraView({
     if (!__DEV__) { return; }
 
     const appState = await AppStateFns.getAppState();
-    const hasProfile = appState.currentDid;
+    const did = appState.currentDid;
+    const url = "https://google.com";
 
-    if (!hasProfile) {
+    if (!did) {
       navigation.navigate(Navigation.MODAL_STACK, {
         screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
         params: {
-          pendingUrl: "https://www.google.com"
+          pendingUrl: url
         }
       });
     } else {
       navigation.navigate(Navigation.MODAL_STACK, {
         screen: Navigation.WEBVIEW_SCREEN,
         params: {
-          url: "https://www.google.com"
+          url: url,
+          did
         }
       });
     }
@@ -134,14 +136,15 @@ export function CameraView({
 
     // Check if user has a profile (currentDid)
     const appState = await AppStateFns.getAppState();
-    const hasProfile = appState.currentDid;
+    const did = appState.currentDid;
+    const url = scannedResult.value;
 
-    if (!hasProfile) {
+    if (!did) {
       // No profile, navigate to profile creation with pending URL
       navigation.navigate(Navigation.MODAL_STACK, {
         screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
         params: {
-          pendingUrl: scannedResult.value
+          pendingUrl: url
         }
       });
     } else {
@@ -149,7 +152,8 @@ export function CameraView({
       navigation.navigate(Navigation.MODAL_STACK, {
         screen: Navigation.WEBVIEW_SCREEN,
         params: {
-          url: scannedResult.value
+          url,
+          did
         }
       });
     }

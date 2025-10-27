@@ -1,27 +1,52 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import WebView from 'react-native-webview';
+import WebView, { WebViewMessageEvent } from 'react-native-webview';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { ThemedText, ThemedView, Screen } from '../components/ui';
-import { Navigation } from '../../lib';
+import Constants from 'expo-constants';
+import { ThemedText, ThemedView } from '../components/ui';
+import { Navigation, SendData } from '../../lib';
 
 type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, typeof Navigation.WEBVIEW_SCREEN>;
+
+// Browser info to inject into WebView
+const browserInfo = {
+  name: 'Antler',
+  version: Constants.expoConfig?.version || '1.0.0',
+  platform: Platform.OS,
+  supportedPermissions: ['profile']
+};
 
 export function WebViewScreen() {
   const navigation = useNavigation();
   const route = useRoute<WebViewScreenRouteProp>();
+  const did = route.params.did;
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
   const [currentUrl, setCurrentUrl] = useState(route.params?.url || '');
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
+
+  // Send disconnect event before closing
+  const handleDisconnect = async () => {
+    try {
+      const disconnectJWT = await SendData.sendDataToWebView(
+        SendData.WebViewDataType.PROFILE_DISCONNECTED,
+        did
+      );
+
+      webViewRef.current?.postMessage(JSON.stringify({ jwt: disconnectJWT }));
+    } catch (error) {
+      console.error('Error sending disconnect JWT:', error);
+    }
+  };
 
   const handleNavigationStateChange = (navState: any) => {
     setCanGoBack(navState.canGoBack);
@@ -29,11 +54,11 @@ export function WebViewScreen() {
     setCurrentUrl(navState.url);
   };
 
-  const goBack = () => {
+  const goBack = async () => {
     if (webViewRef.current && canGoBack) {
       webViewRef.current.goBack();
     } else {
-      navigation.goBack();
+     // disabled if !canGoBack
     }
   };
 
@@ -56,6 +81,181 @@ export function WebViewScreen() {
     } catch {
       return url.substring(0, 30) + (url.length > 30 ? '...' : '');
     }
+  };
+
+  const handleMessage = async (event: WebViewMessageEvent) => {
+    try {
+      const message = JSON.parse(event.nativeEvent.data);
+
+      // Handle different message types
+      switch (message.type) {
+        case 'console':
+          // Forward WebView console logs to React Native console (dev mode only)
+          if (__DEV__ && message.args) {
+            console.log('[WebView console message]', ...message.args);
+          }
+          break;
+
+        case 'irl:api:close':
+          // Send disconnect event and close WebView
+          await handleDisconnect();
+          navigation.goBack();
+          break;
+
+        case 'irl:api:getProfileDetails':
+          // Generate and send profile JWT when web app requests it
+          try {
+            const profileJWT = await SendData.getProfileDetailsJWT(did);
+            webViewRef.current?.postMessage(JSON.stringify({
+              type: 'irl:api:getProfileDetails:response',
+              jwt: profileJWT
+            }));
+          } catch (error) {
+            console.error('Error generating profile JWT:', error);
+            webViewRef.current?.postMessage(JSON.stringify({
+              type: 'irl:api:getProfileDetails:error',
+              error: 'Failed to generate profile JWT'
+            }));
+          }
+          break;
+
+        case 'irl:api:requestPermission':
+          // For now, respond with permission denied
+          // TODO: Implement permission request UI
+          webViewRef.current?.postMessage(JSON.stringify({
+            type: 'irl:api:requestPermission:response',
+            result: false
+          }));
+          break;
+
+        default:
+          console.log('Unknown message type:', message.type);
+      }
+    } catch (error) {
+      console.error('Error handling message from WebView:', error);
+    }
+  };
+
+  // Create injected JavaScript that sets up window.irlBrowser API
+  const getInjectedJavaScript = () => {
+    const consoleInterceptCode = __DEV__ ? `
+        // Intercept console methods and forward to React Native
+        ['log', 'warn', 'error', 'info'].forEach(function(method) {
+          var original = console[method];
+          console[method] = function() {
+            // Call original console method
+            original.apply(console, arguments);
+            
+            // Forward to React Native
+            try {
+              var args = Array.from(arguments).map(function(arg) {
+                if (typeof arg === 'object') {
+                  try {
+                    return JSON.stringify(arg);
+                  } catch (e) {
+                    return '[Object]';
+                  }
+                }
+                return String(arg);
+              });
+              
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'console',
+                method: method,
+                args: args
+              }));
+            } catch (e) {
+              // Ignore errors in console forwarding
+            }
+          };
+        });
+    ` : '';
+
+    return `
+      (function() {
+        // Helper for async communication with native
+        function callNativeApp(type, data, timeout) {
+          return new Promise(function(resolve, reject) {
+            var handled = false;
+            var timeoutId;
+
+            function handleResponse(event) {
+              if (!event.data) return;
+
+              // Parse JSON if event.data is a string from React Native
+              var data = event.data;
+              if (typeof data === 'string') {
+                try {
+                  data = JSON.parse(data);
+                } catch (e) {
+                  return; // Ignore invalid JSON
+                }
+              }
+
+              if (data.type === type + ':response') {
+                if (!handled) {
+                  handled = true;
+                  clearTimeout(timeoutId);
+                  window.removeEventListener('message', handleResponse);
+                  resolve(data.jwt || data.result);
+                }
+              } else if (data.type === type + ':error') {
+                if (!handled) {
+                  handled = true;
+                  clearTimeout(timeoutId);
+                  window.removeEventListener('message', handleResponse);
+                  reject(new Error(data.error || 'Request failed'));
+                }
+              }
+            }
+
+            window.addEventListener('message', handleResponse);
+
+            // Build message object without spread operator for compatibility
+            var message = { type: type };
+            for (var key in data) {
+              if (data.hasOwnProperty(key)) {
+                message[key] = data[key];
+              }
+            }
+            window.ReactNativeWebView.postMessage(JSON.stringify(message), '*');
+
+            timeoutId = setTimeout(function() {
+              if (!handled) {
+                handled = true;
+                window.removeEventListener('message', handleResponse);
+                reject(new Error('Request timed out'));
+              }
+            }, timeout || 5000);
+          });
+        }
+
+        // Set up window.irlBrowser API
+        window.irlBrowser = {
+          // Get profile details as signed JWT (async)
+          getProfileDetails: function() {
+            return callNativeApp('irl:api:getProfileDetails', {});
+          },
+          // Return browser info synchronously
+          getBrowserDetails: function() {
+            return ${JSON.stringify(browserInfo)};
+          },
+          // Request additional permissions from native
+          requestPermission: function(permission) {
+            return callNativeApp('irl:api:requestPermission', { permission: permission });
+          },
+          // Close the WebView
+          close: function() {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'irl:api:close' }), '*');
+          }
+        };
+
+        ${consoleInterceptCode}
+
+        console.log('[IRL Browser] API injected');
+      })();
+      true; // Required for injectedJavaScript
+    `;
   };
 
   return (
@@ -91,7 +291,10 @@ export function WebViewScreen() {
             </ThemedText>
           </View>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={async () => {
+              await handleDisconnect();
+              navigation.goBack();
+            }}
             style={styles.closeButton}
           >
             <Ionicons name="close" size={24} color="black" />
@@ -106,13 +309,16 @@ export function WebViewScreen() {
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}
           onNavigationStateChange={handleNavigationStateChange}
+          onMessage={handleMessage}
+          injectedJavaScript={getInjectedJavaScript()}
           style={styles.webView}
           startInLoadingState={true}
-          renderLoading={() => (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" />
-            </View>
-          )}
+          javaScriptEnabled={true}
+          // renderLoading={() => (
+          //   <View style={styles.loadingContainer}>
+          //     <ActivityIndicator size="large" />
+          //   </View>
+          // )}
         />
         {loading && (
           <View style={styles.loadingOverlay}>
