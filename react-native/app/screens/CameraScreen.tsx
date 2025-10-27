@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Alert, View, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { Alert, View, StyleSheet, AppState, AppStateStatus } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
+import WebView from 'react-native-webview';
 import { CameraPermissions } from '../components/camera/CameraPermissions';
 import { CameraView } from '../components/camera/CameraView';
 import { ProfileCarousel } from '../components/profile';
@@ -18,6 +19,9 @@ export function CameraScreen() {
 
   const { permission, requestCameraAccess } = Camera.useCameraPermission();
 
+  // WebView pre-warming state
+  const [shouldPreWarmWebView, setShouldPreWarmWebView] = useState(true);
+
   useEffect(() => {
     loadAllProfiles();
   }, []);
@@ -34,6 +38,25 @@ export function CameraScreen() {
       handleRequestPermission();
     }
   }, [permission]);
+
+  // AppState listener to clean up WebView when app goes to background
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // Clean up pre-warmed WebView to save memory
+        setShouldPreWarmWebView(false);
+      } else if (nextAppState === 'active' && isFocused && permission?.granted) {
+        // Re-warm when app returns to foreground (if on CameraScreen)
+        setShouldPreWarmWebView(true);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isFocused, permission]);
 
   const handleRequestPermission = async () => {
     setPermissionError(null);
@@ -111,8 +134,8 @@ export function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <CameraView 
-        isFocused={isFocused} 
+      <CameraView
+        isFocused={isFocused}
         hasAtLeastOneProfile={hasAtLeastOneProfile}
       />
       <ProfileCarousel
@@ -121,8 +144,17 @@ export function CameraScreen() {
         onProfileChange={handleProfileChange}
         onAddProfile={handleAddProfile}
         onViewProfile={handleViewProfile}
-      
       />
+
+      {/* Hidden WebView to speed up loading of WebView on next screen */}
+      {isFocused && shouldPreWarmWebView && (
+        <View style={styles.hiddenWebView}>
+          <WebView
+            source={{ html: '<html><body></body></html>' }}
+            javaScriptEnabled={true}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -135,5 +167,12 @@ const styles = StyleSheet.create({
   emptyContainer: {
     flex: 1,
     backgroundColor: 'black',
+  },
+  hiddenWebView: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
+    overflow: 'hidden',
   },
 });

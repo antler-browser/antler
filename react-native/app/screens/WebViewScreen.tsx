@@ -34,6 +34,13 @@ export function WebViewScreen() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
 
+  // Log component mount timing
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[WebView Diagnostics] Component mounted, initializing WebView...', Date.now());
+    }
+  }, []);
+
   // Send disconnect event before closing
   const handleDisconnect = async () => {
     try {
@@ -68,12 +75,6 @@ export function WebViewScreen() {
     }
   };
 
-  const reload = () => {
-    if (webViewRef.current) {
-      webViewRef.current.reload();
-    }
-  };
-
   const formatUrl = (url: string) => {
     try {
       const urlObj = new URL(url);
@@ -104,19 +105,11 @@ export function WebViewScreen() {
 
         case 'irl:api:getProfileDetails':
           // Generate and send profile JWT when web app requests it
-          try {
-            const profileJWT = await SendData.getProfileDetailsJWT(did);
-            webViewRef.current?.postMessage(JSON.stringify({
-              type: 'irl:api:getProfileDetails:response',
-              jwt: profileJWT
-            }));
-          } catch (error) {
-            console.error('Error generating profile JWT:', error);
-            webViewRef.current?.postMessage(JSON.stringify({
-              type: 'irl:api:getProfileDetails:error',
-              error: 'Failed to generate profile JWT'
-            }));
-          }
+          const profileJWT = await SendData.getProfileDetailsJWT(did);
+          webViewRef.current?.postMessage(JSON.stringify({
+            type: 'irl:api:getProfileDetails:response',
+            jwt: profileJWT
+          }));
           break;
 
         case 'irl:api:requestPermission':
@@ -134,6 +127,22 @@ export function WebViewScreen() {
     } catch (error) {
       console.error('Error handling message from WebView:', error);
     }
+  };
+
+  // Handle load start with timing
+  const handleLoadStart = () => {
+    if (__DEV__) {
+      console.log(`[WebView Diagnostics] Load started at ${Date.now()}`);
+    }
+    setLoading(true);
+  };
+
+  // Handle load end with timing summary
+  const handleLoadEnd = () => {
+    if (__DEV__) {
+      console.log(`[WebView Diagnostics] Load finished at ${Date.now()}`);
+    }
+    setLoading(false);
   };
 
   // Create injected JavaScript that sets up window.irlBrowser API
@@ -306,8 +315,8 @@ export function WebViewScreen() {
         <WebView
           ref={webViewRef}
           source={{ uri: route.params?.url as string }}
-          onLoadStart={() => setLoading(true)}
-          onLoadEnd={() => setLoading(false)}
+          onLoadStart={handleLoadStart}
+          onLoadEnd={handleLoadEnd}
           onNavigationStateChange={handleNavigationStateChange}
           onMessage={handleMessage}
           injectedJavaScript={getInjectedJavaScript()}
