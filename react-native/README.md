@@ -1,6 +1,8 @@
 # Antler
 
-Antler is a React Native and Expo app, available on iOS and Android. It is a super-powered QR scanner useful for IRL hangouts. You create profiles (with DIDs), scan QR codes and pass data between the Antler app to complementary mini apps through a WebView. 
+Antler is a React Native and Expo app, available on iOS and Android. It is a super-powered QR scanner useful for IRL hangouts. You create profiles (with DIDs), scan QR codes and pass data between the Antler app to complementary mini apps through a WebView.
+
+Antler implements the **IRL Browser Standard**, a specification for secure communication between IRL Browser apps and third-party web applications (mini apps). 
 
 ## Tech Stack
 
@@ -8,8 +10,9 @@ Antler is a React Native and Expo app, available on iOS and Android. It is a sup
 - **TypeScript** - Type-safe JavaScript
 - **React Navigation** - Navigation library
 - **Expo Camera** - QR scanning and photo capture
-- **DID** - Decentralized identity
-- **JWT** - For passing infomation verified infomation between the app and the web
+- **DID** - Decentralized identity (W3C standard)
+- **JWT** - For passing verified information between the app and mini apps via signed tokens
+- **Ed25519** - Cryptographic signing for JWTs
 - **SQLite + Drizzle ORM** - Local database with type-safe queries and migrations
 - **Expo SecureStore** - Secure credential storage
 
@@ -38,3 +41,24 @@ yarn start
 yarn ios
 yarn android
 ```
+
+## IRL Browser Standard
+
+Antler implements the IRL Browser Standard, which defines how IRL Browser apps communicate with third-party mini apps. Key features:
+
+- **`window.irlBrowser` API**: JavaScript interface injected into WebView for mini apps to interact with the native app
+  - `getProfileDetails()`: Get user profile as signed JWT
+  - `getBrowserDetails()`: Get browser info (name, version, platform, permissions)
+  - `close()`: Close WebView and return to camera
+  - `requestPermission()`: Request additional permissions (future)
+
+- **Signed JWTs**: All data passed between the app and mini apps is cryptographically signed using Ed25519
+  - Profile data signed with user's DID private key
+  - Mini apps verify signatures using DID public key
+  - Ensures data authenticity and prevents tampering
+
+- **Event System**: Native app sends events to mini apps via `window.postMessage`
+  - `irl:profile:disconnected`: User closed WebView
+  - `irl:error`: Error from native app
+
+For the complete specification, see [`/docs/irl-browser-standard.md`](./docs/irl-browser-standard.md).

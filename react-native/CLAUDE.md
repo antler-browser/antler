@@ -7,6 +7,8 @@ Antler is a super-powered QR scanner for IRL hangouts. Available on iOS and Andr
 
 For developers, Antler is a mobile SDK that provides a WebView environment for mini apps. Build simple, self-contained web apps that know users are physically present and can scan QR codes — no native code, no app stores, no auth systems needed.
 
+Antler implements the **IRL Browser Standard**, a specification that defines how IRL Browsers communicate with third-party web applications (mini apps) through signed JWTs and a JavaScript API (`window.irlBrowser`). See `/docs/irl-browser-standard.md` for full specification.
+
 ## Key Files and Directories
 
 ### Application Structure
@@ -14,7 +16,7 @@ For developers, Antler is a mobile SDK that provides a WebView environment for m
   - `/profile/`: Profile creation and viewing screens (NameScreen, SocialsScreen, AvatarScreen, ProfileScreen)
   - `/onboarding/`: Onboarding flow screens (WelcomeScreen, OnboardingNavigator)
   - `CameraScreen.tsx`: Main camera screen with QR scanning
-  - `WebViewScreen.tsx`: In-app browser for external links
+  - `WebViewScreen.tsx`: IRL Browser container that injects `window.irlBrowser` API and handles bidirectional communication with mini apps
   - `ModalStackNavigator.tsx`: Modal navigation stack
   - `root.tsx`: Root navigation configuration
 - `/app/components/`: Components organized by feature
@@ -26,6 +28,7 @@ For developers, Antler is a mobile SDK that provides a WebView environment for m
 - `/lib/`: Utilities and service integrations
   - `camera.ts`: Camera and QR scanning utilities
   - `did.ts`: Decentralized identity (DID) utilities
+  - `send-data.ts`: JWT signing utilities for WebView communication (IRL Browser Standard)
   - `secure-storage.ts`: Secure storage operations
   - `social-links.ts`: Social media link validation and formatting
   - `colors.ts`: Color constants
@@ -35,6 +38,8 @@ For developers, Antler is a mobile SDK that provides a WebView environment for m
     - `index.ts`: Database connection and migration runner
     - `/migrations/`: SQL migration files
     - `/models/`: Database model operations (AppStateFns, UserProfileFns, ScanHistoryFns)
+- `/docs/`: Documentation
+  - `irl-browser-standard.md`: IRL Browser Standard specification
 - `/assets/`: Static assets (fonts, icons, images)
 - `index.tsx`: App entry point
 - `app.config.js`: Expo configuration
@@ -105,13 +110,14 @@ yarn lint
 
 ### Storage Architecture
 - **SQLite Database**: User profiles, app state, social links, scan history
-- **SecureStorage**: DID private keys, sensitive credentials
+- **SecureStorage**: DID private keys (Ed25519) used for signing JWTs, sensitive credentials
 - Database managed with Drizzle ORM for type-safe queries
 - Database model operations in `/lib/db/models/` organized by entity:
   - `app-state.ts`: AppStateFns namespace for app state operations
   - `user-profile.ts`: UserProfileFns namespace for profile CRUD
   - `scan-history.ts`: ScanHistoryFns namespace for scan tracking
 - Secure storage utilities in `/lib/secure-storage.ts`
+- JWT signing utilities in `/lib/send-data.ts` for WebView communication
 
 ### Database Structure
 - **`app_state`**: Global application state (current DID, welcome completion)
@@ -170,7 +176,8 @@ Database operations are organized into function namespaces by entity:
 - QR scanning implemented in `CameraView`
 - Scanned QR codes resolve DIDs to load profiles
 - Camera utilities in `/lib/camera.ts`
-- When a QR code is scanned, if the user has a profile, the app will navigate to the WebView screen and pass in the DID into the WebView screen.
+- When a QR code is scanned, if the user has a profile, the app navigates to WebViewScreen and passes the user's DID as a parameter
+- The DID is used to fetch profile data and sign JWTs for mini app communication
 
 ### DID Integration
 - Decentralized Identity (DID) utilities in `/lib/did.ts`
@@ -178,12 +185,33 @@ Database operations are organized into function namespaces by entity:
 - Keys stored in SecureStorage
 - JWT signing and verification supported
 
+### WebView & Mini App Integration
+- Implements the IRL Browser Standard for secure communication with third-party mini apps
+- **JavaScript API Injection** (`/app/screens/WebViewScreen.tsx`):
+  - `window.irlBrowser.getProfileDetails()`: Returns signed JWT with user profile (async)
+  - `window.irlBrowser.getBrowserDetails()`: Returns browser info (name, version, platform, permissions)
+  - `window.irlBrowser.requestPermission(permission)`: Request additional permissions (future)
+  - `window.irlBrowser.close()`: Close WebView and return to camera
+- **Message Handling**: WebViewScreen listens for messages from mini apps via `window.postMessage`
+- **JWT Signing** (`/lib/send-data.ts`):
+  - `getProfileDetailsJWT(did)`: Generates signed JWT for API responses
+  - `sendDataToWebView(type, did)`: Generates signed JWT for events (e.g., profile disconnect)
+  - Uses Ed25519 algorithm with user's DID private key
+  - JWTs include claims: `iss` (issuer DID), `iat` (issued at), `exp` (expiration), `type` (message type), `data` (payload)
+- **Event Types**:
+  - `irl:profile:disconnected`: Sent when user closes WebView
+  - `irl:error`: Error data from native app
+- Mini apps verify JWTs using the DID public key (`iss` field) to ensure authenticity
+- See `/docs/irl-browser-standard.md` for full specification
+
 ## Third Party Libraries
 - Expo Camera for QR scanning and photo capture
 - Expo Image Picker for avatar selection
 - react-native-webview for WebView screen
 - expo-sqlite with Drizzle ORM for local database (type-safe queries and migrations)
 - Expo SecureStore for sensitive data (DID private keys)
+- @stablelib/ed25519 for Ed25519 cryptographic signing (JWT signatures)
+- base64-js for base64 encoding/decoding
 
 ## Troubleshooting
 
