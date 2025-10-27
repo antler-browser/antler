@@ -29,6 +29,7 @@ Antler implements the **IRL Browser Standard**, a specification that defines how
   - `camera.ts`: Camera and QR scanning utilities
   - `did.ts`: Decentralized identity (DID) utilities
   - `send-data.ts`: JWT signing utilities for WebView communication (IRL Browser Standard)
+  - `webview-signing.ts`: Ephemeral ECDSA P-256 key pair generation and message signing for WebView XSS protection
   - `secure-storage.ts`: Secure storage operations
   - `social-links.ts`: Social media link validation and formatting
   - `colors.ts`: Color constants
@@ -203,6 +204,21 @@ Database operations are organized into function namespaces by entity:
   - `irl:error`: Error data from native app
 - Mini apps verify JWTs using the DID public key (`iss` field) to ensure authenticity
 - See `/docs/irl-browser-standard.md` for full specification
+- **Security Architecture**:
+  - **Dual Signing System**:
+    - Profile JWTs: Signed with user's DID private key (Ed25519, long-lived, stored in SecureStore)
+    - WebView internal messages: Signed with ephemeral ECDSA P-256 keys (session-only, prevents XSS)
+  - **XSS Protection** (`/lib/webview-signing.ts`):
+    - Fresh ECDSA P-256 key pair generated per WebView session
+    - Public key injected into WebView for signature verification
+    - All native→WebView internal messages signed to prevent XSS forgery attacks
+    - WebView verifies signatures using `crypto.subtle` with ECDSA P-256
+    - Uses sorted keys for deterministic serialization to ensure signature verification works correctly
+  - **Browser Requirements**:
+    - Requires `crypto.subtle` with ECDSA P-256 support
+    - iOS 11+ (Safari 11)
+    - Android 5.0+ (Lollipop) with system WebView
+  - `window.ReactNativeWebView.postMessage()` is a one-way secure channel (WebView → Native)
 
 ## Third Party Libraries
 - Expo Camera for QR scanning and photo capture

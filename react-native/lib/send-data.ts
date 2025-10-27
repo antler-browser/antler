@@ -41,8 +41,6 @@ export async function getProfileDetailsJWT(did: string): Promise<string> {
     })) || [],
   };
   
-  console.log('payload', payload);
-
   // For getProfileDetails, we don't use a specific event type
   // The method itself indicates the intent
   return createJWT(did, 'irl:profile:details', payload);

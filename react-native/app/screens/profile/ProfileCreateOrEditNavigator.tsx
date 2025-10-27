@@ -12,6 +12,7 @@ type ProfileCreateOrEditNavigatorRoute = RouteProp<Navigation.ModalStackParamLis
 export function ProfileCreateOrEditNavigator() {
   const route = useRoute<ProfileCreateOrEditNavigatorRoute>();
   const pendingUrl = route.params?.pendingUrl;
+  const pendingWebViewPublicKey = route.params?.pendingWebViewPublicKey;
   const mode = route.params?.mode || 'create';
   const did = route.params?.did;
   const initialScreen = route.params?.initialScreen || 'Name';
@@ -31,6 +32,7 @@ export function ProfileCreateOrEditNavigator() {
         initialParams={{
           mode: mode as Navigation.ProfileMode,
           pendingUrl,
+          pendingWebViewPublicKey,
           did,
         }}
       />

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,7 +12,7 @@ import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { ThemedText } from '../ui';
-import { Camera, Navigation, AppStateFns } from '../../../lib';
+import { Camera, Navigation, AppStateFns, WebViewSigning } from '../../../lib';
 
 interface CameraViewProps {
   isFocused: boolean;
@@ -27,16 +27,30 @@ export function CameraView({
   const [flash, setFlash] = useState<FlashMode>('off');
   const [isScanning, setIsScanning] = useState(false);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
+  const [webViewPublicKey, setWebViewPublicKey] = useState<string | null>(null);
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigation = useNavigation<Navigation.RootStackNavigationProp>();
-  
+
   useEffect(() => {
+    // Generate fresh ephemeral ECDSA P-256 key pair for WebView internal messages signing
+    generateWebViewKeyPair();
+
+    // Clear timeout when component unmounts
     return () => {
       if (scanTimeoutRef.current) {
         clearTimeout(scanTimeoutRef.current);
       }
     };
   }, []);
+
+  const generateWebViewKeyPair = async () => {
+    try {
+      const newPublicKey = await WebViewSigning.generateEphemeralKeyPair();
+      setWebViewPublicKey(newPublicKey);
+    } catch (error) {
+      console.error('Error generating ECDSA P-256 key pair:', error);
+    }
+  };
 
   const toggleCameraFacing = () => {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
@@ -91,8 +105,9 @@ export function CameraView({
     }
   };
 
-  const fakeQRCodeForDevMode = async () => {
+  const fakeQRCodeForDevMode = useCallback(async () => {
     if (!__DEV__) { return; }
+    if (!webViewPublicKey) { return; } // Wait for key to load
 
     const appState = await AppStateFns.getAppState();
     const did = appState.currentDid;
@@ -102,7 +117,8 @@ export function CameraView({
       navigation.navigate(Navigation.MODAL_STACK, {
         screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
         params: {
-          pendingUrl: url
+          pendingUrl: url,
+          pendingWebViewPublicKey: webViewPublicKey,
         }
       });
     } else {
@@ -110,14 +126,16 @@ export function CameraView({
         screen: Navigation.WEBVIEW_SCREEN,
         params: {
           url: url,
-          did
+          did,
+          webViewPublicKey
         }
       });
     }
-  };
+  }, [webViewPublicKey, navigation]);
 
-  const handleBarCodeScanned = async ({ data }: BarcodeScanningResult) => {
+  const handleBarCodeScanned = useCallback(async ({ data }: BarcodeScanningResult) => {
     if (isScanning || !data || data === lastScannedData) return;
+    if (!webViewPublicKey) { return; } // Wait for key to load
 
     setIsScanning(true);
     setLastScannedData(data);
@@ -153,7 +171,8 @@ export function CameraView({
         screen: Navigation.WEBVIEW_SCREEN,
         params: {
           url,
-          did
+          did,
+          webViewPublicKey
         }
       });
     }
@@ -163,7 +182,7 @@ export function CameraView({
       setIsScanning(false);
       setLastScannedData(null);
     }, Camera.CAMERA_SETTINGS.scanInterval);
-  };
+  }, [isScanning, lastScannedData, webViewPublicKey, navigation]);
 
   return (
     <View style={styles.container}>

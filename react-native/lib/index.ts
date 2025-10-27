@@ -19,3 +19,6 @@ export * as SocialLinks from './social-links';
 
 // WebView data communication - export as a namespace object
 export * as SendData from './send-data';
+
+// WebView signing - export as a namespace object
+export * as WebViewSigning from './webview-signing';

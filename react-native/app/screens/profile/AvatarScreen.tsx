@@ -20,6 +20,7 @@ export function AvatarScreen() {
   const name = route.params.name;
   const socials = route.params.socials;
   const pendingUrl = route.params.pendingUrl;
+  const pendingWebViewPublicKey = route.params.pendingWebViewPublicKey;
 
   // Use useProfile hook to get profile data when in edit mode
   const { profile, isLoading } = did 
@@ -129,7 +130,7 @@ export function AvatarScreen() {
               routes: [
                 {
                   name: Navigation.WEBVIEW_SCREEN,
-                  params: { url: pendingUrl }
+                  params: { url: pendingUrl, webViewPublicKey: pendingWebViewPublicKey, did: didResult.did }
                 }
               ]
             })

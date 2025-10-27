@@ -18,6 +18,7 @@ export function NameScreen() {
   const mode = route.params?.mode || 'create';
   const did = route.params?.did;
   const pendingUrl = route.params?.pendingUrl;
+  const pendingWebViewPublicKey = route.params?.pendingWebViewPublicKey;
 
   // Use useProfile hook to get profile data when in edit mode
   const { profile, isLoading } = did
@@ -47,6 +48,7 @@ export function NameScreen() {
       name: trimmedName,
       did,
       pendingUrl,
+      pendingWebViewPublicKey,
     });
   };
 

@@ -17,4 +17,7 @@ config.cacheStores = [
 // Ensure source extensions include TypeScript
 config.resolver.sourceExts = [...(config.resolver.sourceExts || []), 'ts', 'tsx'];
 
+// Enable package exports for ESM packages like @noble/curves
+config.resolver.unstable_enablePackageExports = true;
+
 module.exports = config;

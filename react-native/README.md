@@ -52,12 +52,7 @@ Antler implements the IRL Browser Standard, which defines how IRL Browser apps c
   - `close()`: Close WebView and return to camera
   - `requestPermission()`: Request additional permissions (future)
 
-- **Signed JWTs**: All data passed between the app and mini apps is cryptographically signed using Ed25519
-  - Profile data signed with user's DID private key
-  - Mini apps verify signatures using DID public key
-  - Ensures data authenticity and prevents tampering
-
-- **Event System**: Native app sends events to mini apps via `window.postMessage`
+- **Event System**: Native app sends signed events to mini apps via `window.postMessage`
   - `irl:profile:disconnected`: User closed WebView
   - `irl:error`: Error from native app
 

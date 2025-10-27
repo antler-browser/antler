@@ -24,12 +24,14 @@ export type ProfileCreateOrEditStackParamList = {
     mode: ProfileMode;
     did?: string;
     pendingUrl?: string;
+    pendingWebViewPublicKey?: string;
   } | undefined;
   Socials: {
     mode: ProfileMode;
     name: string;
     did?: string;
     pendingUrl?: string;
+    pendingWebViewPublicKey?: string;
   };
   Avatar: {
     mode: ProfileMode;
@@ -37,6 +39,7 @@ export type ProfileCreateOrEditStackParamList = {
     socials?: SocialLink[];
     did?: string;
     pendingUrl?: string;
+    pendingWebViewPublicKey?: string;
   };
 };
 // Root stack param list
@@ -54,11 +57,12 @@ export type RootStackParamList = {
 export type ModalStackParamList = {
   [PROFILE_CREATE_OR_EDIT_SCREEN]: {
     pendingUrl?: string;
+    pendingWebViewPublicKey?: string;
     mode?: ProfileMode;
     did?: string;
     initialScreen?: keyof ProfileCreateOrEditStackParamList;
   } | undefined;
-  [WEBVIEW_SCREEN]: { url: string, did: string };
+  [WEBVIEW_SCREEN]: { url: string; did: string; webViewPublicKey: string };
 };
 
 
