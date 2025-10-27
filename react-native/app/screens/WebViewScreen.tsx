@@ -12,7 +12,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { ThemedText, ThemedView } from '../components/ui';
-import { Navigation, SendData } from '../../lib';
+import { Navigation, SendData, WebViewSigning } from '../../lib';
 
 type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, typeof Navigation.WEBVIEW_SCREEN>;
 
@@ -28,6 +28,7 @@ export function WebViewScreen() {
   const navigation = useNavigation();
   const route = useRoute<WebViewScreenRouteProp>();
   const did = route.params.did;
+  const webViewPublicKey = route.params.webViewPublicKey;
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
   const [currentUrl, setCurrentUrl] = useState(route.params?.url || '');
@@ -87,6 +88,7 @@ export function WebViewScreen() {
   const handleMessage = async (event: WebViewMessageEvent) => {
     try {
       const message = JSON.parse(event.nativeEvent.data);
+      const requestId = message.requestId; // Extract request ID from message
 
       // Handle different message types
       switch (message.type) {
@@ -103,23 +105,47 @@ export function WebViewScreen() {
           navigation.goBack();
           break;
 
-        case 'irl:api:getProfileDetails':
+        case 'irl:api:getProfileDetails': {
           // Generate and send profile JWT when web app requests it
           const profileJWT = await SendData.getProfileDetailsJWT(did);
-          webViewRef.current?.postMessage(JSON.stringify({
+
+          // Build response with requestId and timestamp
+          const response = {
             type: 'irl:api:getProfileDetails:response',
-            jwt: profileJWT
+            requestId: requestId,
+            jwt: profileJWT,
+            timestamp: Date.now()
+          };
+
+          // Sign the response to prevent XSS forgery
+          const signature = await WebViewSigning.signMessage(response, webViewPublicKey);
+
+          webViewRef.current?.postMessage(JSON.stringify({
+            ...response,
+            signature: signature
           }));
           break;
+        }
 
-        case 'irl:api:requestPermission':
+        case 'irl:api:requestPermission': {
           // For now, respond with permission denied
           // TODO: Implement permission request UI
-          webViewRef.current?.postMessage(JSON.stringify({
+          const response = {
             type: 'irl:api:requestPermission:response',
-            result: false
+            requestId: requestId,
+            result: false,
+            timestamp: Date.now()
+          };
+
+          // Sign the response to prevent XSS forgery
+          const signature = await WebViewSigning.signMessage(response, webViewPublicKey);
+
+          webViewRef.current?.postMessage(JSON.stringify({
+            ...response,
+            signature: signature
           }));
           break;
+        }
 
         default:
           console.log('Unknown message type:', message.type);
@@ -132,7 +158,7 @@ export function WebViewScreen() {
   // Handle load start with timing
   const handleLoadStart = () => {
     if (__DEV__) {
-      console.log(`[WebView Diagnostics] Load started at ${Date.now()}`);
+      console.log(`[WebView Diagnostics] WebView Load started at ${Date.now()}`);
     }
     setLoading(true);
   };
@@ -140,13 +166,13 @@ export function WebViewScreen() {
   // Handle load end with timing summary
   const handleLoadEnd = () => {
     if (__DEV__) {
-      console.log(`[WebView Diagnostics] Load finished at ${Date.now()}`);
+      console.log(`[WebView Diagnostics] WebView Load finished at ${Date.now()}`);
     }
     setLoading(false);
   };
 
   // Create injected JavaScript that sets up window.irlBrowser API
-  const getInjectedJavaScript = () => {
+  const getInjectedJavaScript = (webViewPublicKey: string) => {    
     const consoleInterceptCode = __DEV__ ? `
         // Intercept console methods and forward to React Native
         ['log', 'warn', 'error', 'info'].forEach(function(method) {
@@ -154,7 +180,7 @@ export function WebViewScreen() {
           console[method] = function() {
             // Call original console method
             original.apply(console, arguments);
-            
+
             // Forward to React Native
             try {
               var args = Array.from(arguments).map(function(arg) {
@@ -167,7 +193,7 @@ export function WebViewScreen() {
                 }
                 return String(arg);
               });
-              
+
               window.ReactNativeWebView.postMessage(JSON.stringify({
                 type: 'console',
                 method: method,
@@ -182,46 +208,178 @@ export function WebViewScreen() {
 
     return `
       (function() {
+        // SECURITY: Native WebView public key for verifying native signatures (ECDSA P-256)
+        var WEBVIEW_PUBLIC_KEY = '${webViewPublicKey}';
+
+        // Helper: Decode base64 to Uint8Array
+        function base64ToBytes(base64) {
+          var binaryString = atob(base64);
+          var bytes = new Uint8Array(binaryString.length);
+          for (var i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          return bytes;
+        }
+
+        // Helper: Canonical JSON serialization (sorted keys)
+        // Must match native implementation for signature verification
+        // Uses native JSON.stringify with sorted keys for optimal performance
+        // NOTE: Optimized for flat objects (current message structures are all flat)
+        function canonicalJSON(obj) {
+          var sortedKeys = Object.keys(obj).sort();
+          return JSON.stringify(obj, sortedKeys);
+        }
+
+        // SECURITY: Generate cryptographically random request IDs
+        // Requires crypto object (same requirement as signature verification)
+        function generateRequestId() {
+          // Use crypto.randomUUID if available (Chrome 92+, Safari 15.4+)
+          if (crypto.randomUUID) {
+            return crypto.randomUUID();
+          }
+
+          // Fallback: Generate random hex string using crypto.getRandomValues
+          var array = new Uint8Array(16);
+          crypto.getRandomValues(array);
+          return Array.from(array, function(byte) {
+            return ('0' + byte.toString(16)).slice(-2);
+          }).join('');
+        }
+
+        // SECURITY: Verify ECDSA P-256 signature to prevent XSS forgery
+        async function verifySignature(response) {
+          // Check if crypto.subtle is available
+          if (typeof crypto === 'undefined' || !crypto.subtle) {
+            console.error('[IRL Browser] crypto.subtle not available - cannot verify signatures');
+            return false;
+          }
+
+          // Validate signature exists
+          if (!response.signature) {
+            console.error('[IRL Browser] Response missing signature - possible forgery attempt');
+            return false;
+          }
+
+          try {
+            // Extract signature and reconstruct the message that was signed
+            var signature = response.signature;
+            var messageToVerify = {
+              type: response.type,
+              requestId: response.requestId,
+              timestamp: response.timestamp
+            };
+
+            // Include jwt or result depending on response type
+            if (response.jwt !== undefined) {
+              messageToVerify.jwt = response.jwt;
+            }
+            if (response.result !== undefined) {
+              messageToVerify.result = response.result;
+            }
+
+            // Convert message to bytes using canonical JSON (sorted keys)
+            var messageString = canonicalJSON(messageToVerify);
+            var messageBytes = new TextEncoder().encode(messageString);
+
+            // Decode signature from base64
+            var signatureBytes = base64ToBytes(signature);
+
+            // Decode public key from base64
+            var publicKeyBytes = base64ToBytes(WEBVIEW_PUBLIC_KEY);
+
+            // Import ECDSA P-256 public key
+            var publicKey = await crypto.subtle.importKey(
+              'raw',
+              publicKeyBytes,
+              {
+                name: 'ECDSA',
+                namedCurve: 'P-256'
+              },
+              false,
+              ['verify']
+            );
+
+            // Verify signature using ECDSA with SHA-256
+            var isValid = await crypto.subtle.verify(
+              {
+                name: 'ECDSA',
+                hash: 'SHA-256'
+              },
+              publicKey,
+              signatureBytes,
+              messageBytes
+            );
+
+            if (!isValid) {
+              console.error('[IRL Browser] Signature verification failed - possible XSS forgery attempt');
+            }
+
+            return isValid;
+          } catch (error) {
+            console.error('[IRL Browser] Error verifying signature:', error);
+            return false;
+          }
+        }
+
         // Helper for async communication with native
         function callNativeApp(type, data, timeout) {
           return new Promise(function(resolve, reject) {
             var handled = false;
             var timeoutId;
 
-            function handleResponse(event) {
+            // Generate unique request ID for this call
+            var requestId = generateRequestId();
+
+            async function handleResponse(event) {
               if (!event.data) return;
 
               // Parse JSON if event.data is a string from React Native
-              var data = event.data;
-              if (typeof data === 'string') {
+              var responseData = event.data;
+              if (typeof responseData === 'string') {
                 try {
-                  data = JSON.parse(data);
+                  responseData = JSON.parse(responseData);
                 } catch (e) {
                   return; // Ignore invalid JSON
                 }
               }
 
-              if (data.type === type + ':response') {
+              // Validate request ID matches to prevent cross-talk
+              if (responseData.requestId !== requestId) {
+                return; // Ignore messages with wrong request ID
+              }
+
+              // Verify signature to prevent XSS forgery
+              if (!(await verifySignature(responseData))) {
                 if (!handled) {
                   handled = true;
                   clearTimeout(timeoutId);
                   window.removeEventListener('message', handleResponse);
-                  resolve(data.jwt || data.result);
+                  reject(new Error('Invalid signature - possible XSS forgery attempt'));
                 }
-              } else if (data.type === type + ':error') {
+                return;
+              }
+
+              if (responseData.type === type + ':response') {
                 if (!handled) {
                   handled = true;
                   clearTimeout(timeoutId);
                   window.removeEventListener('message', handleResponse);
-                  reject(new Error(data.error || 'Request failed'));
+                  resolve(responseData.jwt || responseData.result);
+                }
+              } else if (responseData.type === type + ':error') {
+                if (!handled) {
+                  handled = true;
+                  clearTimeout(timeoutId);
+                  window.removeEventListener('message', handleResponse);
+                  reject(new Error(responseData.error || 'Request failed'));
                 }
               }
             }
 
             window.addEventListener('message', handleResponse);
 
-            // Build message object without spread operator for compatibility
-            var message = { type: type };
+            // Build message object with requestId
+            var message = { type: type, requestId: requestId };
             for (var key in data) {
               if (data.hasOwnProperty(key)) {
                 message[key] = data[key];
@@ -261,7 +419,7 @@ export function WebViewScreen() {
 
         ${consoleInterceptCode}
 
-        console.log('[IRL Browser] API injected');
+        console.log('[IRL Browser] WebView API injected');
       })();
       true; // Required for injectedJavaScript
     `;
@@ -319,7 +477,7 @@ export function WebViewScreen() {
           onLoadEnd={handleLoadEnd}
           onNavigationStateChange={handleNavigationStateChange}
           onMessage={handleMessage}
-          injectedJavaScript={getInjectedJavaScript()}
+          injectedJavaScript={getInjectedJavaScript(webViewPublicKey)}
           style={styles.webView}
           startInLoadingState={true}
           javaScriptEnabled={true}
