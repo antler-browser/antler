@@ -11,11 +11,11 @@ author_url: "https://bsky.app/profile/dmathewwws.com"
 
 ## Overview
 
-The IRL Browser Standard defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this standard defines how their profile and other data gets securely passed between the IRL Browser and the mini app.
+The IRL Browser Standard defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this standard defines how their profile and other data get securely passed between the IRL Browser and the mini app.
 
 ## User Benefits
 
-When a user downloads an IRL Browser (like Antler), they create a profile that is stored locally on their device. Whenever a user scans a QR code, their profile gets shared with the mini app. This means users don’t have to go through account creation and immediately gets logged in. 
+When a user downloads an IRL Browser (like Antler), they create a profile that is stored locally on their device. Whenever a user scans a QR code, their profile gets shared with the mini app. This means users don’t have to go through account creation and immediately get logged in. 
 
 ## Developer Benefits
 
@@ -30,22 +30,23 @@ There will always be a need for native mobile apps. IRL Browser mini apps fill a
 ## Lifecycle
 
 ```
-1. User scans QR code using an IRL Browser (e.g., Antler)
+1. User scans QR code using an IRL Browser
  2. IRL Browser loads URL in WebView
  3. IRL Browser injects window.irlBrowser JavaScript object
- 4. IRL Browser immediately sends signed data in a JWT using postMessage
- 5. Mini app verifies JWT signature and uses profile data
+ 4. Mini app calls window.irlBrowser.getProfileDetails() when ready
+ 5. IRL Browser generates and signs JWT with profile details
+ 6. Mini app verifies JWT & has access to profile details
 
  // Fetches IRL Manifest in the background
- 6. IRL Browser parses HTML for <link rel="irl-manifest"> tag
- 7. IRL Browser fetches manifest in background
+ 7. IRL Browser parses HTML for <link rel="irl-manifest"> tag
+ 8. IRL Browser fetches manifest in background
 
  // If you require additional permissions at a later time
- 8. Mini app calls window.irlBrowser.requestPermission('location')
- 9. IRL Browser validates permission is declared in manifest
- 10. If declared → IRL Browser shows user consent prompt
- 11. If NOT declared → request is rejected (security)
- 12. If user approves → IRL Browser sends location data via postMessage
+ 9. Mini app calls window.irlBrowser.requestPermission('location')
+ 10. IRL Browser validates permission is declared in manifest
+ 11. If declared → IRL Browser shows user consent prompt
+ 12. If NOT declared → request is rejected (security)
+ 13. If user approves → IRL Browser sends location data via postMessage
 ```
 
 ## IRL Manifest
@@ -64,7 +65,6 @@ Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
 
 ```json
 {  
-	"version": "1.0",
 	"name": "Coffee Shop",
 	"description": "Cozy little bakery and coffee shop",
 	"location": "123 Davie Street, Vancouver, BC",
@@ -76,14 +76,14 @@ Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `version` | string | Yes | IRL Browser Standard version (e.g., “1.0”) |
 | `name` | string | Yes | Display name of the mini app |
 | `description` | string | No | Short description of the mini app |
+| `location` | string | No | Location of the experience |
 | `icon` | string (URL) | No | App icon URL (recommended: 512x512px) |
 | `type` | string | No | Context type: “place”, “event”, “club”, etc. |
 | `permissions` | array | No | Requested permissions. “profile” is granted by default. |
 
-**Note:** Currently, this spec just supports the profile permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini app. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user has been explicit permission).
+**Note:** Currently, this spec just supports the profile permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).
 
 ## **Decentralized Identifiers**
 
@@ -101,12 +101,91 @@ When you create a profile on an IRL Browser, your DID (which includes a public k
 
 There are two ways IRL Browsers and mini apps communicate: 
 
-1. `window.postMessage`: Useful when you want to receive data from an IRL Browser
-2.  `window.irlBrowser`: Useful when you want to initiate an action inside an IRL Browser
+1. **`window.irlBrowser`:** Use when your mini app wants to request data or initiate actions (e.g., get profile details or request permissions)
+2. **`window.postMessage`:** Use when your mini app wants to be notified of events that happened in the IRL Browser (e.g., user closed the WebView)
+
+### The `window.irlBrowser` Object
+
+When your mini app loads inside an IRL Browser, a global `window.irlBrowser` object is injected. This allows you to 1) call methods and get back data and 2) check that the user is using an IRL browser.
+
+```tsx
+interface IRLBrowser {
+  // Get profile details
+  getProfileDetails(): Promise<string>;
+  
+  // Get details about the IRL Browser
+  getBrowserDetails(): BrowserDetails;
+  
+  // Request additional permissions (in the future)
+  requestPermission(permission: string): Promise<boolean>;
+  
+  // Close the WebView (return to QR scanner)
+  close(): void;
+}
+```
+
+**Profile Details**
+
+`getProfileDetails()` returns the user’s profile details as a signed JWT. 
+
+```tsx
+{
+	"did": "did:key:123456789abcdefghi",
+	"name": "Danny Mathews",
+  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
+	"socials": [
+		{ "platform": "INSTAGRAM", "handle": "dmathewwws" }
+	]  
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `did` | string | Yes | User's Decentralized Identifier (DID) |
+| `name` | string | Yes | User's display name |
+| `avatar` | string | No | Base64-encoded avatar |
+| `socials`  | array | No | Links to social accounts |
+
+For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out this code.
+
+**Browser Details**
+
+`getBrowserDetails()` returns information about the IRL Browser.
+
+```tsx
+{
+	"name": "Antler",
+	"version": "1.0.0",
+  "platform": "ios",
+  "supportedPermissions": ["profile"]
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | Yes | IRL Browser name |
+| `version` | string | Yes | IRL Browser app version |
+| `platform` | string | Yes | `ios` or `android` |
+| `supportedPermissions` | array | Yes | The permission that this IRL Browser has implemented.  |
+
+### Checking for an IRL Browser
+
+```jsx
+if (typeof window.irlBrowser !== 'undefined') {
+  // Running in an IRL Browser 
+  const info = window.irlBrowser.getInfo();
+  console.log(`Running in ${info.name} v${info.version}`);
+} else {
+  // Regular web browser - show message to download an IRL Browser
+  body.innerHTML = `<h1>Scan with an IRL Browser</h1>
+	  <p>Download Antler or another IRL Browser to access this experience</p>
+  `;
+}
+```
 
 ### Use `window.postMessage` to receive data from IRL Browser
 
-All user data passed from an IRL Browser to a mini app is sent via `window.postMessage` and signed using JWTs.
+A user may perform an action inside the IRL Browser that you want to know about. The IRL Browser sends event data to a mini app via `window.postMessage` using signed JWTs.
 
 ```jsx
 window.addEventListener('message', async (event) => {
@@ -117,8 +196,8 @@ window.addEventListener('message', async (event) => {
 	  const payload = await decodeAndVerifyJWT(event.data.jwt);
 
 		// process message based on the type
-	  switch (payload.data.type) {
-		  case 'irl:profile:connected':
+	  switch (payload.type) {
+		  case 'irl:profile:disconnected':
 			  const { type, ...profile } = payload.data;
 			  console.log('User DID:', payload.iss);
 			  console.log('User Name:', profile.name);
@@ -136,20 +215,19 @@ Check out this example code if you want to add decodeAndVerifyJWT to your projec
 
 ### Message Types
 
-| Type | Description | Requred Permission |
+| Type | Description | Required Permission |
 | --- | --- | --- |
-| `irl:profile:connected` | User launched mini app | profile |
 | `irl:profile:disconnected` | User closed WebView | profile |
 | `irl:error` | Error data | 
  |
 
-**Profile Data**
+**Profile Details**
 
-`irl:profile:connected` and `irl:profile:disconnected` return profile details in the following format.
+`irl:profile:disconnected` returns the same profile details mentioned above.
 
 ```json
 {
-	"type": "irl:profile:connected",
+	"did": "did:key:123456789abcdefghi",
 	"name": "Danny Mathews",
   "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 	"socials": [
@@ -158,63 +236,21 @@ Check out this example code if you want to add decodeAndVerifyJWT to your projec
 }
 ```
 
-For security reasons, it is best to reconstruct all items in the socials array on the client side. Check out this code.
-
 **Error Handling**
 
 `irl:error` returns errors from an IRL Browser in the following format.
 
 ```json
 {
-	"type": "irl:error",
 	"code": "PERMISSION_NOT_DECLARED",
-	"message": "Permission not in manifestn",
+	"message": "Permission not in manifest",
 }
 ```
 
-### The `window.irlBrowser` Object
-
-When your mini app loads inside an IRL Browser, a global `window.irlBrowser` object is injected. This allows you to 1) check that the user is using an IRL browser and 2) initiate an on an IRL Browser
-
-### Checking for an IRL Browser
-
-```jsx
-if (typeof window.irlBrowser !== 'undefined') {
-  // Running in an IRL Browser 
-  const info = window.irlBrowser.getInfo();
-  console.log(`Running in ${info.name} v${info.version}`);
-} else {
-  // Regular web browser - show message to download an IRL Browser
-  body.innerHTML = `<h1>Scan with an IRL Browser</h1>
-	  <p>Download Antler or another IRL Browser to access this experience</p>
-  `;
-}
-
-```
-
-### Initiate an action
-
-```tsx
-interface IRLBrowser {
-  // Get information about the IRL Browser
-  getInfo(): IRLBrowserInfo;
-  
-  // Request additional permissions (in the future)
-  requestPermission(permission: string): Promise<boolean>;
-  
-  // Close the WebView (return to QR scanner)
-  close(): void;
-}
-```
-
-```tsx
-interface IRLBrowserInfo {
-  name: string;        // e.g., "Antler"
-  version: string;     // e.g., "1.0.0"
-  platform: "ios" | "android";
-  supportedPermissions: string[];
-}
-```
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | string | Yes | Unique error code |
+| `message` | string | Yes | More details on the error code received |
 
 ## JWT Structure
 
@@ -238,16 +274,17 @@ Useful to know what algorithm to use to decode the JWT. If you use a JWT library
 
 ### JWT Payload
 
-Decoded Data inside the JWT Payload.
+Decoded data inside the JWT Payload.
 
 ```json
 {  
 	"iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
 	"iat": 1728393600,  
 	"exp": 1728397200,
+	"type": "irl:profile:disconnected"
   "data": 
 	  {
-		  "type": "irl:profile:connected",
+		  "did": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
 		  "name": "Danny Mathews",
 		  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 		  "socials": [
@@ -262,6 +299,7 @@ Decoded Data inside the JWT Payload.
 | `iss` | Issuer - Public key of the user’s DID. Use this when verifying the JWT. |
 | `iat` | Issued at timestamp |
 | `exp` | Expiration timestamp (default is 2 minutes) |
+| `type` | Method or Event type |
 | `data` | Type-specific payload |
 
 ### Best Practices

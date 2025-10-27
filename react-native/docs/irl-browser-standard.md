@@ -24,7 +24,7 @@ There will always be a need for native mobile apps. IRL Browser mini apps fill a
 1. User scans QR code using an IRL Browser
 2. IRL Browser loads URL in WebView
 3. IRL Browser injects window.irlBrowser JavaScript object
-4. Mini app calls window.irlBrowser.getProfile() when ready
+4. Mini app calls window.irlBrowser.getProfileDetails() when ready
 5. IRL Browser generates and signs JWT with profile details
 6. Mini app verifies JWT & has access to profile details
 
