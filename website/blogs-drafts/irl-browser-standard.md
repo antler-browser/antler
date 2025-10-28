@@ -110,8 +110,11 @@ When your mini app loads inside an IRL Browser, a global `window.irlBrowser` o
 
 ```tsx
 interface IRLBrowser {
-  // Get profile details
+  // Get profile details (name, socials)
   getProfileDetails(): Promise<string>;
+  
+  // Get avatar as base64-encoded string
+  getAvatar(): Promise<string | null>;
   
   // Get details about the IRL Browser
   getBrowserDetails(): BrowserDetails;
@@ -132,7 +135,6 @@ interface IRLBrowser {
 {
 	"did": "did:key:123456789abcdefghi",
 	"name": "Danny Mathews",
-  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 	"socials": [
 		{ "platform": "INSTAGRAM", "handle": "dmathewwws" }
 	]  
@@ -143,10 +145,25 @@ interface IRLBrowser {
 | --- | --- | --- | --- |
 | `did` | string | Yes | User's Decentralized Identifier (DID) |
 | `name` | string | Yes | User's display name |
-| `avatar` | string | No | Base64-encoded avatar |
 | `socials`  | array | No | Links to social accounts |
 
 For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out this code.
+
+**Avatar Image**
+
+`getAvatar()` returns the user’s base64 encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.
+
+```tsx
+{
+	"did": "did:key:123456789abcdefghi",
+	"avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `did` | string | Yes | User's Decentralized Identifier (DID) |
+| `avatar` | string | Yes | User's avatar as base64 encoded string |
 
 **Browser Details**
 
@@ -229,7 +246,6 @@ Check out this example code if you want to add decodeAndVerifyJWT to your projec
 {
 	"did": "did:key:123456789abcdefghi",
 	"name": "Danny Mathews",
-  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 	"socials": [
 		{ "platform": "INSTAGRAM", "handle": "dmathewwws" }
 	]  
@@ -286,7 +302,6 @@ Decoded data inside the JWT Payload.
 	  {
 		  "did": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
 		  "name": "Danny Mathews",
-		  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 		  "socials": [
 			  { "platform": "INSTAGRAM", "handle": "dmathewwws" }
 			]  

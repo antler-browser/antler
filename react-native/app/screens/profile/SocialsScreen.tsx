@@ -238,7 +238,7 @@ export function SocialsScreen() {
                 Add your socials
               </ThemedText>
               <ThemedText style={styles.subtitle}>
-                Connect your social profiles (optional)
+                (optional)
               </ThemedText>
             </ThemedView>
 

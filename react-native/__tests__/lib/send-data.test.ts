@@ -69,7 +69,8 @@ describe('sendDataToWebView', () => {
       expect(decoded.type).toBe('irl:profile:disconnected');
       expect((decoded.data as any).did).toBe(mockDID);
       expect((decoded.data as any).name).toBe('Charlie');
-      expect((decoded.data as any).avatar).toBeNull();
+      // Avatar is no longer included in profile disconnected payload
+      expect((decoded.data as any).avatar).toBeUndefined();
       expect((decoded.data as any).socials).toEqual([]);
     });
 

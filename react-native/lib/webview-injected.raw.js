@@ -184,24 +184,38 @@
     });
   }
 
-  // Set up window.irlBrowser API
-  window.irlBrowser = {
-    // Get profile details as signed JWT (async)
-    getProfileDetails: function() {
-      return callNativeApp('irl:api:getProfileDetails', {});
-    },
-    // Return browser info synchronously
-    getBrowserDetails: function() {
-      return __BROWSER_INFO__;
-    },
-    // Request additional permissions from native
-    requestPermission: function(permission) {
-      return callNativeApp('irl:api:requestPermission', { permission: permission });
-    },
-    // Close the WebView
-    close: function() {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'irl:api:close' }), '*');
-    }
+  // Set up window.irlBrowser API with protection against XSS modification
+  // Uses Object.defineProperty to prevent replacement/deletion (like native browser APIs)
+  // and Object.freeze to prevent method modification
+  // Only define if not already present (important for testing environments)
+  if (!window.irlBrowser) {
+    Object.defineProperty(window, 'irlBrowser', {
+      value: Object.freeze({
+        // Get profile details as signed JWT (async)
+        getProfileDetails: function() {
+          return callNativeApp('irl:api:getProfileDetails', {});
+        },
+        // Get avatar as signed JWT or null (async)
+        getAvatar: function() {
+          return callNativeApp('irl:api:getAvatar', {});
+        },
+        // Return browser info synchronously
+        getBrowserDetails: function() {
+          return __BROWSER_INFO__;
+        },
+        // Request additional permissions from native
+        requestPermission: function(permission) {
+          return callNativeApp('irl:api:requestPermission', { permission: permission });
+        },
+        // Close the WebView
+        close: function() {
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'irl:api:close' }), '*');
+        }
+      }),
+      writable: false,      // Prevent reassignment: window.irlBrowser = {} throws TypeError
+      configurable: false,  // Prevent deletion: delete window.irlBrowser throws TypeError
+      enumerable: true      // Show in Object.keys(window) for discoverability
+    });
   };
 
   console.log('[IRL Browser] WebView API injected');

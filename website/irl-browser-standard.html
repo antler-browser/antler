@@ -146,8 +146,11 @@
 <h3>The <code>window.irlBrowser</code> Object</h3>
 <p>When your mini app loads inside an IRL Browser, a global <code>window.irlBrowser</code> object is injected. This allows you to 1) call methods and get back data and 2) check that the user is using an IRL browser.</p>
 <pre><code class="language-tsx">interface IRLBrowser {
-  // Get profile details
+  // Get profile details (name, socials)
   getProfileDetails(): Promise&lt;string&gt;;
+  
+  // Get avatar as base64-encoded string
+  getAvatar(): Promise&lt;string | null&gt;;
   
   // Get details about the IRL Browser
   getBrowserDetails(): BrowserDetails;
@@ -164,7 +167,6 @@
 <pre><code class="language-tsx">{
     &quot;did&quot;: &quot;did:key:123456789abcdefghi&quot;,
     &quot;name&quot;: &quot;Danny Mathews&quot;,
-  &quot;avatar&quot;: &quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...&quot;,
     &quot;socials&quot;: [
         { &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }
     ]  
@@ -192,12 +194,6 @@
 <td>User&#39;s display name</td>
 </tr>
 <tr>
-<td><code>avatar</code></td>
-<td>string</td>
-<td>No</td>
-<td>Base64-encoded avatar</td>
-</tr>
-<tr>
 <td><code>socials</code></td>
 <td>array</td>
 <td>No</td>
@@ -205,6 +201,35 @@
 </tr>
 </tbody></table>
 <p>For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out this code.</p>
+<p><strong>Avatar Image</strong></p>
+<p><code>getAvatar()</code> returns the user’s base64 encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.</p>
+<pre><code class="language-tsx">{
+    &quot;did&quot;: &quot;did:key:123456789abcdefghi&quot;,
+    &quot;avatar&quot;: &quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...&quot;,
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>did</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>User&#39;s Decentralized Identifier (DID)</td>
+</tr>
+<tr>
+<td><code>avatar</code></td>
+<td>string</td>
+<td>Yes</td>
+<td>User&#39;s avatar as base64 encoded string</td>
+</tr>
+</tbody></table>
 <p><strong>Browser Details</strong></p>
 <p><code>getBrowserDetails()</code> returns information about the IRL Browser.</p>
 <pre><code class="language-tsx">{
@@ -315,7 +340,6 @@
 <pre><code class="language-json">{
     &quot;did&quot;: &quot;did:key:123456789abcdefghi&quot;,
     &quot;name&quot;: &quot;Danny Mathews&quot;,
-  &quot;avatar&quot;: &quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...&quot;,
     &quot;socials&quot;: [
         { &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }
     ]  
@@ -386,7 +410,6 @@
       {
           &quot;did&quot;: &quot;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&quot;,
           &quot;name&quot;: &quot;Danny Mathews&quot;,
-          &quot;avatar&quot;: &quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...&quot;,
           &quot;socials&quot;: [
               { &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }
             ]  

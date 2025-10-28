@@ -5,6 +5,7 @@ import { Colors, Navigation, UserProfileFns, DID, SecureStorage } from '../../..
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { useProfile } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<Navigation.ProfileCreateOrEditStackParamList, 'Avatar'>;
@@ -41,15 +42,15 @@ export function AvatarScreen() {
 
   const pickImage = async (source: 'camera' | 'library') => {
     setIsPickingImage(true);
-    
+
     try {
-      const { status } = source === 'camera' 
-        ? await ImagePicker.requestCameraPermissionsAsync() 
+      const { status } = source === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== 'granted') {
-        throw new Error(source === 'camera' 
-          ? 'Camera permission is required to take a photo' 
+        throw new Error(source === 'camera'
+          ? 'Camera permission is required to take a photo'
           : 'Photo library permission is required'
         );
       }
@@ -58,28 +59,41 @@ export function AvatarScreen() {
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.9,
-        base64: true,
       };
 
-      const result = source === 'camera' 
-        ? await ImagePicker.launchCameraAsync(options) 
+      const result = source === 'camera'
+        ? await ImagePicker.launchCameraAsync(options)
         : await ImagePicker.launchImageLibraryAsync(options);
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        if (asset.base64) {
-          const mimeType = asset.mimeType || 'image/jpeg';
-          const base64Image = `data:${mimeType};base64,${asset.base64}`;
+
+        // Resize and compress the image using expo-image-manipulator
+        // This ensures consistent size regardless of input format (JPEG/PNG)
+        const context = ImageManipulator.manipulate(asset.uri);
+        context.resize({ width: 512, height: 512 });
+        const imageRef = await context.renderAsync();
+        const manipulatedImage = await imageRef.saveAsync({
+          compress: 0.7,           // 70% quality
+          format: SaveFormat.JPEG, // Always convert to JPEG
+          base64: true             // Return base64 string
+        });
+
+        // Clean up shared objects
+        context.release();
+        imageRef.release();
+
+        if (manipulatedImage.base64) {
+          const base64Image = `data:image/jpeg;base64,${manipulatedImage.base64}`;
           setAvatar(base64Image);
         } else {
-          throw new Error('Failed to pick image. Please try again.');
+          throw new Error('Failed to process image. Please try again.');
         }
       }
     } catch (error) {
-      setError(error instanceof Error 
-        ? error.message : 
-        'Failed to pick image. Please try again.');  
+      setError(error instanceof Error
+        ? error.message :
+        'Failed to pick image. Please try again.');
       console.error('Error picking image:', error);
     } finally {
       setIsPickingImage(false);
@@ -193,7 +207,7 @@ export function AvatarScreen() {
             Add your avatar
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            Personalize your profile with a photo (optional)
+            (optional)
           </ThemedText>
         </ThemedView>
 

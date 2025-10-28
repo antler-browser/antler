@@ -39,7 +39,7 @@ export function WelcomeScreen() {
             Welcome to Antler!
           </ThemedText>
           <ThemedText style={styles.subtitle}>
-            Antler is a <ThemedText type="link" style={styles.subtitleLink}>QR scanner</ThemedText> for <ThemedText type="link" style={styles.subtitleLink}>IRL hangouts</ThemedText>. Connect with others around you.
+            Antler is a <ThemedText type="link" style={styles.subtitleLink}>QR scanner</ThemedText> useful for <ThemedText type="link" style={styles.subtitleLink}>IRL hangouts</ThemedText>.
           </ThemedText>
         </ThemedView>
 

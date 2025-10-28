@@ -88,7 +88,7 @@ export function NameScreen() {
               What's your name?
             </ThemedText>
             <ThemedText style={styles.subtitle}>
-              Your name will be passed on with the QR code
+              When you scan QR codes, you'll instantly sign in without having to create a new account.
             </ThemedText>
           </ThemedView>
 

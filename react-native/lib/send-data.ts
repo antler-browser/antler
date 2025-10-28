@@ -34,7 +34,6 @@ export async function getProfileDetailsJWT(did: string): Promise<string> {
   const payload = {
     did: did,
     name: profile.name,
-    avatar: profile.avatar,
     socials: profile.socialLinks?.map(link => ({
       platform: link.platform,
       handle: link.handle,
@@ -44,6 +43,43 @@ export async function getProfileDetailsJWT(did: string): Promise<string> {
   // For getProfileDetails, we don't use a specific event type
   // The method itself indicates the intent
   return createJWT(did, 'irl:profile:details', payload);
+}
+
+/**
+ * Generates a signed JWT with user avatar for getAvatar() API
+ *
+ * This is used when the web app calls window.irlBrowser.getAvatar()
+ * to retrieve the user's avatar image. Returns a signed JWT containing
+ * the DID and avatar data, or null if the user has no avatar.
+ *
+ * @param did - The user's DID (used to fetch profile and as JWT issuer)
+ * @returns Signed JWT string with avatar data, or null if no avatar
+ *
+ * @example
+ * const jwt = await getAvatarJWT("did:key:z6Mk...");
+ * // Returns JWT string or null
+ * // Decoded payload: { did: "did:key:...", avatar: "data:image/jpeg;base64,..." }
+ */
+export async function getAvatarJWT(did: string): Promise<string | null> {
+  // Fetch user profile from database
+  const profile = await UserProfileFns.getProfileByDID(did);
+  if (!profile) {
+    throw new Error(`No profile found for DID: ${did}`);
+  }
+
+  // Return null if user has no avatar
+  if (!profile.avatar) {
+    return null;
+  }
+
+  // Build payload with DID and avatar
+  const payload = {
+    did: did,
+    avatar: profile.avatar,
+  };
+
+  // Sign and return JWT
+  return createJWT(did, 'irl:avatar', payload);
 }
 
 /**
@@ -84,7 +120,6 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
       return {
         did,
         name: profile.name,
-        avatar: profile.avatar,
         socials: profile.socialLinks?.map(link => ({
           platform: link.platform,
           handle: link.handle,
@@ -116,7 +151,7 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
  * const jwt = await createJWT(
  *   "did:key:z6Mk...",
  *   "irl:profile:disconnected",
- *   { did: "did:key:z6Mk...", name: "Alice", avatar: null, socials: [] }
+ *   { did: "did:key:z6Mk...", name: "Alice", socials: [] }
  * );
  */
 async function createJWT(did: string, type: string, payload: Record<string, any>): Promise<string> {

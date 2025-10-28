@@ -22,22 +22,22 @@ There will always be a need for native mobile apps. IRL Browser mini apps fill a
 
 ```
 1. User scans QR code using an IRL Browser
-2. IRL Browser loads URL in WebView
-3. IRL Browser injects window.irlBrowser JavaScript object
-4. Mini app calls window.irlBrowser.getProfileDetails() when ready
-5. IRL Browser generates and signs JWT with profile details
-6. Mini app verifies JWT & has access to profile details
+ 2. IRL Browser loads URL in WebView
+ 3. IRL Browser injects window.irlBrowser JavaScript object
+ 4. Mini app calls window.irlBrowser.getProfileDetails() when ready
+ 5. IRL Browser generates and signs JWT with profile details
+ 6. Mini app verifies JWT & has access to profile details
 
-// Fetches IRL Manifest in the background
-7. IRL Browser parses HTML for <link rel="irl-manifest"> tag
-8. IRL Browser fetches manifest in background
+ // Fetches IRL Manifest in the background
+ 7. IRL Browser parses HTML for <link rel="irl-manifest"> tag
+ 8. IRL Browser fetches manifest in background
 
-// If you require additional permissions at a later time
-9. Mini app calls window.irlBrowser.requestPermission('location')
-10. IRL Browser validates permission is declared in manifest
-11. If declared → IRL Browser shows user consent prompt
-12. If NOT declared → request is rejected (security)
-13. If user approves → IRL Browser sends location data via postMessage
+ // If you require additional permissions at a later time
+ 9. Mini app calls window.irlBrowser.requestPermission('location')
+ 10. IRL Browser validates permission is declared in manifest
+ 11. If declared → IRL Browser shows user consent prompt
+ 12. If NOT declared → request is rejected (security)
+ 13. If user approves → IRL Browser sends location data via postMessage
 ```
 
 ## IRL Manifest
@@ -82,7 +82,7 @@ When a user downloads an IRL Browser, they create a profile on the app. Under th
 
 A DID is a text string that is used to identify a user. Here's an example:
 
-![did-explain.png](IRL%20Browser%20Standard/did-explain.png)
+![did-explain.png](https://ax0.taddy.org/antler/did-explain.png)
 
 IRL Browsers use the `did:key` method, where the public key is the last part of the DID.
 
@@ -101,8 +101,11 @@ When your mini app loads inside an IRL Browser, a global `window.irlBrowser` o
 
 ```tsx
 interface IRLBrowser {
-  // Get profile details
+  // Get profile details (name, socials)
   getProfileDetails(): Promise<string>;
+  
+  // Get avatar as base64-encoded string
+  getAvatar(): Promise<string | null>;
   
   // Get details about the IRL Browser
   getBrowserDetails(): BrowserDetails;
@@ -123,7 +126,6 @@ interface IRLBrowser {
 {
 	"did": "did:key:123456789abcdefghi",
 	"name": "Danny Mathews",
-  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 	"socials": [
 		{ "platform": "INSTAGRAM", "handle": "dmathewwws" }
 	]  
@@ -134,10 +136,25 @@ interface IRLBrowser {
 | --- | --- | --- | --- |
 | `did` | string | Yes | User's Decentralized Identifier (DID) |
 | `name` | string | Yes | User's display name |
-| `avatar` | string | No | Base64-encoded avatar |
 | `socials`  | array | No | Links to social accounts |
 
 For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out this code.
+
+**Avatar Image**
+
+`getAvatar()` returns the user’s base64 encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.
+
+```tsx
+{
+	"did": "did:key:123456789abcdefghi",
+	"avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `did` | string | Yes | User's Decentralized Identifier (DID) |
+| `avatar` | string | Yes | User's avatar as base64 encoded string |
 
 **Browser Details**
 
@@ -220,7 +237,6 @@ Check out this example code if you want to add decodeAndVerifyJWT to your projec
 {
 	"did": "did:key:123456789abcdefghi",
 	"name": "Danny Mathews",
-  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 	"socials": [
 		{ "platform": "INSTAGRAM", "handle": "dmathewwws" }
 	]  
@@ -277,7 +293,6 @@ Decoded data inside the JWT Payload.
 	  {
 		  "did": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
 		  "name": "Danny Mathews",
-		  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
 		  "socials": [
 			  { "platform": "INSTAGRAM", "handle": "dmathewwws" }
 			]  

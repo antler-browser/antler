@@ -127,6 +127,36 @@ export function WebViewScreen() {
           break;
         }
 
+        case 'irl:api:getAvatar': {
+          // Get avatar JWT when web app requests it (returns null if no avatar)
+          const avatarJWT = await SendData.getAvatarJWT(did);
+
+          // Build response with requestId and timestamp
+          // If avatarJWT is null, use 'result', otherwise use 'jwt' (consistent with getProfileDetails)
+          const response = avatarJWT
+            ? {
+                type: 'irl:api:getAvatar:response',
+                requestId: requestId,
+                jwt: avatarJWT,
+                timestamp: Date.now()
+              }
+            : {
+                type: 'irl:api:getAvatar:response',
+                requestId: requestId,
+                result: null,
+                timestamp: Date.now()
+              };
+
+          // Sign the response to prevent XSS forgery
+          const signature = await WebViewSigning.signMessage(response, webViewPublicKey);
+
+          webViewRef.current?.postMessage(JSON.stringify({
+            ...response,
+            signature: signature
+          }));
+          break;
+        }
+
         case 'irl:api:requestPermission': {
           // For now, respond with permission denied
           // TODO: Implement permission request UI
