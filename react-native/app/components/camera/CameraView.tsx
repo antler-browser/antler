@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CameraView as ExpoCameraView, CameraType } from 'expo-camera';
+import { CameraView as ExpoCameraView } from 'expo-camera';
 import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
@@ -23,7 +23,6 @@ export function CameraView({
   isFocused,
   hasAtLeastOneProfile,
 }: CameraViewProps) {
-  const [facing, setFacing] = useState<CameraType>(Camera.CAMERA_SETTINGS.defaultFacing);
   const [enableTorch, setEnableTorch] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
@@ -50,10 +49,6 @@ export function CameraView({
     } catch (error) {
       console.error('Error generating ECDSA P-256 key pair:', error);
     }
-  };
-
-  const toggleCameraFacing = () => {
-    setFacing(current => (current === 'back' ? 'front' : 'back'));
   };
 
   const handleSignOut = async () => {
@@ -91,6 +86,12 @@ export function CameraView({
 
   const getFlashIcon = () => {
     return enableTorch ? 'flash' : 'flash-off';
+  };
+
+  const handleSettingsPress = () => {
+    navigation.navigate(Navigation.MODAL_STACK, {
+      screen: Navigation.SETTINGS_SCREEN
+    });
   };
 
   const fakeQRCodeForDevMode = useCallback(async () => {
@@ -177,7 +178,7 @@ export function CameraView({
       {isFocused && (
         <ExpoCameraView
           style={StyleSheet.absoluteFillObject}
-          facing={facing}
+          facing="back"
           enableTorch={enableTorch}
           onBarcodeScanned={handleBarCodeScanned}
         >
@@ -212,10 +213,10 @@ export function CameraView({
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.cameraControl}
-                onPress={toggleCameraFacing}
+                onPress={handleSettingsPress}
                 activeOpacity={0.7}
               >
-                <Ionicons name="camera-reverse" size={28} color="white" />
+                <Ionicons name="settings-outline" size={28} color="white" />
               </TouchableOpacity>
             </View>
 

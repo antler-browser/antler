@@ -6,6 +6,7 @@ export const CAMERA_SCREEN = "CameraScreen";
 export const PROFILE_SCREEN = "ProfileScreen";
 export const PROFILE_CREATE_OR_EDIT_SCREEN = "ProfileCreateOrEditScreen ";
 export const WEBVIEW_SCREEN = "WebviewScreen";
+export const SETTINGS_SCREEN = "SettingsScreen";
 export const MODAL_STACK = "ModalStack";
 export const WELCOME_SCREEN = "WelcomeScreen";
 
@@ -63,6 +64,7 @@ export type ModalStackParamList = {
     initialScreen?: keyof ProfileCreateOrEditStackParamList;
   } | undefined;
   [WEBVIEW_SCREEN]: { url: string; did: string; webViewPublicKey: string };
+  [SETTINGS_SCREEN]: undefined;
 };
 
 
