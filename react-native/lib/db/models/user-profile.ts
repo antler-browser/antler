@@ -134,12 +134,13 @@ export namespace UserProfileFns {
         }
 
         // Build update object with only provided fields
-        const updateData: any = {};
+        const updateData: Partial<typeof schema.userProfiles.$inferInsert> = {};
         if (updates.name !== undefined) updateData.name = updates.name;
         if (updates.avatar !== undefined) updateData.avatar = updates.avatar;
 
         // Update profile if there are changes
         if (Object.keys(updateData).length > 0) {
+          updateData.updatedAt = new Date();
           await tx.update(schema.userProfiles)
             .set(updateData)
             .where(eq(schema.userProfiles.did, did));

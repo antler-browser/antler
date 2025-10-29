@@ -111,7 +111,6 @@ function executeMigration(name: string, sql: string): void {
 
     // Commit transaction
     expoDb.execSync('COMMIT');
-    console.log(`Migration completed: ${name}`);
   } catch (error) {
     // Rollback on failure
     expoDb.execSync('ROLLBACK');
@@ -125,7 +124,7 @@ function executeMigration(name: string, sql: string): void {
  */
 export function initializeDatabase(): void {
   try {
-    console.log('Initializing database...');
+    if (__DEV__) { console.log('Initializing database...'); }
 
     expoDb.execSync(`
       CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
@@ -134,7 +133,6 @@ export function initializeDatabase(): void {
         created_at INTEGER NOT NULL DEFAULT (unixepoch())
       );
     `);
-    console.log('Migrations tracking table ready');
 
     // Define migrations in order
     const migrations = [
@@ -149,12 +147,13 @@ export function initializeDatabase(): void {
       const applied = isMigrationApplied(migration.name);
       if (!applied) {
         executeMigration(migration.name, migration.sql);
-      } else {
-        console.log(`Migration already applied: ${migration.name}`);
-      }
+      } 
+      // else {
+      //   console.log(`Migration already applied: ${migration.name}`);
+      // }
     }
 
-    console.log('All migrations completed successfully');
+    if (__DEV__) { console.log('All migrations completed successfully'); }
   } catch (error) {
     console.error('Database initialization failed:', error);
     throw error;
