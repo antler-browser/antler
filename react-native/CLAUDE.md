@@ -17,10 +17,11 @@ Antler implements the **IRL Browser Standard**, a specification that defines how
   - `/onboarding/`: Onboarding flow screens (WelcomeScreen, OnboardingNavigator)
   - `CameraScreen.tsx`: Main camera screen with QR scanning
   - `WebViewScreen.tsx`: IRL Browser container that injects `window.irlBrowser` API and handles bidirectional communication with mini apps
+  - `SettingsScreen.tsx`: Settings modal with app info and support links (Privacy Policy, Terms of Service, Rate App, Email Support)
   - `ModalStackNavigator.tsx`: Modal navigation stack
   - `root.tsx`: Root navigation configuration
 - `/app/components/`: Components organized by feature
-  - `/camera/`: Camera-related components (CameraView, CameraPermissions, ProfileCarousel, ProfileOverlay)
+  - `/camera/`: Camera-related components (CameraView with flash/settings controls, CameraPermissions, ProfileCarousel, ProfileOverlay)
   - `/ui/`: Shared UI components (ThemedView, ThemedText, ThemedButton, etc.)
 - `/app/hooks/`: Custom React hooks
   - `useOnboarding.ts`: Onboarding state management
@@ -105,13 +106,13 @@ yarn lint
 - Modal presentations for profile creation and viewing
 - Three main navigation stacks:
   1. **Camera Stack** (root): CameraScreen → ProfileScreen (modal)
-  2. **Modal Stack**: Profile creation flow and WebView
+  2. **Modal Stack**: Profile creation flow, WebView, and Settings
   3. **Onboarding Stack**: First-time user experience
 - Navigation types and constants in `/lib/navigation.ts`
 - Deep linking support through Expo Linking
 - Navigation param lists:
   - `RootStackParamList`: Main app navigation
-  - `ModalStackParamList`: Modal screens (profile form, webview)
+  - `ModalStackParamList`: Modal screens (profile form, webview, settings)
   - `ProfileCreateOrEditStackParamList`: Profile form flow (Name → Socials → Avatar) - used for both creating and editing profiles
   - `OnboardingStackParamList`: Onboarding screens
 
@@ -124,19 +125,80 @@ yarn lint
 ### State Management
 - Custom hooks for feature-specific state (`useOnboarding`, `useProfile`)
 - SQLite database for app data persistence
-- SecureStorage for sensitive data (DID private keys, credentials)
+- Platform-specific secure storage for DID private keys (SecureStore on iOS, AsyncStorage on Android)
 - Context providers for theme
 
 ### Storage Architecture
 - **SQLite Database**: User profiles, app state, social links, scan history
-- **SecureStorage**: DID private keys (Ed25519) used for signing JWTs, sensitive credentials
+- **Secure Key Storage (Platform-Specific)**: DID private keys (Ed25519) used for signing JWTs
+  - **iOS**: Uses Expo SecureStore (Keychain) with `AFTER_FIRST_UNLOCK` + `requireAuthentication: true`
+    - Keys backed up to iTunes/Finder and iCloud
+    - Requires biometric authentication (Face ID/Touch ID) to access
+  - **Android**: Uses AsyncStorage instead of SecureStore
+    - Keys backed up via Android Auto Backup to Google Drive
+    - Keys are encrypted by Android's OS-level encryption and Google's backup encryption (AES-256)
+    - Necessary because Android Keystore keys are hardware-bound and cannot be backed up
 - Database managed with Drizzle ORM for type-safe queries
 - Database model operations in `/lib/db/models/` organized by entity:
   - `app-state.ts`: AppStateFns namespace for app state operations
   - `user-profile.ts`: UserProfileFns namespace for profile CRUD
   - `scan-history.ts`: ScanHistoryFns namespace for scan tracking
-- Secure storage utilities in `/lib/secure-storage.ts`
+- Secure storage utilities in `/lib/secure-storage.ts` (handles platform-specific logic)
 - JWT signing utilities in `/lib/send-data.ts` for WebView communication
+
+### Backup & Restore Behavior
+
+#### Overview
+Both the SQLite database and DID private keys are automatically backed up on iOS and Android, ensuring users don't lose their identity when upgrading devices or restoring from backup.
+
+#### iOS Backup
+- **Database**: Automatically backed up to iCloud Backup and iTunes/Finder backups
+  - Stored in Documents directory (backed up by default)
+  - No configuration needed
+- **DID Keys**: Automatically backed up via Keychain
+  - `AFTER_FIRST_UNLOCK` accessibility allows backup to iTunes/Finder
+  - iCloud Keychain sync available if user enables it
+  - Biometric protection maintained after restore
+- **Requirements**: User must have iCloud Backup or iTunes/Finder backup enabled
+
+#### Android Backup
+- **Database**: Automatically backed up via Android Auto Backup to Google Drive
+  - App has `android:allowBackup="true"` enabled
+  - Database files in internal storage are included by default
+  - Backups occur automatically when device is idle, charging, and on Wi-Fi
+- **DID Keys**: Backed up via AsyncStorage (included in Auto Backup)
+  - SecureStore (Android Keystore) explicitly excluded from backup (hardware-bound keys)
+  - AsyncStorage provides automatic backup while sacrificing hardware backing
+  - Protected by OS-level file encryption + Google's backup encryption (AES-256)
+- **Requirements**:
+  - Android 6.0+ (API level 23)
+  - User has Google account with backup enabled
+  - Under 25MB backup limit per app
+
+#### User Scenarios
+
+**✅ Data Preserved:**
+- User loses phone and restores from backup → Full data restored (profiles + keys)
+- User gets new phone and restores from backup → Full data restored
+- User factory resets device and restores from backup → Full data restored
+
+**❌ Data Lost:**
+- User deletes and reinstalls app without restoring from backup → Fresh start
+- User has backups disabled on device → Fresh start
+- User exceeds 25MB limit on Android (unlikely for typical usage)
+
+#### Security Implications
+- **iOS**: Keys stored in hardware-backed Keychain with biometric protection + encrypted backups (strong security)
+- **Android**: Keys stored in AsyncStorage with OS encryption + cloud backup encryption (trade-off for recoverability)
+- This approach prioritizes user experience (maintaining identity across devices) over maximum security, which is appropriate for a social identity app (not a crypto wallet)
+
+#### Testing Backup/Restore
+To verify backup functionality:
+1. Create a profile with DID in the app
+2. Trigger a backup (iCloud/iTunes on iOS, Auto Backup on Android)
+3. Delete the app or reset device
+4. Restore from backup
+5. Verify profile data and ability to sign JWTs (keys restored correctly)
 
 ### Database Structure
 - **`app_state`**: Global application state (current DID, welcome completion)
@@ -186,7 +248,7 @@ Database operations are organized into function namespaces by entity:
 ### Creating a Profile
 - The profile creation flow is a three-step modal flow (Name → Socials → Avatar) with progress indicator, data validation at each step, and SQLite database persistence
 - If a user does not have a profile, the first time you scan a QR code, the app will navigate to the profile creation flow
-- Profile creation generates a DID (Decentralized Identifier) stored securely in SecureStorage
+- Profile creation generates a DID (Decentralized Identifier) with private key stored securely (Keychain on iOS, AsyncStorage on Android)
 - Profile data (name, avatar, social links) stored in SQLite via `UserProfileFns.createProfileByDid()`
 - Profiles are a visual wrapper around a user's DID
 
@@ -203,8 +265,8 @@ Database operations are organized into function namespaces by entity:
 ### DID Integration
 - Decentralized Identity (DID) utilities in `/lib/did.ts`
 - DIDs used for user identification and profile resolution
-- Keys stored in SecureStorage
-- JWT signing and verification supported
+- Private keys stored platform-specifically (iOS Keychain via SecureStore, Android AsyncStorage)
+- JWT signing and verification supported using Ed25519 algorithm
 
 ### WebView & Mini App Integration
 - Implements the IRL Browser Standard for secure communication with third-party mini apps
@@ -244,7 +306,7 @@ Database operations are organized into function namespaces by entity:
 - See `/docs/irl-browser-standard.md` for full specification
 - **Security Architecture**:
   - **Dual Signing System**:
-    - Profile JWTs: Signed with user's DID private key (Ed25519, long-lived, stored in SecureStore)
+    - Profile JWTs: Signed with user's DID private key (Ed25519, long-lived, platform-specific storage)
     - WebView internal messages: Signed with ephemeral ECDSA P-256 keys (session-only, prevents XSS)
   - **XSS Protection** (`/lib/webview/webview-signing.ts`):
     - Fresh ECDSA P-256 key pair generated per WebView session
@@ -263,7 +325,8 @@ Database operations are organized into function namespaces by entity:
 - Expo Image Picker for avatar selection
 - react-native-webview for WebView screen
 - expo-sqlite with Drizzle ORM for local database (type-safe queries and migrations)
-- Expo SecureStore for sensitive data (DID private keys)
+- Expo SecureStore for DID private keys (iOS only - uses Keychain)
+- @react-native-async-storage/async-storage for DID private keys (Android only - backupable)
 - @stablelib/ed25519 for Ed25519 cryptographic signing (JWT signatures for profile data)
 - @noble/curves for ECDSA P-256 cryptographic signing (ephemeral WebView message signing)
 - base64-js for base64 encoding/decoding
