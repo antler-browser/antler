@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CameraView as ExpoCameraView, CameraType, FlashMode } from 'expo-camera';
+import { CameraView as ExpoCameraView, CameraType } from 'expo-camera';
 import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
@@ -24,7 +24,7 @@ export function CameraView({
   hasAtLeastOneProfile,
 }: CameraViewProps) {
   const [facing, setFacing] = useState<CameraType>(Camera.CAMERA_SETTINGS.defaultFacing);
-  const [flash, setFlash] = useState<FlashMode>('off');
+  const [enableTorch, setEnableTorch] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
   const [webViewPublicKey, setWebViewPublicKey] = useState<string | null>(null);
@@ -86,23 +86,11 @@ export function CameraView({
   };
 
   const toggleFlash = () => {
-    setFlash(current => {
-      switch (current) {
-        case 'off':
-          return 'on';
-        default:
-          return 'off';
-      }
-    });
+    setEnableTorch(current => !current);
   };
 
   const getFlashIcon = () => {
-    switch (flash) {
-      case 'off':
-        return 'flash-off';
-      default:
-        return 'flash';
-    }
+    return enableTorch ? 'flash' : 'flash-off';
   };
 
   const fakeQRCodeForDevMode = useCallback(async () => {
@@ -190,7 +178,7 @@ export function CameraView({
         <ExpoCameraView
           style={StyleSheet.absoluteFillObject}
           facing={facing}
-          flash={flash}
+          enableTorch={enableTorch}
           onBarcodeScanned={handleBarCodeScanned}
         >
           <SafeAreaView style={styles.cameraOverlay}>
