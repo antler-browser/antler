@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { getInjectedJavaScript, BrowserInfo } from '../../lib/webview-injected';
+import { getInjectedJavaScript, BrowserInfo } from '../../lib/webview/webview-injected';
 
 // Type definitions for the window.irlBrowser API that gets injected
 interface IrlBrowserAPI {

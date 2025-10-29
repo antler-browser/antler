@@ -12,8 +12,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { ThemedText, ThemedView } from '../components/ui';
-import { Navigation, SendData, WebViewSigning } from '../../lib';
+import { Navigation, SendData, WebViewSigning, ScanHistoryFns } from '../../lib';
 import { getInjectedJavaScript, BrowserInfo } from '../../lib/webview/webview-injected';
+import { fetchManifest } from '../../lib/webview/manifest';
 
 type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, typeof Navigation.WEBVIEW_SCREEN>;
 
@@ -41,6 +42,35 @@ export function WebViewScreen() {
       console.log('[WebView Diagnostics] Component mounted, initializing WebView...', Date.now());
     }
   }, []);
+
+  // Fetch manifest and save scan if valid manifest found
+  useEffect(() => {
+    const fetchManifestAndSaveScan = async () => {
+      try {
+        const manifest = await fetchManifest(currentUrl);
+
+        if (manifest) {
+          // Save scan with manifest data (only mini apps with manifests are tracked)
+          await ScanHistoryFns.saveScan(currentUrl, did, manifest);
+
+          if (__DEV__) {
+            console.log('[WebView] Saved scan to history with manifest:', manifest.name);
+          }
+        } else {
+          if (__DEV__) {
+            console.log('[WebView] No manifest found - scan not tracked (regular QR code)');
+          }
+        }
+      } catch (error) {
+        console.error('[WebView] Error fetching manifest:', error);
+        // Silent fail - don't disrupt user experience or save scan
+      }
+    };
+
+    if (!loading && currentUrl) {
+      fetchManifestAndSaveScan();
+    }
+  }, [loading, currentUrl, did]);
 
   // Send disconnect event before closing
   const handleDisconnect = async () => {

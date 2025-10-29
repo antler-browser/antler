@@ -12,17 +12,38 @@ export interface ScanHistory {
   url: string;
   profileDid: string;
   createdAt: Date;
+  name: string | null;
+  description: string | null;
+  location: string | null;
+  icon: string | null;
+  type: string | null;
 }
 
 export namespace ScanHistoryFns {
   /**
-   * Save a new scan to history
+   * Save a new scan to history with manifest data
+   * Only called after successful manifest fetch (regular QR codes not tracked)
    */
-  export async function saveScan(url: string, profileDid: string): Promise<void> {
+  export async function saveScan(
+    url: string,
+    profileDid: string,
+    manifest?: {
+      name?: string | null;
+      description?: string | null;
+      location?: string | null;
+      icon?: string | null;
+      type?: string | null;
+    }
+  ): Promise<void> {
     try {
       await db.insert(schema.scanHistory).values({
         url,
         profileDid,
+        name: manifest?.name ?? null,
+        description: manifest?.description ?? null,
+        location: manifest?.location ?? null,
+        icon: manifest?.icon ?? null,
+        type: manifest?.type ?? null,
       });
     } catch (error) {
       console.error(`Error saving scan history: ${(error as Error).message}`);
@@ -51,6 +72,11 @@ export namespace ScanHistoryFns {
         url: scan.url,
         profileDid: scan.profileDid,
         createdAt: scan.createdAt,
+        name: scan.name,
+        description: scan.description,
+        location: scan.location,
+        icon: scan.icon,
+        type: scan.type,
       }));
     } catch (error) {
       console.error(`Error getting scan history: ${(error as Error).message}`);

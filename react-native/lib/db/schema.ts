@@ -40,13 +40,19 @@ export const socialLinks = sqliteTable('social_links', {
 
 /**
  * Scan History Table
- * Stores QR code scan history
+ * Stores QR code scan history with mini app manifest data
  */
 export const scanHistory = sqliteTable('scan_history', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   url: text('url').notNull(),
   profileDid: text('profile_did').notNull().references(() => userProfiles.did, { onDelete: 'cascade' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  // Manifest fields (snapshot at visit time)
+  name: text('name'),
+  description: text('description'),
+  location: text('location'),
+  icon: text('icon'),
+  type: text('type'),
 });
 
 // Relations
