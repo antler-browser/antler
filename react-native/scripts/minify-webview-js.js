@@ -9,10 +9,10 @@ const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
 
-const MAIN_TEMPLATE_PATH = path.join(__dirname, '../lib/webview-injected.raw.js');
-const CONSOLE_INTERCEPT_PATH = path.join(__dirname, '../lib/webview-console-intercept.raw.js');
-const MAIN_OUTPUT_PATH = path.join(__dirname, '../lib/webview-injected.min.ts');
-const CONSOLE_OUTPUT_PATH = path.join(__dirname, '../lib/webview-console-intercept.min.ts');
+const MAIN_TEMPLATE_PATH = path.join(__dirname, '../lib/webview/webview-injected.raw.js');
+const CONSOLE_INTERCEPT_PATH = path.join(__dirname, '../lib/webview/webview-console-intercept.raw.js');
+const MAIN_OUTPUT_PATH = path.join(__dirname, '../lib/webview/webview-injected.min.ts');
+const CONSOLE_OUTPUT_PATH = path.join(__dirname, '../lib/webview/webview-console-intercept.min.ts');
 
 console.log('[Build] Minifying WebView injected JavaScript...\n');
 

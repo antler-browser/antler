@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { ThemedText, ThemedView } from '../components/ui';
 import { Navigation, SendData, WebViewSigning } from '../../lib';
-import { getInjectedJavaScript, BrowserInfo } from '../../lib/webview-injected';
+import { getInjectedJavaScript, BrowserInfo } from '../../lib/webview/webview-injected';
 
 type WebViewScreenRouteProp = RouteProp<Navigation.ModalStackParamList, typeof Navigation.WEBVIEW_SCREEN>;
 

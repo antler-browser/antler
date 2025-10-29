@@ -51,13 +51,13 @@ yarn android
 # Type check and build (includes WebView minification)
 yarn build
 
-# Minify WebView JavaScript (run after editing /lib/*.raw.js files)
+# Minify WebView JavaScript (run after editing /lib/webview/*.raw.js files)
 yarn minify-webview
 ```
 
 ### WebView JavaScript
 The `window.irlBrowser` API injected into mini apps is pre-minified at build time for optimal performance:
-- **Raw templates:** `lib/webview-injected.raw.js`, `lib/webview-console-intercept.raw.js`
+- **Raw templates:** `lib/webview/webview-injected.raw.js`, `lib/webview/webview-console-intercept.raw.js`
 - **Minified outputs:** Auto-generated `.min.ts` files (59% smaller)
 - Run `yarn minify-webview` after editing raw templates
 
