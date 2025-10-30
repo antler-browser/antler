@@ -18,13 +18,14 @@ export enum WebViewDataType {
  * to retrieve the user's profile information.
  *
  * @param did - The user's DID (used to fetch profile and as JWT issuer)
+ * @param aud - The audience (mini app URL) for the JWT
  * @returns Signed JWT string with profile details
  *
  * @example
- * const jwt = await getProfileDetailsJWT("did:key:z6Mk...");
+ * const jwt = await getProfileDetailsJWT("did:key:z6Mk...", "https://example.app");
  * // Returns JWT with profile data
  */
-export async function getProfileDetailsJWT(did: string): Promise<string> {
+export async function getProfileDetailsJWT(did: string, aud: string): Promise<string> {
   // Fetch user profile from database
   const profile = await UserProfileFns.getProfileByDID(did);
   if (!profile) {
@@ -39,10 +40,10 @@ export async function getProfileDetailsJWT(did: string): Promise<string> {
       handle: link.handle,
     })) || [],
   };
-  
+
   // For getProfileDetails, we don't use a specific event type
   // The method itself indicates the intent
-  return createJWT(did, 'irl:profile:details', payload);
+  return createJWT(did, aud, 'irl:profile:details', payload);
 }
 
 /**
@@ -53,14 +54,15 @@ export async function getProfileDetailsJWT(did: string): Promise<string> {
  * the DID and avatar data, or null if the user has no avatar.
  *
  * @param did - The user's DID (used to fetch profile and as JWT issuer)
+ * @param aud - The audience (mini app URL) for the JWT
  * @returns Signed JWT string with avatar data, or null if no avatar
  *
  * @example
- * const jwt = await getAvatarJWT("did:key:z6Mk...");
+ * const jwt = await getAvatarJWT("did:key:z6Mk...", "https://example.app");
  * // Returns JWT string or null
  * // Decoded payload: { did: "did:key:...", avatar: "data:image/jpeg;base64,..." }
  */
-export async function getAvatarJWT(did: string): Promise<string | null> {
+export async function getAvatarJWT(did: string, aud: string): Promise<string | null> {
   // Fetch user profile from database
   const profile = await UserProfileFns.getProfileByDID(did);
   if (!profile) {
@@ -79,7 +81,7 @@ export async function getAvatarJWT(did: string): Promise<string | null> {
   };
 
   // Sign and return JWT
-  return createJWT(did, 'irl:avatar', payload);
+  return createJWT(did, aud, 'irl:avatar', payload);
 }
 
 /**
@@ -93,19 +95,21 @@ export async function getAvatarJWT(did: string): Promise<string | null> {
  *
  * @param type - The type of data to send (profile disconnected, error, etc.)
  * @param did - The user's DID (used to fetch private key and as JWT issuer)
+ * @param aud - The audience (mini app URL) for the JWT
  * @returns Signed JWT string ready to be posted to WebView
  *
  * @example
  * const jwt = await sendDataToWebView(
  *   WebViewDataType.PROFILE_DISCONNECTED,
- *   "did:key:z6Mk..."
+ *   "did:key:z6Mk...",
+ *   "https://example.app"
  * );
  * // Send via: window.postMessage({ jwt }, '*');
  */
-export async function sendDataToWebView(type: WebViewDataType, did: string): Promise<string> {
+export async function sendDataToWebView(type: WebViewDataType, did: string, aud: string): Promise<string> {
   // Build payload based on type
   const payload = await createPayload(type, did);
-  return createJWT(did, type, payload);
+  return createJWT(did, aud, type, payload);
 }
 
 async function createPayload(type: WebViewDataType, did: string): Promise<Record<string, any>> {
@@ -128,9 +132,10 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
     }
 
     case WebViewDataType.ERROR: {
-      // For errors, payload should contain error details
+      // For errors, payload should contain structured error details per IRL Browser Standard
       return {
-        error: 'An error occurred'
+        code: 'UNKNOWN_ERROR',
+        message: 'An error occurred'
       };
     }
 
@@ -143,6 +148,7 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
  * Signs a JWT with EdDSA algorithm for IRL Browser Standard
  *
  * @param did - User's DID (used as issuer)
+ * @param aud - Audience (mini app URL)
  * @param type - Message type (e.g., 'irl:profile:disconnected')
  * @param payload - Data payload to sign (will be placed in 'data' claim)
  * @returns Signed JWT string
@@ -150,11 +156,12 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
  * @example
  * const jwt = await createJWT(
  *   "did:key:z6Mk...",
+ *   "https://example.app",
  *   "irl:profile:disconnected",
  *   { did: "did:key:z6Mk...", name: "Alice", socials: [] }
  * );
  */
-async function createJWT(did: string, type: string, payload: Record<string, any>): Promise<string> {
+async function createJWT(did: string, aud: string, type: string, payload: Record<string, any>): Promise<string> {
   // Fetch DID private key from secure storage
   const privateKeyAsBase64 = await SecureStorage.getDIDPrivateKey(did);
 
@@ -182,6 +189,7 @@ async function createJWT(did: string, type: string, payload: Record<string, any>
 
   const jwtPayload = {
     iss: did,
+    aud,
     iat,
     exp,
     type,

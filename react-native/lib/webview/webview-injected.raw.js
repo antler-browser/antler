@@ -158,7 +158,16 @@
             handled = true;
             clearTimeout(timeoutId);
             window.removeEventListener('message', handleResponse);
-            reject(new Error(responseData.error || 'Request failed'));
+            // Handle structured error format { code, message } or fallback to string
+            var errorMessage = 'Request failed';
+            if (responseData.error) {
+              if (typeof responseData.error === 'object' && responseData.error.message) {
+                errorMessage = responseData.error.message;
+              } else if (typeof responseData.error === 'string') {
+                errorMessage = responseData.error;
+              }
+            }
+            reject(new Error(errorMessage));
           }
         }
       }

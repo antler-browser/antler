@@ -29,10 +29,11 @@ export function WebViewScreen() {
   const navigation = useNavigation();
   const route = useRoute<WebViewScreenRouteProp>();
   const did = route.params.did;
+  const url = route.params.url;
   const webViewPublicKey = route.params.webViewPublicKey;
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
-  const [currentUrl, setCurrentUrl] = useState(route.params?.url || '');
+  const [currentUrl, setCurrentUrl] = useState(url || '');
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
 
@@ -77,7 +78,8 @@ export function WebViewScreen() {
     try {
       const disconnectJWT = await SendData.sendDataToWebView(
         SendData.WebViewDataType.PROFILE_DISCONNECTED,
-        did
+        did,
+        url
       );
 
       webViewRef.current?.postMessage(JSON.stringify({ jwt: disconnectJWT }));
@@ -137,7 +139,7 @@ export function WebViewScreen() {
 
         case 'irl:api:getProfileDetails': {
           // Generate and send profile JWT when web app requests it
-          const profileJWT = await SendData.getProfileDetailsJWT(did);
+          const profileJWT = await SendData.getProfileDetailsJWT(did, url);
 
           // Build response with requestId and timestamp
           const response = {
@@ -159,7 +161,7 @@ export function WebViewScreen() {
 
         case 'irl:api:getAvatar': {
           // Get avatar JWT when web app requests it (returns null if no avatar)
-          const avatarJWT = await SendData.getAvatarJWT(did);
+          const avatarJWT = await SendData.getAvatarJWT(did, url);
 
           // Build response with requestId and timestamp
           // If avatarJWT is null, use 'result', otherwise use 'jwt' (consistent with getProfileDetails)

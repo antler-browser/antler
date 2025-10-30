@@ -5,6 +5,16 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(),
 }));
 
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  __esModule: true,
+  default: {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+  },
+}));
+
 // Mock db/models before import
 jest.mock('../../lib/db/models', () => ({
   UserProfileFns: {
@@ -33,6 +43,7 @@ function decodeJwt(jwt: string): any {
 
 describe('sendDataToWebView', () => {
   const mockDID = 'did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK';
+  const mockAudience = 'https://example.app';
   let mockKeyPair: ed25519.KeyPair;
   let mockPrivateKeyBase64: string;
 
@@ -62,7 +73,7 @@ describe('sendDataToWebView', () => {
 
       (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
 
-      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID);
+      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience);
       const decoded = decodeJwt(jwt);
 
       // Verify type field is at root level of JWT payload
@@ -90,7 +101,7 @@ describe('sendDataToWebView', () => {
 
       (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
 
-      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID);
+      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience);
       const decoded = decodeJwt(jwt);
 
       expect(decoded.type).toBe('irl:profile:disconnected');
@@ -105,19 +116,21 @@ describe('sendDataToWebView', () => {
       (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID)
+        sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience)
       ).rejects.toThrow('No profile found for DID');
     });
   });
 
   describe('ERROR', () => {
-    it('should create a valid JWT with error data and type field', async () => {
-      const jwt = await sendDataToWebView(WebViewDataType.ERROR, mockDID);
+    it('should create a valid JWT with structured error format', async () => {
+      const jwt = await sendDataToWebView(WebViewDataType.ERROR, mockDID, mockAudience);
       const decoded = decodeJwt(jwt);
 
       // Verify type field is at root level of JWT payload
       expect(decoded.type).toBe('irl:error');
-      expect((decoded.data as any).error).toBe('An error occurred');
+      // Verify structured error format per IRL Browser Standard
+      expect((decoded.data as any).code).toBe('UNKNOWN_ERROR');
+      expect((decoded.data as any).message).toBe('An error occurred');
     });
   });
 
@@ -135,7 +148,7 @@ describe('sendDataToWebView', () => {
 
       (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
 
-      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID);
+      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience);
 
       // Decode header manually
       const [headerB64] = jwt.split('.');
@@ -147,6 +160,33 @@ describe('sendDataToWebView', () => {
 
       expect(header.alg).toBe('EdDSA');
       expect(header.typ).toBe('JWT');
+    });
+  });
+
+  describe('JWT Claims', () => {
+    it('should include aud claim per IRL Browser Standard', async () => {
+      const mockProfile = {
+        did: mockDID,
+        name: 'Test',
+        avatar: null,
+        socialLinks: [],
+        position: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
+
+      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience);
+      const decoded = decodeJwt(jwt);
+
+      // Verify aud claim is present and matches the audience
+      expect(decoded.aud).toBe(mockAudience);
+      // Verify other standard claims
+      expect(decoded.iss).toBe(mockDID);
+      expect(decoded.iat).toBeDefined();
+      expect(decoded.exp).toBeDefined();
+      expect(decoded.exp).toBe(decoded.iat + 120); // 2 minutes
     });
   });
 
@@ -164,7 +204,7 @@ describe('sendDataToWebView', () => {
 
       (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
 
-      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID);
+      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience);
 
       // Split JWT into parts
       const [headerB64, payloadB64, signatureB64] = jwt.split('.');
@@ -194,7 +234,7 @@ describe('sendDataToWebView', () => {
       jest.spyOn(SecureStorage, 'getDIDPrivateKey').mockResolvedValue(null);
 
       await expect(
-        sendDataToWebView(WebViewDataType.ERROR, mockDID)
+        sendDataToWebView(WebViewDataType.ERROR, mockDID, mockAudience)
       ).rejects.toThrow('No private key found for DID');
     });
 
@@ -204,7 +244,7 @@ describe('sendDataToWebView', () => {
       jest.spyOn(SecureStorage, 'getDIDPrivateKey').mockResolvedValue(invalidKey);
 
       await expect(
-        sendDataToWebView(WebViewDataType.ERROR, mockDID)
+        sendDataToWebView(WebViewDataType.ERROR, mockDID, mockAudience)
       ).rejects.toThrow('Invalid private key length. Expected 64 bytes.');
     });
   });
@@ -223,7 +263,7 @@ describe('sendDataToWebView', () => {
 
       (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
 
-      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID);
+      const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience);
 
       // Base64URL should not contain +, /, or = characters
       expect(jwt).not.toContain('+');

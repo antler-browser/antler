@@ -55,13 +55,13 @@ Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
 ### manifest.json Schema
 
 ```json
-{  
-	"name": "Coffee Shop",
-	"description": "Cozy little bakery and coffee shop",
-	"location": "123 Davie Street, Vancouver, BC",
-	"icon": "https://example.com/icon.png",
-	"type": "place",
-	"permissions": ["profile"] //profile is granted by default
+{
+  "name": "Coffee Shop",
+  "description": "Cozy little bakery and coffee shop",
+  "location": "123 Davie Street, Vancouver, BC",
+  "icon": "https://example.com/icon.png",
+  "type": "place",
+  "permissions": ["profile"] //profile is granted by default
 }
 ```
 
@@ -70,13 +70,13 @@ Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
 | `name` | string | Yes | Display name of the mini app |
 | `description` | string | No | Short description of the mini app |
 | `location` | string | No | Location of the experience |
-| `icon` | string (URL) | No | App icon URL (recommended: 512x512px) |
+| `icon` | string (URL) | No | App icon URL (recommended: 512x512px). **Note:** You can use an absolute url or a relative path like ./icon.png (which resolves to https://example.com/icon.png) |
 | `type` | string | No | Context type: “place”, “event”, “club”, etc. |
 | `permissions` | array | No | Requested permissions. “profile” is granted by default. |
 
 **Note:** Currently, this spec just supports the profile permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).
 
-## **Decentralized Identifiers**
+## Decentralized Identifiers
 
 When a user downloads an IRL Browser, they create a profile on the app. Under the hood, each profile is a DID ([Decentralized Identifier](https://www.w3.org/TR/did-1.0/) - a W3C standard) with additional details (like name, avatar, and links to socials). 
 
@@ -118,17 +118,17 @@ interface IRLBrowser {
 }
 ```
 
-**Profile Details**
+#### Getting profile details
 
 `getProfileDetails()` returns the user’s profile details as a signed JWT. 
 
 ```tsx
 {
-	"did": "did:key:123456789abcdefghi",
-	"name": "Danny Mathews",
-	"socials": [
-		{ "platform": "INSTAGRAM", "handle": "dmathewwws" }
-	]  
+  "did": "did:key:123456789abcdefghi",
+  "name": "Danny Mathews",
+  "socials": [
+    { "platform": "INSTAGRAM", "handle": "dmathewwws" }
+  ]  
 }
 ```
 
@@ -140,30 +140,30 @@ interface IRLBrowser {
 
 For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out this code.
 
-**Avatar Image**
+#### Getting a user’s avatar
 
-`getAvatar()` returns the user’s base64 encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.
+`getAvatar()` returns the user’s base64-encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.
 
 ```tsx
 {
-	"did": "did:key:123456789abcdefghi",
-	"avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...",
+  "did": "did:key:123456789abcdefghi",
+  "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD..."
 }
 ```
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `did` | string | Yes | User's Decentralized Identifier (DID) |
-| `avatar` | string | Yes | User's avatar as base64 encoded string |
+| `avatar` | string | Yes | User's avatar as base64-encoded string |
 
-**Browser Details**
+#### Getting browser details
 
 `getBrowserDetails()` returns information about the IRL Browser.
 
 ```tsx
 {
-	"name": "Antler",
-	"version": "1.0.0",
+  "name": "Antler",
+  "version": "1.0.0",
   "platform": "ios",
   "supportedPermissions": ["profile"]
 }
@@ -176,7 +176,9 @@ For security reasons, always reconstruct social links client-side rather than tr
 | `platform` | string | Yes | `ios` or `android` |
 | `supportedPermissions` | array | Yes | The permission that this IRL Browser has implemented.  |
 
-### Checking for an IRL Browser
+#### Checking for an IRL Browser
+
+Your mini app can detect whether it's running inside an IRL Browser or a regular web browser.
 
 ```jsx
 if (typeof window.irlBrowser !== 'undefined') {
@@ -184,10 +186,8 @@ if (typeof window.irlBrowser !== 'undefined') {
   const info = window.irlBrowser.getInfo();
   console.log(`Running in ${info.name} v${info.version}`);
 } else {
-  // Regular web browser - show message to download an IRL Browser
-  body.innerHTML = `<h1>Scan with an IRL Browser</h1>
-	  <p>Download Antler or another IRL Browser to access this experience</p>
-  `;
+  // Regular web browser
+  console.log('Not in an IRL Browser');
 }
 ```
 
@@ -198,30 +198,30 @@ A user may perform an action inside the IRL Browser that you want to know about.
 ```jsx
 window.addEventListener('message', async (event) => {
   try {
-	  if (!event.data?.jwt) { return }
-	  
-	  // verify JWT is valid 
-	  const payload = await decodeAndVerifyJWT(event.data.jwt);
-
-		// process message based on the type
-	  switch (payload.type) {
-		  case 'irl:profile:disconnected':
-			  const { type, ...profile } = payload.data;
-			  console.log('User DID:', payload.iss);
-			  console.log('User Name:', profile.name);
-			  break;
-			default:
-				console.warn('Unknown message type:', payload.data.type);
-		}
+    if (!event.data?.jwt) { return }
+    
+    // verify JWT is valid
+    const payload = await decodeAndVerifyJWT(event.data.jwt);
+    
+    // process message based on the type
+    switch (payload.type) {
+      case 'irl:profile:disconnected':
+        const { type, ...profile } = payload.data;
+        console.log('User DID:', payload.iss);
+        console.log('User Name:', profile.name);
+        break;
+      default:
+	      console.warn('Unknown message type:', payload.data.type);
+	  }
 	} catch (error) {
-		console.error('Error processing message:', error);
+	  console.error('Error processing message:', error);
 	}
 });
 ```
 
 Check out this example code if you want to add decodeAndVerifyJWT to your project.
 
-### Message Types
+#### Possible message types
 
 | Type | Description | Required Permission |
 | --- | --- | --- |
@@ -229,28 +229,28 @@ Check out this example code if you want to add decodeAndVerifyJWT to your projec
 | `irl:error` | Error data | 
  |
 
-**Profile Details**
+##### Profile Disconnected
 
 `irl:profile:disconnected` returns the same profile details mentioned above.
 
 ```json
 {
-	"did": "did:key:123456789abcdefghi",
-	"name": "Danny Mathews",
-	"socials": [
-		{ "platform": "INSTAGRAM", "handle": "dmathewwws" }
-	]  
+  "did": "did:key:123456789abcdefghi",
+  "name": "Danny Mathews",
+  "socials": [
+    { "platform": "INSTAGRAM", "handle": "dmathewwws" }
+  ]  
 }
 ```
 
-**Error Handling**
+##### Error Handling
 
 `irl:error` returns errors from an IRL Browser in the following format.
 
 ```json
 {
-	"code": "PERMISSION_NOT_DECLARED",
-	"message": "Permission not in manifest",
+  "code": "PERMISSION_NOT_DECLARED",
+  "message": "Permission not in manifest"
 }
 ```
 
@@ -265,12 +265,12 @@ All data passed from the IRL Browser to a mini app is done via signed JWTs ([JSO
 
 ### JWT Header
 
-Useful to know what algorithm to use to decode the JWT. If you use a JWT library, this part is usually done behind the scenes for you. 
+It's useful to know what algorithm to use to decode the JWT. If you use a JWT library, this part is usually done behind the scenes for you. 
 
 ```json
-{  
-	"alg": "EdDSA",  
-	"typ": "JWT",
+{
+  "alg": "EdDSA",
+  "typ": "JWT"
 }
 ```
 
@@ -284,34 +284,100 @@ Useful to know what algorithm to use to decode the JWT. If you use a JWT library
 Decoded data inside the JWT Payload.
 
 ```json
-{  
-	"iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
-	"iat": 1728393600,  
-	"exp": 1728397200,
-	"type": "irl:profile:disconnected"
+{
+  "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+  "aud": "https://example.app",
+  "iat": 1728393600,
+  "exp": 1728397200,
+  "type": "irl:profile:disconnected",
   "data": 
-	  {
-		  "did": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
-		  "name": "Danny Mathews",
-		  "socials": [
-			  { "platform": "INSTAGRAM", "handle": "dmathewwws" }
-			]  
-		}
+    {
+      "did": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+      "name": "Danny Mathews",
+      "socials": [{ "platform": "INSTAGRAM", "handle": "dmathewwws" }]
+    }
 }
 ```
 
 | Claim | Description |
 | --- | --- |
 | `iss` | Issuer - Public key of the user’s DID. Use this when verifying the JWT. |
+| `aud` | Intended Audience - The mini app that requested the JWT.  |
 | `iat` | Issued at timestamp |
 | `exp` | Expiration timestamp (default is 2 minutes) |
-| `type` | Method or Event type |
+| `type` | IRL Browser function or event type |
 | `data` | Type-specific payload |
 
 ### Best Practices
 
 1. **Decoding & verifying the JWT** - Never trust unverified data. Decode JWTs using the `alg`. Verify that the JWT has been signed by the user’s public key (`iss` field). 
-2. **Validate expiration** - Reject expired tokens. Check the `exp` field. 
+2. **Validate audience -** Ensure the `aud` claim matches the domain of the mini app. This is set by the IRL Browser based on the url that launched the WebView.
+3. **Validate expiration** - Reject expired tokens. Check the `exp` field. 
+
+## Making Authenticated Requests
+
+When your mini app needs to make an authenticated request on behalf of a user, call `getProfileDetails()`to get a valid JWT for them. This can be used directly as a Bearer token to make authenticated requests ie) no need to build session tokens or additional auth infrastructure. 
+
+### Your Mini App (Client-Side)
+
+```tsx
+// Get profile JWT when you need to make an authenticated request
+const jwt = await window.irlBrowser.getProfileDetails();
+
+// Use it as a Bearer token in your requests
+const response = await fetch('https://example.app/api/posts', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${jwt}`,
+    'Content-Type': 'application/json'},
+    body: JSON.stringify({ content: 'Hello world' })
+  }
+);
+
+if (response.ok) {
+  console.log('Post created successfully');
+}
+```
+
+### Your Backend
+
+Your backend checks for a valid JWT before processing the rest of the request. The JWT contains the DID of the user making the request.
+
+```tsx
+app.post('/api/posts', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const { content } = req.body;
+    
+    // Get User's JWT
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Invalid authorization header' });
+    }
+    
+    const jwt = authHeader.slice(7).trim();
+    
+    if (!jwt) { return res.status(401).json({ error: 'No token provided' }); }
+    
+    // Decode and verify JWT signature using DID public key
+    const payload = await verifyAndDecodeJWT(jwt);
+    
+    // Process authenticated request
+    await db.posts.create({ 
+      content,
+      authorId: payload.iss  // User's DID from JWT
+    });
+    
+    res.json({ success: true });
+    
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid JWT' });
+  }
+});
+```
+
+**Note**: You will most likely need a new JWT for each request as JWTs expire after 2 minutes.
+
+See code example for verifyAndDecodeJWT. We decode & verify JWT signature including making sure the `aud` claim is for our mini app.
 
 **License**: [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
 
