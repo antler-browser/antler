@@ -27,7 +27,7 @@ export default {
     android: {
       package: "com.antlerbrowser",
       adaptiveIcon: {
-        foregroundImage: "./assets/images/antler-icon.png",
+        foregroundImage: "./assets/images/android-icon-foreground.png",
         backgroundImage: "./assets/images/android-background.png",
       },
       edgeToEdgeEnabled: true,
