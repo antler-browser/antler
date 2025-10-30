@@ -61,7 +61,7 @@ export function NameScreen() {
 
   if (mode === 'edit' && !profile) {
     return (
-      <Screen edges={['top', 'bottom']}>
+      <Screen edges={['top']}>
         <ThemedView />
       </Screen>
     );
@@ -69,7 +69,7 @@ export function NameScreen() {
 
 
   return (
-    <Screen edges={['top', 'bottom']}>
+    <Screen edges={['top']}>
       <ThemedView style={styles.headerButtons}>
         <ProgressIndicator currentStep={1} totalSteps={3} />
         <HeaderCloseButton />
@@ -115,16 +115,16 @@ export function NameScreen() {
               ) : null}
             </ThemedView>
           </ThemedView>
-
-          <ThemedView style={styles.footer}>
-            <ThemedButton
-              title='Next'
-              onPress={handleNext}
-              variant="primary"
-            />
-          </ThemedView>
         </ThemedView>
         </ScrollView>
+
+        <ThemedView style={styles.footer}>
+          <ThemedButton
+            title='Next'
+            onPress={handleNext}
+            variant="primary"
+          />
+        </ThemedView>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -140,12 +140,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
   content: {
-    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 30,
   },
   header: {
     alignItems: 'center',
@@ -161,9 +160,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   middle: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 20,
+    paddingVertical: 40,
   },
   errorText: {
     fontSize: 14,
@@ -172,5 +169,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    paddingTop: 12,
   },
 });

@@ -24,24 +24,23 @@ export function CameraPermissions({
   onRequestPermission,
 }: CameraPermissionsProps) {
   const navigation = useNavigation();
-  const colors = Colors['dark'];
 
   if (!permission.granted) {
     return (
       <Screen style={styles.background}>
         <ThemedView style={styles.permissionContainer}>
-          <Ionicons name="camera-outline" size={64} color={colors.tint} />
-          <ThemedText type="title" style={[styles.permissionTitle, { color: colors.text }]}>
+          <Ionicons name="camera-outline" size={64} color="#FF8FA9" />
+          <ThemedText type="title" style={[styles.permissionTitle, { color: '#FFFFFF' }]}>
             Enable Camera Access
           </ThemedText>
-          <ThemedText style={[styles.permissionText, { color: colors.text }]}>
+          <ThemedText style={[styles.permissionText, { color: '#FFFFFF' }]}>
             Camera access is required to scan QR codes.
           </ThemedText>
 
           {permissionError && (
             <ThemedView style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={20} color={colors.notification} />
-              <ThemedText style={[styles.errorText, { color: colors.notification }]}>
+              <Ionicons name="alert-circle" size={20} color="#FF8FA3" />
+              <ThemedText style={[styles.errorText, { color: '#FF8FA3' }]}>
                 {permissionError}
               </ThemedText>
             </ThemedView>
@@ -50,20 +49,18 @@ export function CameraPermissions({
           <ThemedView style={styles.buttonContainer}>
             {permission.canAskAgain ? (
               <TouchableOpacity
-                style={[styles.permissionButton, { backgroundColor: colors.tint }]}
-                onPress={onRequestPermission}
-              >
-                <ThemedText style={[styles.permissionButtonText, { color: colors.buttonText }]}>
+                style={[styles.permissionButton, { backgroundColor: '#FF8FA9' }]}
+                onPress={onRequestPermission}>
+                <ThemedText style={[styles.permissionButtonText, { color: '#FFFFFF' }]}>
                   {permissionError ? 'Try Again' : 'Grant Permission'}
                 </ThemedText>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
-                style={[styles.permissionButton, { backgroundColor: colors.tint }]}
-                onPress={() => Linking.openSettings()}
-              >
-                <Ionicons name="settings-outline" size={20} color={colors.buttonText} />
-                <ThemedText style={[styles.permissionButtonText, { color: colors.buttonText }]}>Open Settings</ThemedText>
+                style={[styles.permissionButton, { backgroundColor: '#FF8FA9' }]}
+                onPress={() => Linking.openSettings()}>
+                <Ionicons name="settings-outline" size={20} color="#FFFFFF" />
+                <ThemedText style={[styles.permissionButtonText, { color: '#FFFFFF' }]}>Open Settings</ThemedText>
               </TouchableOpacity>
             )}
           </ThemedView>

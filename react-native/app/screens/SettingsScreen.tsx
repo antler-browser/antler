@@ -78,7 +78,7 @@ export function SettingsScreen() {
   ) => {
     return (
       <TouchableOpacity
-        style={[styles.settingsItem, { backgroundColor: colors.card }]}
+        style={[styles.settingsItem]}
         onPress={onPress}
         activeOpacity={0.7}
       >
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   content: {
-    marginTop: 40,
+    marginTop: 20,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 40,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    paddingVertical: 16,
     borderRadius: 12,
     marginBottom: 8,
   },
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginLeft: 4,
   },
   settingsItemTitle: {
     fontSize: 16,

@@ -1,10 +1,11 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, StyleSheet, ActivityIndicator, StyleProp, ViewStyle, ButtonProps } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { Colors } from '../../../lib';
 import { ThemedText } from './ThemedText';
 
 interface ThemedButtonProps {
+  style?: StyleProp<ViewStyle>;
   title: string;
   onPress: () => void;
   variant?: 'primary' | 'secondary';
@@ -13,6 +14,7 @@ interface ThemedButtonProps {
 }
 
 export function ThemedButton({
+  style,
   title,
   onPress,
   variant = 'primary',
@@ -37,6 +39,7 @@ export function ThemedButton({
           borderWidth: isPrimary ? 0 : 1,
           opacity: disabled || loading ? 0.5 : 1,
         },
+        style,
       ]}
       onPress={onPress}
       disabled={disabled || loading}

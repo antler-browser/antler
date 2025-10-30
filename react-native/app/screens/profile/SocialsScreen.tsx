@@ -210,25 +210,24 @@ export function SocialsScreen() {
 
   if (mode === 'edit' && !profile) {
     return (
-      <Screen edges={['top', 'bottom']}>
+      <Screen edges={['top']}>
         <ThemedView />
       </Screen>
     );
   }
 
   return (
-    <Screen edges={['top', 'bottom']}>
+    <Screen edges={['top']}>
       <ThemedView style={styles.headerButtons}>
         <HeaderBackButton />
         <ProgressIndicator currentStep={2} totalSteps={3} />
       </ThemedView>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={100}
+        behavior='padding'
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -278,13 +277,12 @@ export function SocialsScreen() {
               )}
             </ThemedView>
 
-            <ThemedView style={styles.footer}>
-              <ThemedButton
-                title='Next'
-                onPress={handleNext}
-                variant="primary"
-              />
-            </ThemedView>
+            <ThemedButton
+              style={{ marginBottom: 20 }}
+              title='Next'
+              onPress={handleNext}
+              variant="primary"
+            />
           </ThemedView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -300,11 +298,7 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
   content: {
-    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
   },
@@ -322,13 +316,11 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   middle: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 40,
-    gap: 24,
+    paddingVertical: 24,
   },
   inputGroup: {
     gap: 8,
+    marginBottom: 24,
   },
   label: {
     fontSize: 14,
@@ -353,8 +345,9 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   footer: {
-    gap: 12,
-    paddingBottom: 30,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    paddingTop: 40,
   },
   moreOptionsText: {
     fontSize: 14,
