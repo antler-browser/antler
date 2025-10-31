@@ -151,7 +151,8 @@ export function CameraView({
       navigation.navigate(Navigation.MODAL_STACK, {
         screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
         params: {
-          pendingUrl: url
+          pendingUrl: url,
+          pendingWebViewPublicKey: webViewPublicKey
         }
       });
     } else {

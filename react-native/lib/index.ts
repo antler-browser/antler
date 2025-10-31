@@ -22,3 +22,6 @@ export * as SendData from './send-data';
 
 // WebView signing - export as a namespace object
 export * as WebViewSigning from './webview/webview-signing';
+
+// Remote debugging - export as a namespace object
+export * as RemoteDebug from './remote-debug';
