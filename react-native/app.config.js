@@ -49,6 +49,13 @@ export default {
         }
       ],
       [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Antler uses Face ID to save your profile securely."
+        }
+      ],
+      [
         "expo-font",
         {
           fonts: [

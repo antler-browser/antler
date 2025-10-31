@@ -17,11 +17,9 @@ export async function saveDIDPrivateKey(did: string, privateKey: string): Promis
     const key = getDIDPrivateKeyKey(did);
 
     if (Platform.OS === 'ios') {
-      // iOS: Use SecureStore with biometric protection and backup support
-      await SecureStore.setItemAsync(key, privateKey, {
-        keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
-        requireAuthentication: true,
-      });
+      // iOS: Use SecureStore with Keychain encryption and iCloud/iTunes backup support
+      // Keys are accessible after device unlock
+      await SecureStore.setItemAsync(key, privateKey, { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK });
     } else {
       // Android: Use AsyncStorage for automatic backup via Android Auto Backup
       // Keys are encrypted by Android's OS-level encryption and Google's backup encryption

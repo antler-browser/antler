@@ -131,9 +131,9 @@ yarn lint
 ### Storage Architecture
 - **SQLite Database**: User profiles, app state, social links, scan history
 - **Secure Key Storage (Platform-Specific)**: DID private keys (Ed25519) used for signing JWTs
-  - **iOS**: Uses Expo SecureStore (Keychain) with `AFTER_FIRST_UNLOCK` + `requireAuthentication: true`
+  - **iOS**: Uses Expo SecureStore (Keychain) with `AFTER_FIRST_UNLOCK`
     - Keys backed up to iTunes/Finder and iCloud
-    - Requires biometric authentication (Face ID/Touch ID) to access
+    - Keys encrypted by iOS Keychain, accessible after device unlock
   - **Android**: Uses AsyncStorage instead of SecureStore
     - Keys backed up via Android Auto Backup to Google Drive
     - Keys are encrypted by Android's OS-level encryption and Google's backup encryption (AES-256)
@@ -156,9 +156,9 @@ Both the SQLite database and DID private keys are automatically backed up on iOS
   - Stored in Documents directory (backed up by default)
   - No configuration needed
 - **DID Keys**: Automatically backed up via Keychain
-  - `AFTER_FIRST_UNLOCK` accessibility allows backup to iTunes/Finder
-  - iCloud Keychain sync available if user enables it
-  - Biometric protection maintained after restore
+  - `AFTER_FIRST_UNLOCK` accessibility allows backup to iTunes/Finder and iCloud
+  - Keys accessible after device unlock
+  - Real-time iCloud Keychain sync NOT supported (Expo SecureStore limitation)
 - **Requirements**: User must have iCloud Backup or iTunes/Finder backup enabled
 
 #### Android Backup
@@ -188,9 +188,9 @@ Both the SQLite database and DID private keys are automatically backed up on iOS
 - User exceeds 25MB limit on Android (unlikely for typical usage)
 
 #### Security Implications
-- **iOS**: Keys stored in hardware-backed Keychain with biometric protection + encrypted backups (strong security)
-- **Android**: Keys stored in AsyncStorage with OS encryption + cloud backup encryption (trade-off for recoverability)
-- This approach prioritizes user experience (maintaining identity across devices) over maximum security, which is appropriate for a social identity app (not a crypto wallet)
+- **iOS**: Keys stored in hardware-backed Keychain with encryption + iCloud/iTunes backups
+  - Keys accessible after device unlock
+- **Android**: Keys stored in AsyncStorage with OS encryption + cloud backup encryption
 
 #### Testing Backup/Restore
 To verify backup functionality:
