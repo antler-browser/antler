@@ -140,7 +140,7 @@
           if (!handled) {
             handled = true;
             clearTimeout(timeoutId);
-            window.removeEventListener('message', handleResponse);
+            window.removeEventListener('message', handleResponse, true);
             reject(new Error('Invalid signature - possible XSS forgery attempt'));
           }
           return;
@@ -150,14 +150,14 @@
           if (!handled) {
             handled = true;
             clearTimeout(timeoutId);
-            window.removeEventListener('message', handleResponse);
+            window.removeEventListener('message', handleResponse, true);
             resolve(responseData.jwt || responseData.result);
           }
         } else if (responseData.type === type + ':error') {
           if (!handled) {
             handled = true;
             clearTimeout(timeoutId);
-            window.removeEventListener('message', handleResponse);
+            window.removeEventListener('message', handleResponse, true);
             // Handle structured error format { code, message } or fallback to string
             var errorMessage = 'Request failed';
             if (responseData.error) {
@@ -172,7 +172,9 @@
         }
       }
 
-      window.addEventListener('message', handleResponse);
+      // Use capture phase to work on both Android (document dispatch) and iOS (window dispatch)
+      // Android dispatches on document, iOS on window - capture phase catches both
+      window.addEventListener('message', handleResponse, true);
 
       // Build message object with requestId
       var message = { type: type, requestId: requestId };
@@ -181,12 +183,14 @@
           message[key] = data[key];
         }
       }
-      window.ReactNativeWebView.postMessage(JSON.stringify(message), '*');
+      // Note: ReactNativeWebView.postMessage only accepts one argument (no targetOrigin)
+      // Unlike standard window.postMessage which requires (data, targetOrigin)
+      window.ReactNativeWebView.postMessage(JSON.stringify(message));
 
       timeoutId = setTimeout(function() {
         if (!handled) {
           handled = true;
-          window.removeEventListener('message', handleResponse);
+          window.removeEventListener('message', handleResponse, true);
           reject(new Error('Request timed out'));
         }
       }, timeout || 5000);
@@ -218,7 +222,8 @@
         },
         // Close the WebView
         close: function() {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'irl:api:close' }), '*');
+          // Note: ReactNativeWebView.postMessage only accepts one argument (no targetOrigin)
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'irl:api:close' }));
         }
       }),
       writable: false,      // Prevent reassignment: window.irlBrowser = {} throws TypeError
@@ -229,4 +234,3 @@
 
   console.log('[IRL Browser] WebView API injected');
 })();
-true; // Required for injectedJavaScript

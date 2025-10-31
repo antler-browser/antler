@@ -1164,8 +1164,8 @@ describe('webview-injected', () => {
         }).not.toThrow();
         expect(mockPostMessage).toHaveBeenCalledTimes(1);
         expect(mockPostMessage).toHaveBeenCalledWith(
-          JSON.stringify({ type: 'irl:api:close' }),
-          '*'
+          JSON.stringify({ type: 'irl:api:close' })
+          // Note: No second argument - ReactNativeWebView.postMessage only accepts one argument
         );
       });
 

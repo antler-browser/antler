@@ -39,6 +39,6 @@ export function getInjectedJavaScript(
   let injectedCode = minifiedMainTemplate
     .replace('__WEBVIEW_PUBLIC_KEY__', webViewPublicKey)
     .replace('__BROWSER_INFO__', JSON.stringify(browserInfo));
-
+    
   return injectedCode;
 }

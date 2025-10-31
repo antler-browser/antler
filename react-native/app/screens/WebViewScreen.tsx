@@ -150,12 +150,13 @@ export function WebViewScreen() {
           };
 
           // Sign the response to prevent XSS forgery
-          const signature = await WebViewSigning.signMessage(response, webViewPublicKey);
+          const signature = WebViewSigning.signMessage(response, webViewPublicKey);
 
-          webViewRef.current?.postMessage(JSON.stringify({
+          const messageToSend = JSON.stringify({
             ...response,
             signature: signature
-          }));
+          });
+          webViewRef.current?.postMessage(messageToSend);
           break;
         }
 
@@ -180,7 +181,7 @@ export function WebViewScreen() {
               };
 
           // Sign the response to prevent XSS forgery
-          const signature = await WebViewSigning.signMessage(response, webViewPublicKey);
+          const signature = WebViewSigning.signMessage(response, webViewPublicKey);
 
           webViewRef.current?.postMessage(JSON.stringify({
             ...response,
@@ -200,7 +201,7 @@ export function WebViewScreen() {
           };
 
           // Sign the response to prevent XSS forgery
-          const signature = await WebViewSigning.signMessage(response, webViewPublicKey);
+          const signature = WebViewSigning.signMessage(response, webViewPublicKey);
 
           webViewRef.current?.postMessage(JSON.stringify({
             ...response,
@@ -286,7 +287,7 @@ export function WebViewScreen() {
           onLoadEnd={handleLoadEnd}
           onNavigationStateChange={handleNavigationStateChange}
           onMessage={handleMessage}
-          injectedJavaScript={getInjectedJavaScript(webViewPublicKey, browserInfo)}
+          injectedJavaScriptBeforeContentLoaded={getInjectedJavaScript(webViewPublicKey, browserInfo)}
           style={styles.webView}
           startInLoadingState={true}
           javaScriptEnabled={true}
