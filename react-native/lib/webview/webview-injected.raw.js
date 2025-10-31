@@ -193,7 +193,7 @@
           window.removeEventListener('message', handleResponse, true);
           reject(new Error('Request timed out'));
         }
-      }, timeout || 5000);
+      }, timeout || 10000);
     });
   }
 

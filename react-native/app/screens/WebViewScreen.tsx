@@ -291,6 +291,7 @@ export function WebViewScreen() {
           style={styles.webView}
           startInLoadingState={true}
           javaScriptEnabled={true}
+          cacheEnabled={false}
           // renderLoading={() => (
           //   <View style={styles.loadingContainer}>
           //     <ActivityIndicator size="large" />
