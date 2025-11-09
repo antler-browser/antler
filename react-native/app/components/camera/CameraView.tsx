@@ -82,6 +82,10 @@ export function CameraView({
           },
         });
       }
+
+      // Clear pendingUrl from route params after navigation to allow subsequent deep links
+      // This fixes the issue where universal links only work once
+      navigation.setParams({ pendingUrl: undefined });
     };
 
     handlePendingUrl();
