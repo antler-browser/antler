@@ -1,6 +1,8 @@
 # Antler
 
-Antler is a local-first mobile app platform that makes it easy for developers to build complementary mini apps — no signup required. You create profiles (with DIDs), scan QR codes and pass data between the Antler app to mini apps through a WebView.
+Antler makes it easy for developers to build local first-auth into their web applications. User's download the Antler app (or another IRL Browser), create a profile (a DID). Whenever they scan a QR code, they share their profile data with the third-party web application (mini app) through a WebView. 
+
+Antler implements the [IRL Browser Standard](https://antlerbrowser.com/irl-browser-standard), a specification for secure communication between IRL Browser apps and mini apps.
 
 ## Monorepo Structure
 

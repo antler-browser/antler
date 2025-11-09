@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "antler",
     slug: "antler",
-    version: "1.0.0",
+    version: "1.1",
     orientation: "portrait",
     scheme: "antler",
     userInterfaceStyle: "automatic",
@@ -12,6 +12,9 @@ export default {
       icon: "./assets/images/antler-icon.icon",
       bundleIdentifier: "com.antlerbrowser",
       supportsTablet: true,
+      associatedDomains: [
+        "applinks:antlerbrowser.com"
+      ],
       infoPlist: {
         NSCameraUsageDescription: "Antler uses the camera to scan QR codes.",
         LSApplicationQueriesSchemes: [
@@ -35,6 +38,19 @@ export default {
       permissions: [
         "android.permission.INTERNET",
         "android.permission.CAMERA"
+      ],
+      intentFilters: [
+        {
+          action: "VIEW",
+          autoVerify: true,
+          data: [
+            {
+              scheme: "https",
+              host: "antlerbrowser.com"
+            }
+          ],
+          category: ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     plugins: [

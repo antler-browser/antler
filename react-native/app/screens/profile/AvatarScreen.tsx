@@ -180,7 +180,6 @@ export function AvatarScreen() {
       [
         { text: 'Take Photo', onPress: () => pickImage('camera') },
         { text: 'Choose from Library', onPress: () => pickImage('library') },
-        ...(!avatar ? [{ text: 'Skip for now', onPress: () => generateDIDAndComplete() }] : [{ text: 'Remove Photo', onPress: () => handleRemoveAvatar() }]),
         { text: 'Cancel', style: 'cancel' }
       ]
     );
@@ -227,9 +226,6 @@ export function AvatarScreen() {
                 <ThemedText style={styles.avatarPlaceholder}>
                   👤
                 </ThemedText>
-                <ThemedText style={styles.addPhotoText}>
-                  Tap this button
-                </ThemedText>
               </ThemedView>
             )}
           </TouchableOpacity>
@@ -257,7 +253,22 @@ export function AvatarScreen() {
               disabled={isPickingImage}
             />
           ) : (
-            <ThemedView style={styles.emptySpace} />
+            <>
+              <ThemedButton
+                title='Add an avatar'
+                onPress={showImageOptions}
+                variant="primary"
+                disabled={isPickingImage || isGenerating}
+              />
+              <TouchableOpacity
+                style={[styles.skipButton, { paddingTop: 6 }]}
+                onPress={generateDIDAndComplete}
+              >
+                <ThemedText style={[styles.actionButtonText, { color: colors.text, opacity: 0.8 }]}>
+                  Skip for now
+                </ThemedText>
+              </TouchableOpacity>
+            </>
           )}
         </ThemedView>
       </ThemedView>
@@ -330,7 +341,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   actionButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
   generatingContainer: {
@@ -347,5 +358,8 @@ const styles = StyleSheet.create({
   },
   emptySpace: {
     height: 100,
+  },
+  skipButton: {
+    alignItems: 'center',
   },
 });

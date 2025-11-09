@@ -17,11 +17,13 @@ import { Camera, Navigation, AppStateFns, WebViewSigning } from '../../../lib';
 interface CameraViewProps {
   isFocused: boolean;
   hasAtLeastOneProfile: boolean;
+  pendingUrl?: string | null;
 }
 
 export function CameraView({
   isFocused,
   hasAtLeastOneProfile,
+  pendingUrl,
 }: CameraViewProps) {
   const [enableTorch, setEnableTorch] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -50,6 +52,40 @@ export function CameraView({
       console.error('Error generating ECDSA P-256 key pair:', error);
     }
   };
+
+  // Handle deep link pendingUrl from "Open in Antler" button
+  useEffect(() => {
+    if (!pendingUrl || !webViewPublicKey) return;
+
+    const handlePendingUrl = async () => {
+      // Check if user has a profile (currentDid)
+      const appState = await AppStateFns.getAppState();
+      const did = appState.currentDid;
+
+      if (!did) {
+        // No profile, navigate to profile creation with pending URL
+        navigation.navigate(Navigation.MODAL_STACK, {
+          screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
+          params: {
+            pendingUrl,
+            pendingWebViewPublicKey: webViewPublicKey,
+          },
+        });
+      } else {
+        // Profile exists, navigate directly to WebView
+        navigation.navigate(Navigation.MODAL_STACK, {
+          screen: Navigation.WEBVIEW_SCREEN,
+          params: {
+            url: pendingUrl,
+            did,
+            webViewPublicKey,
+          },
+        });
+      }
+    };
+
+    handlePendingUrl();
+  }, [pendingUrl, webViewPublicKey, navigation]);
 
   const handleSignOut = async () => {
     Alert.alert(

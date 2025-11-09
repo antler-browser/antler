@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Alert, View, StyleSheet, AppState, AppStateStatus } from 'react-native';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation, useIsFocused, useRoute, RouteProp } from '@react-navigation/native';
 import WebView from 'react-native-webview';
 import { CameraPermissions } from '../components/camera/CameraPermissions';
 import { CameraView } from '../components/camera/CameraView';
@@ -10,6 +10,8 @@ import * as Haptics from 'expo-haptics';
 
 export function CameraScreen() {
   const navigation = useNavigation<Navigation.RootStackNavigationProp>();
+  const route = useRoute<RouteProp<Navigation.RootStackParamList, typeof Navigation.CAMERA_SCREEN>>();
+  const pendingUrl = route.params?.pendingUrl;
   const isFocused = useIsFocused();
 
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
@@ -137,6 +139,7 @@ export function CameraScreen() {
       <CameraView
         isFocused={isFocused}
         hasAtLeastOneProfile={hasAtLeastOneProfile}
+        pendingUrl={pendingUrl}
       />
       <ProfileCarousel
         profiles={allProfiles}

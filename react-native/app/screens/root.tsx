@@ -51,16 +51,19 @@ function CameraStack() {
 }
 
 const linking: LinkingOptions<Navigation.RootStackParamList> = {
-  prefixes: ['antler://'],
+  prefixes: [
+    'antler://',
+    'https://antlerbrowser.com',
+  ],
   config: {
     screens: {
       [Navigation.CAMERA_SCREEN]: {
-        screens: {
-          [Navigation.MODAL_STACK]: {
-            screens: {
-              [Navigation.WEBVIEW_SCREEN]: 'webview',
-            },
-          },
+        path: 'open/:pendingUrl',
+        parse: {
+          pendingUrl: (url: string) => decodeURIComponent(url),
+        },
+        stringify: {
+          pendingUrl: (url: string) => encodeURIComponent(url),
         },
       },
     },

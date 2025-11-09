@@ -86,6 +86,10 @@ Console logging from WebView to React Native is **disabled by default** for bett
 
 To re-enable console forwarding, see [`/docs/webview-console-forwarding.md`](./docs/webview-console-forwarding.md).
 
+### Backup Private Keys on iOS and Android
+- **iOS:** SQLite database and private keys are backed up to iCloud Backup
+- **Android:** SQLite database and private keys are backed up via Android Auto Backup
+
 ## IRL Browser Standard
 
 Antler implements the IRL Browser Standard, which defines how IRL Browser apps communicate with third-party mini apps. Key features:

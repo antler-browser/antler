@@ -45,7 +45,7 @@ export type ProfileCreateOrEditStackParamList = {
 };
 // Root stack param list
 export type RootStackParamList = {
-  [CAMERA_SCREEN]: undefined;
+  [CAMERA_SCREEN]: { pendingUrl?: string } | undefined;
   [PROFILE_SCREEN]: ProfileScreenParams;
   [WELCOME_SCREEN]: undefined;
   [MODAL_STACK]: {
