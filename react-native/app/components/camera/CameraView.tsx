@@ -55,47 +55,23 @@ export function CameraView({
 
         if (!did) {
           // No profile, navigate to profile creation with pending URL
-          // Use reset to prevent stacking multiple modals
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 1,
-              routes: [
-                { name: Navigation.CAMERA_SCREEN },
-                {
-                  name: Navigation.MODAL_STACK,
-                  params: {
-                    screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
-                    params: {
-                      pendingUrl,
-                      pendingWebViewPublicKey: newPublicKey,
-                    },
-                  },
-                },
-              ],
-            })
-          );
+          navigation.navigate(Navigation.MODAL_STACK, {
+            screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
+            params: {
+              pendingUrl,
+              pendingWebViewPublicKey: newPublicKey,
+            },
+          });
         } else {
           // Profile exists, navigate directly to WebView
-          // Use reset to replace any existing modal stack
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 1,
-              routes: [
-                { name: Navigation.CAMERA_SCREEN },
-                {
-                  name: Navigation.MODAL_STACK,
-                  params: {
-                    screen: Navigation.WEBVIEW_SCREEN,
-                    params: {
-                      url: pendingUrl,
-                      did,
-                      webViewPublicKey: newPublicKey,
-                    },
-                  },
-                },
-              ],
-            })
-          );
+          navigation.navigate(Navigation.MODAL_STACK, {
+            screen: Navigation.WEBVIEW_SCREEN,
+            params: {
+              url: pendingUrl,
+              did,
+              webViewPublicKey: newPublicKey,
+            },
+          });
         }
 
         // Clear pendingUrl from route params after navigation to allow subsequent deep links
@@ -153,6 +129,12 @@ export function CameraView({
     });
   };
 
+  const handleHistoryPress = () => {
+    navigation.navigate(Navigation.MODAL_STACK, {
+      screen: Navigation.SCAN_HISTORY_SCREEN
+    });
+  };
+
   const fakeQRCodeForDevMode = useCallback(async () => {
     if (!__DEV__) { return; }
 
@@ -165,46 +147,22 @@ export function CameraView({
       const url = "https://google.com";
 
       if (!did) {
-        // Use reset to replace any existing modal stack
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 1,
-            routes: [
-              { name: Navigation.CAMERA_SCREEN },
-              {
-                name: Navigation.MODAL_STACK,
-                params: {
-                  screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
-                  params: {
-                    pendingUrl: url,
-                    pendingWebViewPublicKey: newPublicKey,
-                  },
-                },
-              },
-            ],
-          })
-        );
+        navigation.navigate(Navigation.MODAL_STACK, {
+          screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
+          params: {
+            pendingUrl: url,
+            pendingWebViewPublicKey: newPublicKey,
+          },
+        });
       } else {
-        // Use reset to replace any existing modal stack
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 1,
-            routes: [
-              { name: Navigation.CAMERA_SCREEN },
-              {
-                name: Navigation.MODAL_STACK,
-                params: {
-                  screen: Navigation.WEBVIEW_SCREEN,
-                  params: {
-                    url: url,
-                    did,
-                    webViewPublicKey: newPublicKey,
-                  },
-                },
-              },
-            ],
-          })
-        );
+        navigation.navigate(Navigation.MODAL_STACK, {
+          screen: Navigation.WEBVIEW_SCREEN,
+          params: {
+            url: url,
+            did,
+            webViewPublicKey: newPublicKey,
+          },
+        });
       }
     } catch (error) {
       console.error('Error generating ECDSA P-256 key pair:', error);
@@ -241,47 +199,23 @@ export function CameraView({
 
       if (!did) {
         // No profile, navigate to profile creation with pending URL
-        // Use reset to replace any existing modal stack
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 1,
-            routes: [
-              { name: Navigation.CAMERA_SCREEN },
-              {
-                name: Navigation.MODAL_STACK,
-                params: {
-                  screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
-                  params: {
-                    pendingUrl: url,
-                    pendingWebViewPublicKey: newPublicKey,
-                  },
-                },
-              },
-            ],
-          })
-        );
+        navigation.navigate(Navigation.MODAL_STACK, {
+          screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
+          params: {
+            pendingUrl: url,
+            pendingWebViewPublicKey: newPublicKey,
+          },
+        });
       } else {
         // Profile exists, navigate directly to WebView
-        // Use reset to replace any existing modal stack
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 1,
-            routes: [
-              { name: Navigation.CAMERA_SCREEN },
-              {
-                name: Navigation.MODAL_STACK,
-                params: {
-                  screen: Navigation.WEBVIEW_SCREEN,
-                  params: {
-                    url,
-                    did,
-                    webViewPublicKey: newPublicKey,
-                  },
-                },
-              },
-            ],
-          })
-        );
+        navigation.navigate(Navigation.MODAL_STACK, {
+          screen: Navigation.WEBVIEW_SCREEN,
+          params: {
+            url,
+            did,
+            webViewPublicKey: newPublicKey,
+          },
+        });
       }
 
       // Reset scanning state after navigation
@@ -337,6 +271,13 @@ export function CameraView({
                 activeOpacity={0.7}
               >
                 <Ionicons name={getFlashIcon()} size={28} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cameraControl}
+                onPress={handleHistoryPress}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="time-outline" size={28} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.cameraControl}
