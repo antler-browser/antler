@@ -96,6 +96,18 @@ export function signMessage(payload: object, publicKey: string): string {
 }
 
 /**
+ * Clear a specific key pair from memory
+ *
+ * Should be called when a WebView session ends to free memory
+ * and ensure true ephemeral key lifecycle.
+ *
+ * @param publicKey - Base64-encoded public key to identify which key pair to remove
+ */
+export function cleanupKeyPair(publicKey: string): void {
+  keyPairCache.delete(publicKey);
+}
+
+/**
  * Clear all cached keys from memory
  *
  * This is optional and mainly useful for testing or manual cleanup.

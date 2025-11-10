@@ -28,14 +28,10 @@ export function CameraView({
   const [enableTorch, setEnableTorch] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
-  const [webViewPublicKey, setWebViewPublicKey] = useState<string | null>(null);
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigation = useNavigation<Navigation.RootStackNavigationProp>();
 
   useEffect(() => {
-    // Generate fresh ephemeral ECDSA P-256 key pair for WebView internal messages signing
-    generateWebViewKeyPair();
-
     // Clear timeout when component unmounts
     return () => {
       if (scanTimeoutRef.current) {
@@ -44,52 +40,75 @@ export function CameraView({
     };
   }, []);
 
-  const generateWebViewKeyPair = async () => {
-    try {
-      const newPublicKey = await WebViewSigning.generateEphemeralKeyPair();
-      setWebViewPublicKey(newPublicKey);
-    } catch (error) {
-      console.error('Error generating ECDSA P-256 key pair:', error);
-    }
-  };
-
   // Handle deep link pendingUrl from "Open in Antler" button
   useEffect(() => {
-    if (!pendingUrl || !webViewPublicKey) return;
+    if (!pendingUrl) return;
 
     const handlePendingUrl = async () => {
-      // Check if user has a profile (currentDid)
-      const appState = await AppStateFns.getAppState();
-      const did = appState.currentDid;
+      // Generate fresh ephemeral key pair for this WebView session
+      try {
+        const newPublicKey = await WebViewSigning.generateEphemeralKeyPair();
 
-      if (!did) {
-        // No profile, navigate to profile creation with pending URL
-        navigation.navigate(Navigation.MODAL_STACK, {
-          screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
-          params: {
-            pendingUrl,
-            pendingWebViewPublicKey: webViewPublicKey,
-          },
-        });
-      } else {
-        // Profile exists, navigate directly to WebView
-        navigation.navigate(Navigation.MODAL_STACK, {
-          screen: Navigation.WEBVIEW_SCREEN,
-          params: {
-            url: pendingUrl,
-            did,
-            webViewPublicKey,
-          },
-        });
+        // Check if user has a profile (currentDid)
+        const appState = await AppStateFns.getAppState();
+        const did = appState.currentDid;
+
+        if (!did) {
+          // No profile, navigate to profile creation with pending URL
+          // Use reset to prevent stacking multiple modals
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 1,
+              routes: [
+                { name: Navigation.CAMERA_SCREEN },
+                {
+                  name: Navigation.MODAL_STACK,
+                  params: {
+                    screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
+                    params: {
+                      pendingUrl,
+                      pendingWebViewPublicKey: newPublicKey,
+                    },
+                  },
+                },
+              ],
+            })
+          );
+        } else {
+          // Profile exists, navigate directly to WebView
+          // Use reset to replace any existing modal stack
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 1,
+              routes: [
+                { name: Navigation.CAMERA_SCREEN },
+                {
+                  name: Navigation.MODAL_STACK,
+                  params: {
+                    screen: Navigation.WEBVIEW_SCREEN,
+                    params: {
+                      url: pendingUrl,
+                      did,
+                      webViewPublicKey: newPublicKey,
+                    },
+                  },
+                },
+              ],
+            })
+          );
+        }
+
+        // Clear pendingUrl from route params after navigation to allow subsequent deep links
+        // This fixes the issue where universal links only work once
+        navigation.setParams({ pendingUrl: undefined });
+      } catch (error) {
+        console.error('Error generating ECDSA P-256 key pair:', error);
+        return;
       }
-
-      // Clear pendingUrl from route params after navigation to allow subsequent deep links
-      // This fixes the issue where universal links only work once
-      navigation.setParams({ pendingUrl: undefined });
     };
 
     handlePendingUrl();
-  }, [pendingUrl, webViewPublicKey, navigation]);
+  }, [pendingUrl, navigation]);
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -136,35 +155,65 @@ export function CameraView({
 
   const fakeQRCodeForDevMode = useCallback(async () => {
     if (!__DEV__) { return; }
-    if (!webViewPublicKey) { return; } // Wait for key to load
 
-    const appState = await AppStateFns.getAppState();
-    const did = appState.currentDid;
-    const url = "https://google.com";
+    // Generate fresh ephemeral key pair for this WebView session
+    try {
+      const newPublicKey = await WebViewSigning.generateEphemeralKeyPair();
 
-    if (!did) {
-      navigation.navigate(Navigation.MODAL_STACK, {
-        screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
-        params: {
-          pendingUrl: url,
-          pendingWebViewPublicKey: webViewPublicKey,
-        }
-      });
-    } else {
-      navigation.navigate(Navigation.MODAL_STACK, {
-        screen: Navigation.WEBVIEW_SCREEN,
-        params: {
-          url: url,
-          did,
-          webViewPublicKey
-        }
-      });
+      const appState = await AppStateFns.getAppState();
+      const did = appState.currentDid;
+      const url = "https://google.com";
+
+      if (!did) {
+        // Use reset to replace any existing modal stack
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [
+              { name: Navigation.CAMERA_SCREEN },
+              {
+                name: Navigation.MODAL_STACK,
+                params: {
+                  screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
+                  params: {
+                    pendingUrl: url,
+                    pendingWebViewPublicKey: newPublicKey,
+                  },
+                },
+              },
+            ],
+          })
+        );
+      } else {
+        // Use reset to replace any existing modal stack
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [
+              { name: Navigation.CAMERA_SCREEN },
+              {
+                name: Navigation.MODAL_STACK,
+                params: {
+                  screen: Navigation.WEBVIEW_SCREEN,
+                  params: {
+                    url: url,
+                    did,
+                    webViewPublicKey: newPublicKey,
+                  },
+                },
+              },
+            ],
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error generating ECDSA P-256 key pair:', error);
+      return;
     }
-  }, [webViewPublicKey, navigation]);
+  }, [navigation]);
 
   const handleBarCodeScanned = useCallback(async ({ data }: BarcodeScanningResult) => {
     if (isScanning || !data || data === lastScannedData) return;
-    if (!webViewPublicKey) { return; } // Wait for key to load
 
     setIsScanning(true);
     setLastScannedData(data);
@@ -181,38 +230,75 @@ export function CameraView({
       return;
     }
 
-    // Check if user has a profile (currentDid)
-    const appState = await AppStateFns.getAppState();
-    const did = appState.currentDid;
-    const url = scannedResult.value;
+    // Generate fresh ephemeral key pair for this WebView session
+    try {
+      const newPublicKey = await WebViewSigning.generateEphemeralKeyPair();
 
-    if (!did) {
-      // No profile, navigate to profile creation with pending URL
-      navigation.navigate(Navigation.MODAL_STACK, {
-        screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
-        params: {
-          pendingUrl: url,
-          pendingWebViewPublicKey: webViewPublicKey
-        }
-      });
-    } else {
-      // Profile exists, navigate directly to WebView
-      navigation.navigate(Navigation.MODAL_STACK, {
-        screen: Navigation.WEBVIEW_SCREEN,
-        params: {
-          url,
-          did,
-          webViewPublicKey
-        }
-      });
+      // Check if user has a profile (currentDid)
+      const appState = await AppStateFns.getAppState();
+      const did = appState.currentDid;
+      const url = scannedResult.value;
+
+      if (!did) {
+        // No profile, navigate to profile creation with pending URL
+        // Use reset to replace any existing modal stack
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [
+              { name: Navigation.CAMERA_SCREEN },
+              {
+                name: Navigation.MODAL_STACK,
+                params: {
+                  screen: Navigation.PROFILE_CREATE_OR_EDIT_SCREEN,
+                  params: {
+                    pendingUrl: url,
+                    pendingWebViewPublicKey: newPublicKey,
+                  },
+                },
+              },
+            ],
+          })
+        );
+      } else {
+        // Profile exists, navigate directly to WebView
+        // Use reset to replace any existing modal stack
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [
+              { name: Navigation.CAMERA_SCREEN },
+              {
+                name: Navigation.MODAL_STACK,
+                params: {
+                  screen: Navigation.WEBVIEW_SCREEN,
+                  params: {
+                    url,
+                    did,
+                    webViewPublicKey: newPublicKey,
+                  },
+                },
+              },
+            ],
+          })
+        );
+      }
+
+      // Reset scanning state after navigation
+      scanTimeoutRef.current = setTimeout(() => {
+        setIsScanning(false);
+        setLastScannedData(null);
+      }, Camera.CAMERA_SETTINGS.scanInterval);
+    } catch (error) {
+      console.error('Error generating ECDSA P-256 key pair:', error);
+      // Reset scanning state on error
+      scanTimeoutRef.current = setTimeout(() => {
+        setIsScanning(false);
+        setLastScannedData(null);
+      }, Camera.CAMERA_SETTINGS.scanInterval);
+      return;
     }
-
-    // Reset scanning state after navigation
-    scanTimeoutRef.current = setTimeout(() => {
-      setIsScanning(false);
-      setLastScannedData(null);
-    }, Camera.CAMERA_SETTINGS.scanInterval);
-  }, [isScanning, lastScannedData, webViewPublicKey, navigation]);
+  }, [isScanning, lastScannedData, navigation]);
 
   return (
     <View style={styles.container}>

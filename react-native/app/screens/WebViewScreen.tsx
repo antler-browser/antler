@@ -37,12 +37,20 @@ export function WebViewScreen() {
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
 
-  // Log component mount timing
+  // Log component mount timing and clean up ephemeral key pair when WebView unmounts
   useEffect(() => {
     if (__DEV__) {
       console.log('[WebView Diagnostics] Component mounted, initializing WebView...', Date.now());
     }
-  }, []);
+
+    return () => {
+      // Clean up the ephemeral key pair for this session
+      WebViewSigning.cleanupKeyPair(webViewPublicKey);
+      if (__DEV__) {
+        console.log('[WebView] Cleaned up ephemeral key pair on unmount');
+      }
+    };
+  }, [webViewPublicKey]);
 
   // Fetch manifest and save scan if valid manifest found
   useEffect(() => {
