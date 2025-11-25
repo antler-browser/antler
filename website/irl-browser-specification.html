@@ -38,7 +38,7 @@
         </header>
         <div class="blog-body">
           <h2>Overview</h2>
-<p>The IRL Browser Specification defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this standard defines how their profile and other data get securely passed between the IRL Browser and the mini app.</p>
+<p>The IRL Browser Specification defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this spec defines how their profile and other data get securely passed between the IRL Browser and the mini app.</p>
 <h2>User Benefits</h2>
 <p>When a user downloads an IRL Browser (like Antler), they create a profile that is stored locally on their device. Whenever a user scans a QR code, their profile gets shared with the mini app. This means users don’t have to go through account creation and immediately get logged in. </p>
 <h2>Developer Benefits</h2>
@@ -79,7 +79,7 @@
   &quot;name&quot;: &quot;Coffee Shop&quot;,
   &quot;description&quot;: &quot;Cozy little bakery and coffee shop&quot;,
   &quot;location&quot;: &quot;123 Davie Street, Vancouver, BC&quot;,
-  &quot;icon&quot;: &quot;https://example.com/icon.png&quot;,
+  &quot;icon&quot;: &quot;https://yourdomain.com/icon.png&quot;,
   &quot;type&quot;: &quot;place&quot;,
   &quot;permissions&quot;: [&quot;profile&quot;] //profile is granted by default
 }
@@ -115,7 +115,7 @@
 <td><code>icon</code></td>
 <td>string (URL)</td>
 <td>No</td>
-<td>App icon URL (recommended: 512x512px). <strong>Note:</strong> You can use an absolute url or a relative path like ./icon.png (which resolves to <a href="https://example.com/icon.png" target="_blank" rel="noopener noreferrer">https://example.com/icon.png</a>)</td>
+<td>App icon URL (recommended: 512x512px). <strong>Note:</strong> You can use an absolute url or a relative path like ./icon.png (which resolves to <a href="https://yourdomain.com/icon.png" target="_blank" rel="noopener noreferrer">https://yourdomain.com/icon.png</a>)</td>
 </tr>
 <tr>
 <td><code>type</code></td>
@@ -130,7 +130,7 @@
 <td>Requested permissions. “profile” is granted by default.</td>
 </tr>
 </tbody></table>
-<p><strong>Note:</strong> Currently, this spec just supports the profile permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).</p>
+<p><strong>Note:</strong> Currently, this spec just supports the ‘profile’ permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).</p>
 <h2>Decentralized Identifiers</h2>
 <p>When a user downloads an IRL Browser, they create a profile on the app. Under the hood, each profile is a DID (<a href="https://www.w3.org/TR/did-1.0/" target="_blank" rel="noopener noreferrer">Decentralized Identifier</a> - a W3C standard) with additional details (like name, avatar, and links to socials). </p>
 <p>A DID is a text string that is used to identify a user. Here&#39;s an example:</p>
@@ -200,7 +200,7 @@
 <td>Links to social accounts</td>
 </tr>
 </tbody></table>
-<p>For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out this code.</p>
+<p>For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out <a href="https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/social-links.ts#L353" target="_blank" rel="noopener noreferrer">this code</a>.</p>
 <h4>Getting a user’s avatar</h4>
 <p><code>getAvatar()</code> returns the user’s base64-encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.</p>
 <pre><code class="language-tsx">{
@@ -277,7 +277,7 @@
 <p>Your mini app can detect whether it&#39;s running inside an IRL Browser or a regular web browser.</p>
 <pre><code class="language-jsx">if (typeof window.irlBrowser !== &#39;undefined&#39;) {
   // Running in an IRL Browser 
-  const info = window.irlBrowser.getInfo();
+  const info = window.irlBrowser.getBrowserDetails();
   console.log(`Running in ${info.name} v${info.version}`);
 } else {
   // Regular web browser
@@ -308,7 +308,7 @@
     }
 });
 </code></pre>
-<p>Check out this example code if you want to add decodeAndVerifyJWT to your project.</p>
+<p>Check out this <a href="https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/jwt.ts#L23" target="_blank" rel="noopener noreferrer">example code</a> if you want to add <code>decodeAndVerifyJWT</code> to your project.</p>
 <h4>Possible message types</h4>
 <table>
 <thead>
@@ -402,7 +402,7 @@
 <p>Decoded data inside the JWT Payload.</p>
 <pre><code class="language-json">{
   &quot;iss&quot;: &quot;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&quot;,
-  &quot;aud&quot;: &quot;https://example.app&quot;,
+  &quot;aud&quot;: &quot;https://yourdomain.com&quot;,
   &quot;iat&quot;: 1728393600,
   &quot;exp&quot;: 1728397200,
   &quot;type&quot;: &quot;irl:profile:disconnected&quot;,
@@ -459,7 +459,7 @@
 const jwt = await window.irlBrowser.getProfileDetails();
 
 // Use it as a Bearer token in your requests
-const response = await fetch(&#39;https://example.app/api/posts&#39;, {
+const response = await fetch(&#39;https://yourdomain.com/api/posts&#39;, {
   method: &#39;POST&#39;,
   headers: {
     &#39;Authorization&#39;: `Bearer ${jwt}`,
@@ -489,7 +489,7 @@ if (response.ok) {
     if (!jwt) { return res.status(401).json({ error: &#39;No token provided&#39; }); }
     
     // Decode and verify JWT signature using DID public key
-    const payload = await verifyAndDecodeJWT(jwt);
+    const payload = await decodeAndVerifyJWT(jwt);
     
     // Process authenticated request
     await db.posts.create({ 
@@ -505,10 +505,10 @@ if (response.ok) {
 });
 </code></pre>
 <p><strong>Note</strong>: You will most likely need a new JWT for each request as JWTs expire after 2 minutes.</p>
-<p>See code example for verifyAndDecodeJWT. We decode &amp; verify JWT signature including making sure the <code>aud</code> claim is for our mini app.</p>
+<p>See <a href="https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/jwt.ts#L23" target="_blank" rel="noopener noreferrer">code example</a> for <code>decodeAndVerifyJWT</code>. We decode &amp; verify JWT signature including making sure the <code>aud</code> claim is for our mini app.</p>
 <p><strong>License</strong>: <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</a></p>
 <p><strong>Author</strong>: <a href="https://dmathewwws.com" target="_blank" rel="noopener noreferrer">Daniel Mathews</a> (<code>danny@antlerbrowser.com</code>)</p>
-<p><strong>Last Modified</strong>: 2025-10-23</p>
+<p><strong>Last Modified</strong>: 2025-11-23</p>
 
         </div>
       </article>

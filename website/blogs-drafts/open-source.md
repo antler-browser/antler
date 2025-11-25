@@ -17,7 +17,7 @@ Antler is an [open-source](https://github.com/antler-browser/antler) monorepo wi
 
 ## IRL Browser Specification
 
-Antler uses an [open standard](./irl-browser-standard.html) to pass data between the app to your website. When users scan your QR code, their profile details on Antler get shared to your site - no auth friction, instant login, no account creation.
+Antler uses an [open specification](./irl-browser-specification.html) to pass data between the app to your website. When users scan your QR code, their profile details on Antler get shared to your site - no auth friction, instant login, no account creation.
 
 **Why using open specification matters:** Being an open specification means anyone can create an alternative to Antler. This means if you are a developer, you get the benefits of integrating your website with Antler and know you are not locked into a closed platform.
 
@@ -25,8 +25,8 @@ Antler uses an [open standard](./irl-browser-standard.html) to pass data betwe
 
 Here are some example apps you can fork to get started:
 
-[Mini-App for a Meetup (Cloudflare - Recommended)](https://github.com/antler-browser/meetup-cloudflare): Uses Cloudflare Workers, Durable Object and D1 Storage.
+[Check-in into an event (Cloudflare - Recommended)](https://github.com/antler-browser/meetup-cloudflare): Uses Cloudflare Workers, Durable Object and D1 Storage.
 
-[Mini-App for a Meetup (Self-hosted)](https://github.com/antler-browser/meetup-self-hosted): Same app as above but you can self-hosted via Docker.  
+[Check-in into an event (Self-hosted)](https://github.com/antler-browser/meetup-self-hosted): Same app as above but using REST API, SQLite, and SSE. You can self-hosted via Docker.  
 
-[Draw-on-my-phone:](https://github.com/antler-browser/draw-on-my-phone) Scan QR code to get into the same room, then you draw a word → pass your phone to the person next to you → they can guess your drawing, and so on (similar to Telestrations or Garlic Phone)
+[Draw On My Phone Game:](https://github.com/antler-browser/draw-on-my-phone-game) Scan QR code to get into the same room, then you draw a word → pass your phone to the person next to you → they can guess your drawing, and so on (similar to Telestrations or Garlic Phone)
