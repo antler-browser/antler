@@ -7,7 +7,7 @@ Antler is a super-powered QR scanner for IRL hangouts. Available on iOS and Andr
 
 For developers, Antler is a mobile SDK that provides a WebView environment for mini apps. Build simple, self-contained web apps that know users are physically present and can scan QR codes — no native code, no app stores, no auth systems needed.
 
-Antler implements the **IRL Browser Standard**, a specification that defines how IRL Browsers communicate with third-party web applications (mini apps) through signed JWTs and a JavaScript API (`window.irlBrowser`). See `/docs/irl-browser-standard.md` for full specification.
+Antler implements the **IRL Browser Specification**, a specification that defines how IRL Browsers communicate with third-party web applications (mini apps) through signed JWTs and a JavaScript API (`window.irlBrowser`). See `/docs/irl-browser-standard.md` for full specification.
 
 ## Key Files and Directories
 
@@ -29,7 +29,7 @@ Antler implements the **IRL Browser Standard**, a specification that defines how
 - `/lib/`: Utilities and service integrations
   - `camera.ts`: Camera and QR scanning utilities
   - `did.ts`: Decentralized identity (DID) utilities
-  - `send-data.ts`: JWT signing utilities for WebView communication (IRL Browser Standard)
+  - `send-data.ts`: JWT signing utilities for WebView communication (IRL Browser Specification)
   - `secure-storage.ts`: Secure storage operations
   - `social-links.ts`: Social media link validation and formatting
   - `colors.ts`: Color constants
@@ -48,7 +48,7 @@ Antler implements the **IRL Browser Standard**, a specification that defines how
     - `/migrations/`: SQL migration files
     - `/models/`: Database model operations (AppStateFns, UserProfileFns, ScanHistoryFns)
 - `/docs/`: Documentation
-  - `irl-browser-standard.md`: IRL Browser Standard specification
+  - `irl-browser-standard.md`: IRL Browser Specification specification
   - `webview-console-forwarding.md`: Guide for re-enabling console log forwarding from WebView
 - `/scripts/`: Build scripts
   - `minify-webview-js.js`: Build script to minify the WebView injected JavaScript
@@ -269,7 +269,7 @@ Database operations are organized into function namespaces by entity:
 - JWT signing and verification supported using Ed25519 algorithm
 
 ### WebView & Mini App Integration
-- Implements the IRL Browser Standard for secure communication with third-party mini apps
+- Implements the IRL Browser Specification for secure communication with third-party mini apps
 - **JavaScript API Injection** (`/app/screens/WebViewScreen.tsx`):
   - `window.irlBrowser.getProfileDetails()`: Returns signed JWT with user profile (async)
   - `window.irlBrowser.getAvatar()`: Returns signed JWT with user avatar or null (async)
@@ -279,7 +279,7 @@ Database operations are organized into function namespaces by entity:
 - **Message Handling**: WebViewScreen listens for messages from mini apps via `window.postMessage`
 - **Manifest Fetching & Scan Tracking** (`/lib/webview/manifest.ts`):
   - Automatically fetches mini app manifest after page loads
-  - Parses HTML for `<link rel="irl-manifest">` tag per IRL Browser Standard
+  - Parses HTML for `<link rel="irl-manifest">` tag per IRL Browser Specification
   - Validates and sanitizes manifest data (UGC protection):
     - Strips HTML tags to prevent XSS
     - Enforces max length limits (name: 100, description: 500, location: 200, icon: 2048, type: 50)

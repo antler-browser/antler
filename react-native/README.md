@@ -2,7 +2,7 @@
 
 Antler is a React Native and Expo app, available on iOS and Android. It is a super-powered QR scanner useful for IRL hangouts. You create profiles (with DIDs), scan QR codes and pass data between the Antler app to complementary mini apps through a WebView.
 
-Antler implements the **IRL Browser Standard**, a specification for secure communication between IRL Browser apps and third-party web applications (mini apps). 
+Antler implements the **IRL Browser Specification**, a specification for secure communication between IRL Browser apps and third-party web applications (mini apps). 
 
 ## Tech Stack
 
@@ -90,9 +90,9 @@ To re-enable console forwarding, see [`/docs/webview-console-forwarding.md`](./d
 - **iOS:** SQLite database and private keys are backed up to iCloud Backup
 - **Android:** SQLite database and private keys are backed up via Android Auto Backup
 
-## IRL Browser Standard
+## IRL Browser Specification
 
-Antler implements the IRL Browser Standard, which defines how IRL Browser apps communicate with third-party mini apps. Key features:
+Antler implements the IRL Browser Specification, which defines how IRL Browser apps communicate with third-party mini apps. Key features:
 
 ### JavaScript API
 

@@ -1,6 +1,6 @@
 /**
  * Mini App Manifest Utilities
- * Fetches and validates mini app manifests according to IRL Browser Standard
+ * Fetches and validates mini app manifests according to IRL Browser Specification
  */
 
 // Maximum allowed sizes for manifest fields (UGC protection)
@@ -19,7 +19,7 @@ const FETCH_TIMEOUT_MS = 5000;
 const MAX_MANIFEST_SIZE = 100 * 1024;
 
 /**
- * Manifest data structure according to IRL Browser Standard
+ * Manifest data structure according to IRL Browser Specification
  */
 export interface Manifest {
   name: string;

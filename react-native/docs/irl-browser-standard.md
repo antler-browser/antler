@@ -1,8 +1,8 @@
-# IRL Browser Standard
+# IRL Browser Specification
 
 ## Overview
 
-The IRL Browser Standard defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this standard defines how their profile and other data get securely passed between the IRL Browser and the mini app.
+The IRL Browser Specification defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this standard defines how their profile and other data get securely passed between the IRL Browser and the mini app.
 
 ## User Benefits
 

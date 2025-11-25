@@ -21,7 +21,7 @@
     <meta property="og:description" content="Quick guide to building a mini app for IRL browsers" />
     <meta property="og:url" content="https://antlerbrowser.com/how-antler-works.html" />
     <meta property="og:type" content="article" />
-    <meta property="article:published_time" content="2025-10-20" />
+    <meta property="article:published_time" content="2025-11-24" />
     <meta property="article:author" content="https://bsky.app/profile/dmathewwws.com" />
     
     <link rel="stylesheet" href="style.css" />
@@ -37,7 +37,37 @@
           <h1>How Antler Works</h1>
         </header>
         <div class="blog-body">
-          
+          <p><img src="https://ax0.taddy.org/dmathewwws/antler-how-it-works.png" alt="how-antler-works.png"></p>
+<p>When a user downloads Antler, they create a profile that is stored locally on their device.</p>
+<p>A profile contains: </p>
+<ul>
+<li>a <a href="https://www.w3.org/TR/did-1.0/" target="_blank" rel="noopener noreferrer">DID</a> (a W3C Standard for identity) - a public key</li>
+<li>a private key</li>
+<li>a name</li>
+<li>link to socials (optional)</li>
+<li>an avatar (optional)</li>
+</ul>
+<p>When a user scans a QR code, Antler opens your website inside a WebView and injects a <code>window.irlBrowser</code> object.</p>
+<p>The <code>window</code> object is available on all browsers, and as a developer it gives you access to useful browser features. For example, <code>window.location</code> lets you know the current url you are visiting in the browser. We made up a new property called <code>window.irlBrowser</code> and use it as an interface to communicate between the Antler app and your website.</p>
+<p>Your website calls <code>window.irlBrowser.getProfileDetails()</code>  and gets back cryptographically signed profile data as a JWT.</p>
+<pre><code class="language-json">{
+  &quot;iss&quot;: &quot;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&quot;,
+  &quot;aud&quot;: &quot;https://yourdomain.com&quot;,
+  &quot;iat&quot;: 1728393600,
+  &quot;exp&quot;: 1728397200,
+  &quot;type&quot;: &quot;irl:profile:details&quot;,
+  &quot;data&quot;: 
+    {
+      &quot;did&quot;: &quot;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&quot;,
+      &quot;name&quot;: &quot;Danny Mathews&quot;,
+      &quot;socials&quot;: [{ &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }]
+    }
+}
+</code></pre>
+<p>You should decode and verify that the public key in the <code>iss</code> field was used to sign this data. This way you know only someone with the private key for this DID could have sent it.</p>
+<p>And voila, the user is instantly logged into your website. Profile details that were stored locally on the user’s device were shared to your website and no servers were involved! </p>
+<p>For more details, check out the full <a href="./irl-browser-specification.html">IRL Browser specification</a></p>
+
         </div>
       </article>
       <nav class="blog-nav">

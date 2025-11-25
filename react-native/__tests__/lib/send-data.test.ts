@@ -128,7 +128,7 @@ describe('sendDataToWebView', () => {
 
       // Verify type field is at root level of JWT payload
       expect(decoded.type).toBe('irl:error');
-      // Verify structured error format per IRL Browser Standard
+      // Verify structured error format per IRL Browser Specification
       expect((decoded.data as any).code).toBe('UNKNOWN_ERROR');
       expect((decoded.data as any).message).toBe('An error occurred');
     });
@@ -164,7 +164,7 @@ describe('sendDataToWebView', () => {
   });
 
   describe('JWT Claims', () => {
-    it('should include aud claim per IRL Browser Standard', async () => {
+    it('should include aud claim per IRL Browser Specification', async () => {
       const mockProfile = {
         did: mockDID,
         name: 'Test',

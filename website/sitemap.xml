@@ -6,28 +6,28 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://antlerbrowser.com/terms-of-service</loc>
-    <lastmod>2025-10-20</lastmod>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://antlerbrowser.com/privacy-policy</loc>
-    <lastmod>2025-10-20</lastmod>
+    <loc>https://antlerbrowser.com/irl-browser-specification</loc>
+    <lastmod>2025-11-18</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://antlerbrowser.com/open-source</loc>
-    <lastmod>2025-10-20</lastmod>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://antlerbrowser.com/irl-browser-standard</loc>
-    <lastmod>2025-10-20</lastmod>
+    <lastmod>2025-11-18</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://antlerbrowser.com/how-antler-works</loc>
     <lastmod>2025-10-20</lastmod>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://antlerbrowser.com/terms-of-service</loc>
+    <lastmod>2025-10-20</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://antlerbrowser.com/privacy-policy</loc>
+    <lastmod>2025-10-20</lastmod>
+    <priority>0.8</priority>
   </url>
 </urlset>

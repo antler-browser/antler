@@ -1,17 +1,17 @@
 ---
-title: "IRL Browser Standard"
-description: "Technical specification for the IRL Browser Standard"
-date: "2025-10-20"
+title: "IRL Browser Specification"
+description: "Technical specification for the IRL Browser Specification"
+date: "2025-11-18"
 author: "Daniel Mathews"
 author_image: "https://ax0.taddy.org/blog/about-us/danny-small-profile-pic.png"
 author_url: "https://bsky.app/profile/dmathewwws.com"
 ---
 
-# IRL Browser Standard
+# IRL Browser Specification
 
 ## Overview
 
-The IRL Browser Standard defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this standard defines how their profile and other data get securely passed between the IRL Browser and the mini app.
+The IRL Browser Specification defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this spec defines how their profile and other data get securely passed between the IRL Browser and the mini app.
 
 ## User Benefits
 
@@ -68,7 +68,7 @@ Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
   "name": "Coffee Shop",
   "description": "Cozy little bakery and coffee shop",
   "location": "123 Davie Street, Vancouver, BC",
-  "icon": "https://example.com/icon.png",
+  "icon": "https://yourdomain.com/icon.png",
   "type": "place",
   "permissions": ["profile"] //profile is granted by default
 }
@@ -79,11 +79,11 @@ Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
 | `name` | string | Yes | Display name of the mini app |
 | `description` | string | No | Short description of the mini app |
 | `location` | string | No | Location of the experience |
-| `icon` | string (URL) | No | App icon URL (recommended: 512x512px). **Note:** You can use an absolute url or a relative path like ./icon.png (which resolves to https://example.com/icon.png) |
+| `icon` | string (URL) | No | App icon URL (recommended: 512x512px). **Note:** You can use an absolute url or a relative path like ./icon.png (which resolves to https://yourdomain.com/icon.png) |
 | `type` | string | No | Context type: “place”, “event”, “club”, etc. |
 | `permissions` | array | No | Requested permissions. “profile” is granted by default. |
 
-**Note:** Currently, this spec just supports the profile permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).
+**Note:** Currently, this spec just supports the ‘profile’ permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).
 
 ## Decentralized Identifiers
 
@@ -147,7 +147,7 @@ interface IRLBrowser {
 | `name` | string | Yes | User's display name |
 | `socials`  | array | No | Links to social accounts |
 
-For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out this code.
+For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out [this code](https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/social-links.ts#L353).
 
 #### Getting a user’s avatar
 
@@ -192,7 +192,7 @@ Your mini app can detect whether it's running inside an IRL Browser or a regular
 ```jsx
 if (typeof window.irlBrowser !== 'undefined') {
   // Running in an IRL Browser 
-  const info = window.irlBrowser.getInfo();
+  const info = window.irlBrowser.getBrowserDetails();
   console.log(`Running in ${info.name} v${info.version}`);
 } else {
   // Regular web browser
@@ -228,7 +228,7 @@ window.addEventListener('message', async (event) => {
 });
 ```
 
-Check out this example code if you want to add decodeAndVerifyJWT to your project.
+Check out this [example code](https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/jwt.ts#L23) if you want to add `decodeAndVerifyJWT` to your project.
 
 #### Possible message types
 
@@ -295,7 +295,7 @@ Decoded data inside the JWT Payload.
 ```json
 {
   "iss": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
-  "aud": "https://example.app",
+  "aud": "https://yourdomain.com",
   "iat": 1728393600,
   "exp": 1728397200,
   "type": "irl:profile:disconnected",
@@ -334,7 +334,7 @@ When your mini app needs to make an authenticated request on behalf of a user, c
 const jwt = await window.irlBrowser.getProfileDetails();
 
 // Use it as a Bearer token in your requests
-const response = await fetch('https://example.app/api/posts', {
+const response = await fetch('https://yourdomain.com/api/posts', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${jwt}`,
@@ -368,7 +368,7 @@ app.post('/api/posts', async (req, res) => {
     if (!jwt) { return res.status(401).json({ error: 'No token provided' }); }
     
     // Decode and verify JWT signature using DID public key
-    const payload = await verifyAndDecodeJWT(jwt);
+    const payload = await decodeAndVerifyJWT(jwt);
     
     // Process authenticated request
     await db.posts.create({ 
@@ -386,10 +386,10 @@ app.post('/api/posts', async (req, res) => {
 
 **Note**: You will most likely need a new JWT for each request as JWTs expire after 2 minutes.
 
-See code example for verifyAndDecodeJWT. We decode & verify JWT signature including making sure the `aud` claim is for our mini app.
+See [code example](https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/jwt.ts#L23) for `decodeAndVerifyJWT`. We decode & verify JWT signature including making sure the `aud` claim is for our mini app.
 
 **License**: [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 **Author**: [Daniel Mathews](https://dmathewwws.com) (`danny@antlerbrowser.com`)
 
-**Last Modified**: 2025-10-23
+**Last Modified**: 2025-11-23

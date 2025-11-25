@@ -81,4 +81,4 @@ Add this meta tag to your mini app's `<head>`:
 - **iOS Universal Links**: https://developer.apple.com/ios/universal-links/
 - **Smart App Banners**: https://developer.apple.com/documentation/webkit/promoting_apps_with_smart_app_banners
 - **Android App Links**: https://developer.android.com/training/app-links
-- **IRL Browser Standard**: `/docs/irl-browser-standard.md`
+- **IRL Browser Specification**: `/docs/irl-browser-standard.md`

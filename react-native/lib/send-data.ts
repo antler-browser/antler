@@ -4,7 +4,7 @@ import * as base64 from 'base64-js';
 import * as ed25519 from '@stablelib/ed25519';
 
 /**
- * Data types that can be sent to WebView via IRL Browser Standard
+ * Data types that can be sent to WebView via IRL Browser Specification
  */
 export enum WebViewDataType {
   PROFILE_DISCONNECTED = 'irl:profile:disconnected',
@@ -132,7 +132,7 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
     }
 
     case WebViewDataType.ERROR: {
-      // For errors, payload should contain structured error details per IRL Browser Standard
+      // For errors, payload should contain structured error details per IRL Browser Specification
       return {
         code: 'UNKNOWN_ERROR',
         message: 'An error occurred'
@@ -145,7 +145,7 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
 }
 
 /**
- * Signs a JWT with EdDSA algorithm for IRL Browser Standard
+ * Signs a JWT with EdDSA algorithm for IRL Browser Specification
  *
  * @param did - User's DID (used as issuer)
  * @param aud - Audience (mini app URL)
@@ -183,7 +183,7 @@ async function createJWT(did: string, aud: string, type: string, payload: Record
     typ: 'JWT',
   };
 
-  // Build JWT payload with claims per IRL Browser Standard
+  // Build JWT payload with claims per IRL Browser Specification
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 120; // 2 minutes
 

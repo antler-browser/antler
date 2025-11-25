@@ -1,7 +1,7 @@
 ---
 title: "Terms of Service"
 description: "Terms of Service for the Antler Browser"
-date: "2025-10-08"
+date: "2025-11-16"
 author: "Daniel Mathews"
 author_image: "https://ax0.taddy.org/blog/about-us/danny-small-profile-pic.png"
 author_url: "https://bsky.app/profile/dmathewwws.com"
@@ -9,7 +9,7 @@ author_url: "https://bsky.app/profile/dmathewwws.com"
 
 # Terms of Service
 
-**Last Modified: 2025-10-08**
+**Last Modified: 2025-11-16**
 
 These Terms of Service (“Terms”) govern your use of the Antler mobile application (“Antler” or “App”), provided by Taddy Artist Database Inc. (“we,” “us,” or “Taddy Inc.”).
 
@@ -26,7 +26,7 @@ Antler is a **local-first IRL Browser** that:
 - Runs entirely on your device with no backend servers
 - Allows you to create and manage local profiles using Decentralized Identifiers (DIDs)
 - Enables you to scan QR codes and interact with third-party web applications through a WebView
-- Implements the **IRL Browser Standard** for passing data between your local profile and websites
+- Implements the **IRL Browser Specification** for passing data between your local profile and websites
 
 We do not collect, store, or transmit your data to our servers. 
 
@@ -80,7 +80,7 @@ While Antler operates locally and **we cannot monitor or enforce user behavior**
 
 When you scan a QR code and interact with a website:
 
-- Your profile data may be shared with that website per the IRL Browser Standard
+- Your profile data may be shared with that website per the IRL Browser Spec
 - The website (not Antler) controls what happens to that data
 - We are not responsible for third-party website privacy practices
 
