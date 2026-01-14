@@ -2,7 +2,7 @@
 
 Antler is a React Native and Expo app, available on iOS and Android. It is a super-powered QR scanner useful for IRL hangouts. You create profiles (with DIDs), scan QR codes and pass data between the Antler app to complementary mini apps through a WebView.
 
-Antler implements the **IRL Browser Specification**, a specification for secure communication between IRL Browser apps and third-party web applications (mini apps). 
+Antler implements the [**Local First Auth Specification**](./docs/local-first-auth-spec.md), a specification for secure communication between local first auth apps and third-party web applications (mini apps). 
 
 ## Tech Stack
 
@@ -56,7 +56,7 @@ yarn minify-webview
 ```
 
 ### WebView JavaScript
-The `window.irlBrowser` API injected into mini apps is pre-minified at build time for optimal performance:
+The `window.localFirstAuth` API injected into mini apps is pre-minified at build time for optimal performance:
 - **Raw templates:** `lib/webview/webview-injected.raw.js`, `lib/webview/webview-console-intercept.raw.js`
 - **Minified outputs:** Auto-generated `.min.ts` files (59% smaller)
 - Run `yarn minify-webview` after editing raw templates
@@ -90,13 +90,13 @@ To re-enable console forwarding, see [`/docs/webview-console-forwarding.md`](./d
 - **iOS:** SQLite database and private keys are backed up to iCloud Backup
 - **Android:** SQLite database and private keys are backed up via Android Auto Backup
 
-## IRL Browser Specification
+## Local First Auth Specification
 
-Antler implements the IRL Browser Specification, which defines how IRL Browser apps communicate with third-party mini apps. Key features:
+Antler implements the Local First Auth Specification, which defines how local first auth apps communicate with third-party mini apps. Key features:
 
 ### JavaScript API
 
-**`window.irlBrowser` API** - JavaScript interface injected into WebView for mini apps:
+**`window.localFirstAuth` API** - JavaScript interface injected into WebView for mini apps:
 - `getProfileDetails()`: Get user profile as signed JWT
 - `getAvatar()`: Get user avatar as signed JWT (or null)
 - `getBrowserDetails()`: Get browser info (name, version, platform, permissions)
@@ -104,8 +104,8 @@ Antler implements the IRL Browser Specification, which defines how IRL Browser a
 - `requestPermission(permission)`: Request additional permissions (future)
 
 **Event System** - Native app sends signed events to mini apps via `window.postMessage`:
-- `irl:profile:disconnected`: User closed WebView (includes profile data)
-- `irl:error`: Error from native app
+- `localFirstAuth:profile:disconnected`: User closed WebView (includes profile data)
+- `localFirstAuth:error`: Error from native app
 
 ### Security Architecture
 
@@ -123,12 +123,10 @@ Antler implements the IRL Browser Specification, which defines how IRL Browser a
 
 **XSS Protection Mechanisms:**
 - Signature verification on all native→WebView responses
-- `Object.defineProperty()` + `Object.freeze()` on `window.irlBrowser` (prevents API tampering)
+- `Object.defineProperty()` + `Object.freeze()` on `window.localFirstAuth` (prevents API tampering)
 - Canonical JSON serialization for deterministic signature verification
 - Timeout handling (5 second default)
 
 **Browser Requirements:**
 - iOS 11+ (Safari 11) or Android 5.0+ (Lollipop) with system WebView
 - Requires `crypto.subtle` with ECDSA P-256 support
-
-For the complete specification, see [`/docs/irl-browser-standard.md`](./docs/irl-browser-standard.md).

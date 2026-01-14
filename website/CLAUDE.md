@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a the website for Antler, the IRL browser (antlerbrowser.com). The site is built as a static website with a custom page generation system that converts markdown files to HTML.
+This is the website for Antler, a demo app for the Local First Auth Spec (antlerbrowser.com). The site is built as a static website with a custom page generation system that converts markdown files to HTML.
 
 ## Architecture
 

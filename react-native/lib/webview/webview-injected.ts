@@ -2,7 +2,7 @@
  * WebView Injected JavaScript
  *
  * This module contains the JavaScript code that gets injected into the WebView
- * to provide the window.irlBrowser API for mini apps. It implements secure
+ * to provide the window.localFirstAuth API for mini apps. It implements secure
  * communication between the WebView and React Native using ECDSA P-256 signatures
  * to prevent XSS forgery attacks.
  *
@@ -22,7 +22,7 @@ export interface BrowserInfo {
 
 /**
  * Generates the JavaScript code to be injected into the WebView.
- * This code sets up the window.irlBrowser API and handles secure communication
+ * This code sets up the window.localFirstAuth API and handles secure communication
  * with the React Native app using ECDSA P-256 signature verification.
  *
  * The returned code is pre-minified for optimal performance (zero runtime overhead).

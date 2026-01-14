@@ -243,7 +243,7 @@ describe('Manifest Validation', () => {
           icon: './icon.png',
         };
 
-        const result = validateManifest(manifest, 'https://example.com/irl-manifest.json');
+        const result = validateManifest(manifest, 'https://example.com/local-first-auth-manifest.json');
         expect(result?.icon).toBe('https://example.com/icon.png');
       });
 

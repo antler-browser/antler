@@ -1,6 +1,6 @@
 /**
  * Mini App Manifest Utilities
- * Fetches and validates mini app manifests according to IRL Browser Specification
+ * Fetches and validates mini app manifests according to Local First Auth Specification
  */
 
 // Maximum allowed sizes for manifest fields (UGC protection)
@@ -19,7 +19,7 @@ const FETCH_TIMEOUT_MS = 5000;
 const MAX_MANIFEST_SIZE = 100 * 1024;
 
 /**
- * Manifest data structure according to IRL Browser Specification
+ * Manifest data structure according to Local First Auth Specification
  */
 export interface Manifest {
   name: string;
@@ -146,7 +146,7 @@ export function validateManifest(json: unknown, baseUrl?: string): SanitizedMani
 /**
  * Fetch manifest from a mini app URL
  * 1. Fetches the HTML page
- * 2. Parses for <link rel="irl-manifest"> tag
+ * 2. Parses for <link rel="local-first-auth-manifest"> tag
  * 3. Fetches the manifest JSON
  * 4. Validates and sanitizes the manifest
  *
@@ -170,7 +170,7 @@ export async function fetchManifest(url: string): Promise<SanitizedManifest | nu
       htmlResponse = await fetch(url, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Antler/1.0 (IRL Browser)',
+          'User-Agent': 'Antler/1.0 (Local First Auth)',
         },
       });
     } finally {
@@ -191,9 +191,9 @@ export async function fetchManifest(url: string): Promise<SanitizedManifest | nu
 
     const html = await htmlResponse.text();
 
-    // Parse HTML for <link rel="irl-manifest" href="...">
+    // Parse HTML for <link rel="local-first-auth-manifest" href="...">
     // Using a simple regex since we don't need full HTML parsing
-    const manifestLinkMatch = html.match(/<link[^>]*rel=["']irl-manifest["'][^>]*>/i);
+    const manifestLinkMatch = html.match(/<link[^>]*rel=["']local-first-auth-manifest["'][^>]*>/i);
     if (!manifestLinkMatch) {
       console.warn('[Manifest] No manifest link found in HTML');
       return null;
@@ -218,7 +218,7 @@ export async function fetchManifest(url: string): Promise<SanitizedManifest | nu
       manifestResponse = await fetch(manifestUrl, {
         signal: manifestController.signal,
         headers: {
-          'User-Agent': 'Antler/1.0 (IRL Browser)',
+          'User-Agent': 'Antler/1.0 (Local First Auth)',
         },
       });
     } finally {

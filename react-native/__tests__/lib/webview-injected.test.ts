@@ -9,8 +9,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { getInjectedJavaScript, BrowserInfo } from '../../lib/webview/webview-injected';
 
-// Type definitions for the window.irlBrowser API that gets injected
-interface IrlBrowserAPI {
+// Type definitions for the window.localFirstAuth API that gets injected
+interface LocalFirstAuthAPI {
   getProfileDetails(): Promise<string>;
   getAvatar(): Promise<string | null>;
   getBrowserDetails(): BrowserInfo;
@@ -20,7 +20,7 @@ interface IrlBrowserAPI {
 
 declare global {
   interface Window {
-    irlBrowser: IrlBrowserAPI;
+    localFirstAuth: LocalFirstAuthAPI;
     ReactNativeWebView: {
       postMessage: jest.Mock;
     };
@@ -42,15 +42,15 @@ describe('webview-injected', () => {
     jest.clearAllTimers();
     jest.useRealTimers();
 
-    // Clear any lingering event listeners and the irlBrowser API
-    // Since window.irlBrowser is now non-configurable (XSS protection),
+    // Clear any lingering event listeners and the localFirstAuth API
+    // Since window.localFirstAuth is now non-configurable (XSS protection),
     // we can't delete it between tests. The injected code now checks
     // if it exists before defining it, so this is safe.
-    if ((global.window as any).irlBrowser) {
-      const descriptor = Object.getOwnPropertyDescriptor(global.window, 'irlBrowser');
+    if ((global.window as any).localFirstAuth) {
+      const descriptor = Object.getOwnPropertyDescriptor(global.window, 'localFirstAuth');
       if (descriptor && descriptor.configurable) {
         // Only delete if configurable (old behavior for backwards compatibility)
-        delete (global.window as any).irlBrowser;
+        delete (global.window as any).localFirstAuth;
       }
       // If non-configurable, leave it - the injected code will skip re-definition
     }
@@ -148,7 +148,7 @@ describe('webview-injected', () => {
     }
 
     // Generate a real ECDSA P-256 key pair ONCE for all tests
-    // (not per test, because window.irlBrowser is non-configurable and persists)
+    // (not per test, because window.localFirstAuth is non-configurable and persists)
     if (!keysGenerated) {
       const keyPair = await global.crypto.subtle.generateKey(
         {
@@ -205,24 +205,24 @@ describe('webview-injected', () => {
 
   describe('Injected API - Helper Functions', () => {
     beforeEach(() => {
-      // Execute the injected code to set up window.irlBrowser
+      // Execute the injected code to set up window.localFirstAuth
       const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
       eval(code);
       // Clear mock after evaluation (eval triggers console.log which calls postMessage)
       mockPostMessage.mockClear();
     });
 
-    it('should set up window.irlBrowser API', () => {
-      expect((global.window as any).irlBrowser).toBeDefined();
-      expect(typeof (global.window as any).irlBrowser.getProfileDetails).toBe('function');
-      expect(typeof (global.window as any).irlBrowser.getAvatar).toBe('function');
-      expect(typeof (global.window as any).irlBrowser.getBrowserDetails).toBe('function');
-      expect(typeof (global.window as any).irlBrowser.requestPermission).toBe('function');
-      expect(typeof (global.window as any).irlBrowser.close).toBe('function');
+    it('should set up window.localFirstAuth API', () => {
+      expect((global.window as any).localFirstAuth).toBeDefined();
+      expect(typeof (global.window as any).localFirstAuth.getProfileDetails).toBe('function');
+      expect(typeof (global.window as any).localFirstAuth.getAvatar).toBe('function');
+      expect(typeof (global.window as any).localFirstAuth.getBrowserDetails).toBe('function');
+      expect(typeof (global.window as any).localFirstAuth.requestPermission).toBe('function');
+      expect(typeof (global.window as any).localFirstAuth.close).toBe('function');
     });
   });
 
-  describe('window.irlBrowser.getBrowserDetails', () => {
+  describe('window.localFirstAuth.getBrowserDetails', () => {
     beforeEach(() => {
       const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
       eval(code);
@@ -231,32 +231,32 @@ describe('webview-injected', () => {
     });
 
     it('should return browser info synchronously', () => {
-      const result = (global.window as any).irlBrowser.getBrowserDetails();
+      const result = (global.window as any).localFirstAuth.getBrowserDetails();
       expect(result).toEqual(testBrowserInfo);
     });
 
     it('should return correct browser name', () => {
-      const result = (global.window as any).irlBrowser.getBrowserDetails();
+      const result = (global.window as any).localFirstAuth.getBrowserDetails();
       expect(result.name).toBe('Antler');
     });
 
     it('should return correct version', () => {
-      const result = (global.window as any).irlBrowser.getBrowserDetails();
+      const result = (global.window as any).localFirstAuth.getBrowserDetails();
       expect(result.version).toBe('1.0.0');
     });
 
     it('should return correct platform', () => {
-      const result = (global.window as any).irlBrowser.getBrowserDetails();
+      const result = (global.window as any).localFirstAuth.getBrowserDetails();
       expect(result.platform).toBe('ios');
     });
 
     it('should return supported permissions', () => {
-      const result = (global.window as any).irlBrowser.getBrowserDetails();
+      const result = (global.window as any).localFirstAuth.getBrowserDetails();
       expect(result.supportedPermissions).toEqual(['profile']);
     });
   });
 
-  describe('window.irlBrowser.close', () => {
+  describe('window.localFirstAuth.close', () => {
     beforeEach(() => {
       const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
       eval(code);
@@ -265,20 +265,20 @@ describe('webview-injected', () => {
     });
 
     it('should post a close message to React Native', () => {
-      (global.window as any).irlBrowser.close();
+      (global.window as any).localFirstAuth.close();
 
       expect(mockPostMessage).toHaveBeenCalledTimes(1);
       const message = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
-      expect(message.type).toBe('irl:api:close');
+      expect(message.type).toBe('localFirstAuth:api:close');
     });
 
     it('should not wait for a response', () => {
-      const result = (global.window as any).irlBrowser.close();
+      const result = (global.window as any).localFirstAuth.close();
       expect(result).toBeUndefined();
     });
   });
 
-  describe('window.irlBrowser.getProfileDetails', () => {
+  describe('window.localFirstAuth.getProfileDetails', () => {
     beforeEach(() => {
       const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
       eval(code);
@@ -287,22 +287,22 @@ describe('webview-injected', () => {
     });
 
     it('should send a message to React Native with request ID', () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       expect(mockPostMessage).toHaveBeenCalledTimes(1);
       const message = JSON.parse(mockPostMessage.mock.calls[0][0] as string as string);
-      expect(message.type).toBe('irl:api:getProfileDetails');
+      expect(message.type).toBe('localFirstAuth:api:getProfileDetails');
       expect(message.requestId).toBeDefined();
       expect(typeof message.requestId).toBe('string');
     });
 
     it('should return a promise', () => {
-      const result = (global.window as any).irlBrowser.getProfileDetails();
+      const result = (global.window as any).localFirstAuth.getProfileDetails();
       expect(result).toBeInstanceOf(Promise);
     });
 
     it('should resolve with JWT when valid signed response is received', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       // Get the request ID from the posted message
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
@@ -310,7 +310,7 @@ describe('webview-injected', () => {
 
       // Create a signed response
       const response = {
-        type: 'irl:api:getProfileDetails:response',
+        type: 'localFirstAuth:api:getProfileDetails:response',
         requestId: requestId,
         jwt: 'test-jwt-token',
         timestamp: Date.now(),
@@ -346,7 +346,7 @@ describe('webview-injected', () => {
       // Use fake timers for this test
       jest.useFakeTimers();
 
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       // Fast-forward time by 6 seconds to trigger timeout
       jest.advanceTimersByTime(6000);
@@ -358,14 +358,14 @@ describe('webview-injected', () => {
     });
 
     it('should reject if signature verification fails', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       // Send response with invalid signature
       const response = {
-        type: 'irl:api:getProfileDetails:response',
+        type: 'localFirstAuth:api:getProfileDetails:response',
         requestId: requestId,
         jwt: 'test-jwt-token',
         timestamp: Date.now(),
@@ -381,14 +381,14 @@ describe('webview-injected', () => {
     });
 
     it('should ignore responses with wrong request ID', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       // Send response with wrong request ID
       const wrongResponse = {
-        type: 'irl:api:getProfileDetails:response',
+        type: 'localFirstAuth:api:getProfileDetails:response',
         requestId: 'wrong-id',
         jwt: 'test-jwt-token',
         timestamp: Date.now(),
@@ -416,7 +416,7 @@ describe('webview-injected', () => {
 
       // Now send correct response
       const correctResponse = {
-        type: 'irl:api:getProfileDetails:response',
+        type: 'localFirstAuth:api:getProfileDetails:response',
         requestId: requestId,
         jwt: 'correct-jwt-token',
         timestamp: Date.now(),
@@ -447,7 +447,7 @@ describe('webview-injected', () => {
     });
 
     it('should handle error responses from native', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
@@ -455,7 +455,7 @@ describe('webview-injected', () => {
       // Send error response (note: error responses don't include 'error' field in signed message, only in full response)
       // The signed portion should only include type, requestId, timestamp
       const signedPortion = {
-        type: 'irl:api:getProfileDetails:error',
+        type: 'localFirstAuth:api:getProfileDetails:error',
         requestId: requestId,
         timestamp: Date.now(),
       };
@@ -485,7 +485,7 @@ describe('webview-injected', () => {
     });
   });
 
-  describe('window.irlBrowser.getAvatar', () => {
+  describe('window.localFirstAuth.getAvatar', () => {
     beforeEach(() => {
       const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
       eval(code);
@@ -494,22 +494,22 @@ describe('webview-injected', () => {
     });
 
     it('should send a message to React Native with request ID', () => {
-      const promise = (global.window as any).irlBrowser.getAvatar();
+      const promise = (global.window as any).localFirstAuth.getAvatar();
 
       expect(mockPostMessage).toHaveBeenCalledTimes(1);
       const message = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
-      expect(message.type).toBe('irl:api:getAvatar');
+      expect(message.type).toBe('localFirstAuth:api:getAvatar');
       expect(message.requestId).toBeDefined();
       expect(typeof message.requestId).toBe('string');
     });
 
     it('should return a promise', () => {
-      const result = (global.window as any).irlBrowser.getAvatar();
+      const result = (global.window as any).localFirstAuth.getAvatar();
       expect(result).toBeInstanceOf(Promise);
     });
 
     it('should resolve with JWT string when valid signed response is received', async () => {
-      const promise = (global.window as any).irlBrowser.getAvatar();
+      const promise = (global.window as any).localFirstAuth.getAvatar();
 
       // Get the request ID from the posted message
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
@@ -517,7 +517,7 @@ describe('webview-injected', () => {
 
       // Create a signed response
       const response = {
-        type: 'irl:api:getAvatar:response',
+        type: 'localFirstAuth:api:getAvatar:response',
         requestId: requestId,
         jwt: 'test-avatar-jwt-token',
         timestamp: Date.now(),
@@ -550,7 +550,7 @@ describe('webview-injected', () => {
     });
 
     it('should resolve with null when user has no avatar', async () => {
-      const promise = (global.window as any).irlBrowser.getAvatar();
+      const promise = (global.window as any).localFirstAuth.getAvatar();
 
       // Get the request ID from the posted message
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
@@ -558,7 +558,7 @@ describe('webview-injected', () => {
 
       // Create a signed response with null result
       const response = {
-        type: 'irl:api:getAvatar:response',
+        type: 'localFirstAuth:api:getAvatar:response',
         requestId: requestId,
         result: null,
         timestamp: Date.now(),
@@ -594,7 +594,7 @@ describe('webview-injected', () => {
       // Use fake timers for this test
       jest.useFakeTimers();
 
-      const promise = (global.window as any).irlBrowser.getAvatar();
+      const promise = (global.window as any).localFirstAuth.getAvatar();
 
       // Fast-forward time by 6 seconds to trigger timeout
       jest.advanceTimersByTime(6000);
@@ -606,14 +606,14 @@ describe('webview-injected', () => {
     });
 
     it('should reject if signature verification fails', async () => {
-      const promise = (global.window as any).irlBrowser.getAvatar();
+      const promise = (global.window as any).localFirstAuth.getAvatar();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       // Send response with invalid signature
       const response = {
-        type: 'irl:api:getAvatar:response',
+        type: 'localFirstAuth:api:getAvatar:response',
         requestId: requestId,
         jwt: 'test-avatar-jwt',
         timestamp: Date.now(),
@@ -629,14 +629,14 @@ describe('webview-injected', () => {
     });
 
     it('should ignore responses with wrong request ID', async () => {
-      const promise = (global.window as any).irlBrowser.getAvatar();
+      const promise = (global.window as any).localFirstAuth.getAvatar();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       // Send response with wrong request ID
       const wrongResponse = {
-        type: 'irl:api:getAvatar:response',
+        type: 'localFirstAuth:api:getAvatar:response',
         requestId: 'wrong-id',
         jwt: 'wrong-jwt-token',
         timestamp: Date.now(),
@@ -664,7 +664,7 @@ describe('webview-injected', () => {
 
       // Now send correct response
       const correctResponse = {
-        type: 'irl:api:getAvatar:response',
+        type: 'localFirstAuth:api:getAvatar:response',
         requestId: requestId,
         jwt: 'correct-avatar-jwt-token',
         timestamp: Date.now(),
@@ -695,14 +695,14 @@ describe('webview-injected', () => {
     });
 
     it('should handle error responses from native', async () => {
-      const promise = (global.window as any).irlBrowser.getAvatar();
+      const promise = (global.window as any).localFirstAuth.getAvatar();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       // Send error response
       const signedPortion = {
-        type: 'irl:api:getAvatar:error',
+        type: 'localFirstAuth:api:getAvatar:error',
         requestId: requestId,
         timestamp: Date.now(),
       };
@@ -732,7 +732,7 @@ describe('webview-injected', () => {
     });
   });
 
-  describe('window.irlBrowser.requestPermission', () => {
+  describe('window.localFirstAuth.requestPermission', () => {
     beforeEach(() => {
       const code = getInjectedJavaScript(testPublicKey, testBrowserInfo);
       eval(code);
@@ -741,23 +741,23 @@ describe('webview-injected', () => {
     });
 
     it('should send permission request with permission parameter', () => {
-      const promise = (global.window as any).irlBrowser.requestPermission('camera');
+      const promise = (global.window as any).localFirstAuth.requestPermission('camera');
 
       expect(mockPostMessage).toHaveBeenCalledTimes(1);
       const message = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
-      expect(message.type).toBe('irl:api:requestPermission');
+      expect(message.type).toBe('localFirstAuth:api:requestPermission');
       expect(message.permission).toBe('camera');
       expect(message.requestId).toBeDefined();
     });
 
     it('should resolve with boolean result when valid response received', async () => {
-      const promise = (global.window as any).irlBrowser.requestPermission('camera');
+      const promise = (global.window as any).localFirstAuth.requestPermission('camera');
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       const response = {
-        type: 'irl:api:requestPermission:response',
+        type: 'localFirstAuth:api:requestPermission:response',
         requestId: requestId,
         result: true,
         timestamp: Date.now(),
@@ -788,13 +788,13 @@ describe('webview-injected', () => {
     });
 
     it('should handle permission denied', async () => {
-      const promise = (global.window as any).irlBrowser.requestPermission('location');
+      const promise = (global.window as any).localFirstAuth.requestPermission('location');
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       const response = {
-        type: 'irl:api:requestPermission:response',
+        type: 'localFirstAuth:api:requestPermission:response',
         requestId: requestId,
         result: false,
         timestamp: Date.now(),
@@ -835,9 +835,9 @@ describe('webview-injected', () => {
 
     it('should generate unique request IDs for concurrent requests', () => {
       // Make multiple concurrent requests
-      (global.window as any).irlBrowser.getProfileDetails();
-      (global.window as any).irlBrowser.getProfileDetails();
-      (global.window as any).irlBrowser.requestPermission('camera');
+      (global.window as any).localFirstAuth.getProfileDetails();
+      (global.window as any).localFirstAuth.getProfileDetails();
+      (global.window as any).localFirstAuth.requestPermission('camera');
 
       expect(mockPostMessage).toHaveBeenCalledTimes(3);
 
@@ -851,7 +851,7 @@ describe('webview-injected', () => {
     });
 
     it('should generate request IDs in valid format', () => {
-      (global.window as any).irlBrowser.getProfileDetails();
+      (global.window as any).localFirstAuth.getProfileDetails();
 
       const message = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = message.requestId;
@@ -878,14 +878,14 @@ describe('webview-injected', () => {
     });
 
     it('should reject response without signature', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       // Send response without signature field
       const response = {
-        type: 'irl:api:getProfileDetails:response',
+        type: 'localFirstAuth:api:getProfileDetails:response',
         requestId: requestId,
         jwt: 'test-jwt-token',
         timestamp: Date.now(),
@@ -900,13 +900,13 @@ describe('webview-injected', () => {
     });
 
     it('should reject response with malformed signature', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
 
       const response = {
-        type: 'irl:api:getProfileDetails:response',
+        type: 'localFirstAuth:api:getProfileDetails:response',
         requestId: requestId,
         jwt: 'test-jwt-token',
         timestamp: Date.now(),
@@ -922,7 +922,7 @@ describe('webview-injected', () => {
     });
 
     it('should ignore messages with invalid JSON', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       // Send invalid JSON
       const messageEvent = new MessageEvent('message', {
@@ -945,7 +945,7 @@ describe('webview-injected', () => {
     });
 
     it('should sort object keys for consistent serialization', async () => {
-      const promise = (global.window as any).irlBrowser.getProfileDetails();
+      const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
       const sentMessage = JSON.parse(mockPostMessage.mock.calls[0][0] as string);
       const requestId = sentMessage.requestId;
@@ -953,7 +953,7 @@ describe('webview-injected', () => {
       // Create response with keys in non-alphabetical order
       const responseUnsorted = {
         timestamp: Date.now(),
-        type: 'irl:api:getProfileDetails:response',
+        type: 'localFirstAuth:api:getProfileDetails:response',
         requestId: requestId,
         jwt: 'test-jwt-token',
       };
@@ -1000,203 +1000,203 @@ describe('webview-injected', () => {
       mockPostMessage.mockClear();
     });
 
-    describe('Prevent window.irlBrowser reassignment', () => {
-      it('should prevent reassignment of window.irlBrowser', () => {
-        const original = window.irlBrowser;
+    describe('Prevent window.localFirstAuth reassignment', () => {
+      it('should prevent reassignment of window.localFirstAuth', () => {
+        const original = window.localFirstAuth;
         // In non-strict mode, this fails silently without throwing
-        (window as any).irlBrowser = {};
+        (window as any).localFirstAuth = {};
         // Verify assignment failed - still has original value
-        expect(window.irlBrowser).toBe(original);
-        expect(window.irlBrowser).not.toEqual({});
+        expect(window.localFirstAuth).toBe(original);
+        expect(window.localFirstAuth).not.toEqual({});
       });
 
-      it('should prevent setting window.irlBrowser to null', () => {
-        const original = window.irlBrowser;
-        (window as any).irlBrowser = null;
+      it('should prevent setting window.localFirstAuth to null', () => {
+        const original = window.localFirstAuth;
+        (window as any).localFirstAuth = null;
         // Verify assignment failed
-        expect(window.irlBrowser).toBe(original);
-        expect(window.irlBrowser).not.toBeNull();
+        expect(window.localFirstAuth).toBe(original);
+        expect(window.localFirstAuth).not.toBeNull();
       });
 
-      it('should prevent setting window.irlBrowser to a malicious object', () => {
-        const original = window.irlBrowser;
-        (window as any).irlBrowser = {
+      it('should prevent setting window.localFirstAuth to a malicious object', () => {
+        const original = window.localFirstAuth;
+        (window as any).localFirstAuth = {
           getProfileDetails: () => Promise.resolve('malicious-jwt'),
           getBrowserDetails: () => ({ name: 'Fake Browser' } as BrowserInfo),
           requestPermission: () => Promise.resolve(true),
           close: () => { /* do nothing */ }
         };
         // Verify assignment failed
-        expect(window.irlBrowser).toBe(original);
+        expect(window.localFirstAuth).toBe(original);
       });
 
-      it('should preserve window.irlBrowser after failed reassignment attempt', () => {
-        const original = window.irlBrowser;
+      it('should preserve window.localFirstAuth after failed reassignment attempt', () => {
+        const original = window.localFirstAuth;
         try {
-          (window as any).irlBrowser = {};
+          (window as any).localFirstAuth = {};
         } catch (e) {
           // Expected to throw
         }
-        expect(window.irlBrowser).toBe(original);
-        expect(window.irlBrowser).toBeDefined();
+        expect(window.localFirstAuth).toBe(original);
+        expect(window.localFirstAuth).toBeDefined();
       });
     });
 
-    describe('Prevent window.irlBrowser deletion', () => {
-      it('should prevent deletion of window.irlBrowser', () => {
-        const original = window.irlBrowser;
+    describe('Prevent window.localFirstAuth deletion', () => {
+      it('should prevent deletion of window.localFirstAuth', () => {
+        const original = window.localFirstAuth;
         // In non-strict mode, delete fails silently without throwing
-        delete (window as any).irlBrowser;
+        delete (window as any).localFirstAuth;
         // Verify deletion failed
-        expect(window.irlBrowser).toBe(original);
-        expect(window.irlBrowser).toBeDefined();
+        expect(window.localFirstAuth).toBe(original);
+        expect(window.localFirstAuth).toBeDefined();
       });
 
-      it('should still have window.irlBrowser defined after delete attempt', () => {
+      it('should still have window.localFirstAuth defined after delete attempt', () => {
         try {
-          delete (window as any).irlBrowser;
+          delete (window as any).localFirstAuth;
         } catch (e) {
           // Expected to throw
         }
-        expect(window.irlBrowser).toBeDefined();
-        expect(typeof window.irlBrowser.getProfileDetails).toBe('function');
+        expect(window.localFirstAuth).toBeDefined();
+        expect(typeof window.localFirstAuth.getProfileDetails).toBe('function');
       });
     });
 
     describe('Prevent method modification (Object.freeze)', () => {
       it('should prevent replacing close method', () => {
-        const originalClose = window.irlBrowser.close;
+        const originalClose = window.localFirstAuth.close;
         // In non-strict mode, this fails silently without throwing
-        (window as any).irlBrowser.close = () => {
+        (window as any).localFirstAuth.close = () => {
           console.log('malicious close');
         };
         // Verify modification failed
-        expect(window.irlBrowser.close).toBe(originalClose);
+        expect(window.localFirstAuth.close).toBe(originalClose);
       });
 
       it('should prevent replacing getProfileDetails', () => {
-        const originalMethod = window.irlBrowser.getProfileDetails;
-        (window as any).irlBrowser.getProfileDetails = () => {
+        const originalMethod = window.localFirstAuth.getProfileDetails;
+        (window as any).localFirstAuth.getProfileDetails = () => {
           return Promise.resolve('fake-jwt');
         };
         // Verify modification failed
-        expect(window.irlBrowser.getProfileDetails).toBe(originalMethod);
+        expect(window.localFirstAuth.getProfileDetails).toBe(originalMethod);
       });
 
       it('should prevent replacing getAvatar', () => {
-        const originalMethod = window.irlBrowser.getAvatar;
-        (window as any).irlBrowser.getAvatar = () => {
+        const originalMethod = window.localFirstAuth.getAvatar;
+        (window as any).localFirstAuth.getAvatar = () => {
           return Promise.resolve('fake-avatar');
         };
         // Verify modification failed
-        expect(window.irlBrowser.getAvatar).toBe(originalMethod);
+        expect(window.localFirstAuth.getAvatar).toBe(originalMethod);
       });
 
       it('should prevent replacing getBrowserDetails', () => {
-        const originalMethod = window.irlBrowser.getBrowserDetails;
-        (window as any).irlBrowser.getBrowserDetails = () => {
+        const originalMethod = window.localFirstAuth.getBrowserDetails;
+        (window as any).localFirstAuth.getBrowserDetails = () => {
           return { name: 'Fake' } as BrowserInfo;
         };
         // Verify modification failed
-        expect(window.irlBrowser.getBrowserDetails).toBe(originalMethod);
+        expect(window.localFirstAuth.getBrowserDetails).toBe(originalMethod);
       });
 
       it('should prevent replacing requestPermission', () => {
-        const originalMethod = window.irlBrowser.requestPermission;
-        (window as any).irlBrowser.requestPermission = () => {
+        const originalMethod = window.localFirstAuth.requestPermission;
+        (window as any).localFirstAuth.requestPermission = () => {
           return Promise.resolve(true);
         };
         // Verify modification failed
-        expect(window.irlBrowser.requestPermission).toBe(originalMethod);
+        expect(window.localFirstAuth.requestPermission).toBe(originalMethod);
       });
 
       it('should preserve original methods after failed modification attempt', () => {
-        const originalClose = window.irlBrowser.close;
+        const originalClose = window.localFirstAuth.close;
         try {
-          (window as any).irlBrowser.close = () => {};
+          (window as any).localFirstAuth.close = () => {};
         } catch (e) {
           // Expected to throw
         }
-        expect(window.irlBrowser.close).toBe(originalClose);
+        expect(window.localFirstAuth.close).toBe(originalClose);
       });
     });
 
     describe('Prevent adding new properties', () => {
-      it('should not allow adding new methods to window.irlBrowser', () => {
+      it('should not allow adding new methods to window.localFirstAuth', () => {
         // In non-strict mode, this fails silently without throwing
-        (window as any).irlBrowser.maliciousMethod = () => {
+        (window as any).localFirstAuth.maliciousMethod = () => {
           console.log('XSS attack');
         };
         // Verify property was not added
-        expect((window as any).irlBrowser.maliciousMethod).toBeUndefined();
+        expect((window as any).localFirstAuth.maliciousMethod).toBeUndefined();
       });
 
-      it('should not allow adding new properties to window.irlBrowser', () => {
-        (window as any).irlBrowser.isCompromised = true;
+      it('should not allow adding new properties to window.localFirstAuth', () => {
+        (window as any).localFirstAuth.isCompromised = true;
         // Verify property was not added
-        expect((window as any).irlBrowser.isCompromised).toBeUndefined();
+        expect((window as any).localFirstAuth.isCompromised).toBeUndefined();
       });
 
       it('should not have malicious properties after failed addition attempt', () => {
         try {
-          (window as any).irlBrowser.evil = true;
+          (window as any).localFirstAuth.evil = true;
         } catch (e) {
           // Expected to throw
         }
-        expect((window as any).irlBrowser.evil).toBeUndefined();
+        expect((window as any).localFirstAuth.evil).toBeUndefined();
       });
     });
 
     describe('Verify normal functionality still works after protection', () => {
       it('should still allow calling getProfileDetails normally', () => {
-        const result = window.irlBrowser.getProfileDetails();
+        const result = window.localFirstAuth.getProfileDetails();
         expect(result).toBeInstanceOf(Promise);
       });
 
       it('should still allow calling getBrowserDetails normally', () => {
-        const result = window.irlBrowser.getBrowserDetails();
+        const result = window.localFirstAuth.getBrowserDetails();
         expect(result).toEqual(testBrowserInfo);
       });
 
       it('should still allow calling close normally', () => {
         expect(() => {
-          window.irlBrowser.close();
+          window.localFirstAuth.close();
         }).not.toThrow();
         expect(mockPostMessage).toHaveBeenCalledTimes(1);
         expect(mockPostMessage).toHaveBeenCalledWith(
-          JSON.stringify({ type: 'irl:api:close' })
+          JSON.stringify({ type: 'localFirstAuth:api:close' })
           // Note: No second argument - ReactNativeWebView.postMessage only accepts one argument
         );
       });
 
       it('should still allow calling requestPermission normally', () => {
-        const result = window.irlBrowser.requestPermission('camera');
+        const result = window.localFirstAuth.requestPermission('camera');
         expect(result).toBeInstanceOf(Promise);
       });
 
       it('should have all 5 expected methods available', () => {
-        expect(typeof window.irlBrowser.getProfileDetails).toBe('function');
-        expect(typeof window.irlBrowser.getAvatar).toBe('function');
-        expect(typeof window.irlBrowser.getBrowserDetails).toBe('function');
-        expect(typeof window.irlBrowser.requestPermission).toBe('function');
-        expect(typeof window.irlBrowser.close).toBe('function');
+        expect(typeof window.localFirstAuth.getProfileDetails).toBe('function');
+        expect(typeof window.localFirstAuth.getAvatar).toBe('function');
+        expect(typeof window.localFirstAuth.getBrowserDetails).toBe('function');
+        expect(typeof window.localFirstAuth.requestPermission).toBe('function');
+        expect(typeof window.localFirstAuth.close).toBe('function');
       });
     });
 
     describe('Enumerable property', () => {
-      it('should show window.irlBrowser in Object.keys(window) for discoverability', () => {
+      it('should show window.localFirstAuth in Object.keys(window) for discoverability', () => {
         const keys = Object.keys(window);
-        expect(keys).toContain('irlBrowser');
+        expect(keys).toContain('localFirstAuth');
       });
 
       it('should be enumerable in property descriptor', () => {
-        const descriptor = Object.getOwnPropertyDescriptor(window, 'irlBrowser');
+        const descriptor = Object.getOwnPropertyDescriptor(window, 'localFirstAuth');
         expect(descriptor).toBeDefined();
         expect(descriptor?.enumerable).toBe(true);
       });
 
       it('should have correct property descriptor configuration', () => {
-        const descriptor = Object.getOwnPropertyDescriptor(window, 'irlBrowser');
+        const descriptor = Object.getOwnPropertyDescriptor(window, 'localFirstAuth');
         expect(descriptor?.writable).toBe(false);
         expect(descriptor?.configurable).toBe(false);
         expect(descriptor?.enumerable).toBe(true);
@@ -1204,16 +1204,16 @@ describe('webview-injected', () => {
     });
 
     describe('Object.freeze verification', () => {
-      it('should have frozen window.irlBrowser object', () => {
-        expect(Object.isFrozen(window.irlBrowser)).toBe(true);
+      it('should have frozen window.localFirstAuth object', () => {
+        expect(Object.isFrozen(window.localFirstAuth)).toBe(true);
       });
 
       it('should not be extensible (cannot add properties)', () => {
-        expect(Object.isExtensible(window.irlBrowser)).toBe(false);
+        expect(Object.isExtensible(window.localFirstAuth)).toBe(false);
       });
 
       it('should be sealed (cannot reconfigure properties)', () => {
-        expect(Object.isSealed(window.irlBrowser)).toBe(true);
+        expect(Object.isSealed(window.localFirstAuth)).toBe(true);
       });
     });
   });

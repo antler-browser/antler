@@ -37,13 +37,13 @@
   async function verifySignature(response) {
     // Check if crypto.subtle is available
     if (typeof crypto === 'undefined' || !crypto.subtle) {
-      console.error('[IRL Browser] crypto.subtle not available - cannot verify signatures');
+      console.error('[Local First Auth] crypto.subtle not available - cannot verify signatures');
       return false;
     }
 
     // Validate signature exists
     if (!response.signature) {
-      console.error('[IRL Browser] Response missing signature - possible forgery attempt');
+      console.error('[Local First Auth] Response missing signature - possible forgery attempt');
       return false;
     }
 
@@ -98,17 +98,17 @@
       );
 
       if (!isValid) {
-        console.error('[IRL Browser] Signature verification failed - possible XSS forgery attempt');
+        console.error('[Local First Auth] Signature verification failed - possible XSS forgery attempt');
       }
 
       return isValid;
     } catch (error) {
-      console.error('[IRL Browser] Error verifying signature:', error);
+      console.error('[Local First Auth] Error verifying signature:', error);
       return false;
     }
   }
 
-  // Async function to communicate with native IRL Browser
+  // Async function to communicate with native Local First Auth browser
   function callNativeApp(type, data, timeout) {
     return new Promise(function(resolve, reject) {
       var handled = false;
@@ -197,20 +197,20 @@
     });
   }
 
-  // Set up window.irlBrowser API with protection against XSS modification
+  // Set up window.localFirstAuth API with protection against XSS modification
   // Uses Object.defineProperty to prevent replacement/deletion (like native browser APIs)
   // and Object.freeze to prevent method modification
   // Only define if not already present (important for testing environments)
-  if (!window.irlBrowser) {
-    Object.defineProperty(window, 'irlBrowser', {
+  if (!window.localFirstAuth) {
+    Object.defineProperty(window, 'localFirstAuth', {
       value: Object.freeze({
         // Get profile details as signed JWT (async)
         getProfileDetails: function() {
-          return callNativeApp('irl:api:getProfileDetails', {});
+          return callNativeApp('localFirstAuth:api:getProfileDetails', {});
         },
         // Get avatar as signed JWT or null (async)
         getAvatar: function() {
-          return callNativeApp('irl:api:getAvatar', {});
+          return callNativeApp('localFirstAuth:api:getAvatar', {});
         },
         // Return browser info synchronously
         getBrowserDetails: function() {
@@ -218,19 +218,19 @@
         },
         // Request additional permissions from native
         requestPermission: function(permission) {
-          return callNativeApp('irl:api:requestPermission', { permission: permission });
+          return callNativeApp('localFirstAuth:api:requestPermission', { permission: permission });
         },
         // Close the WebView
         close: function() {
           // Note: ReactNativeWebView.postMessage only accepts one argument (no targetOrigin)
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'irl:api:close' }));
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'localFirstAuth:api:close' }));
         }
       }),
-      writable: false,      // Prevent reassignment: window.irlBrowser = {} throws TypeError
-      configurable: false,  // Prevent deletion: delete window.irlBrowser throws TypeError
+      writable: false,      // Prevent reassignment: window.localFirstAuth = {} throws TypeError
+      configurable: false,  // Prevent deletion: delete window.localFirstAuth throws TypeError
       enumerable: true      // Show in Object.keys(window) for discoverability
     });
   };
 
-  console.log('[IRL Browser] WebView API injected');
+  console.log('[Local First Auth] WebView API injected');
 })();

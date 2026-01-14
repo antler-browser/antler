@@ -1,8 +1,6 @@
 # Antler
 
-Antler makes it easy for developers to build local first-auth into their web applications. User's download the Antler app (or another IRL Browser), create a profile (a DID). Whenever they scan a QR code, they share their profile data with the third-party web application (mini app) through a WebView. 
-
-Antler implements the [IRL Browser Specification](https://antlerbrowser.com/irl-browser-specification), a specification for secure communication between IRL Browser apps and mini apps.
+Antler makes it easy for developers interact with mini apps that use the [Local First Auth Specification](https://antlerbrowser.com/local-first-auth-specification). User's download the Antler app, create a profile (a DID). Whenever they scan a QR code, they share their profile data with the mini app through a WebView. 
 
 ## Monorepo Structure
 
@@ -35,5 +33,3 @@ yarn start
 yarn ios
 yarn android
 ```
-
-

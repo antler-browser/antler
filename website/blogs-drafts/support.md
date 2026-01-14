@@ -1,6 +1,6 @@
 ---
 title: "Support"
-description: "Support for the Antler Browser"
+description: "Support for Antler"
 date: "2025-10-19"
 author: "Daniel Mathews"
 author_image: "https://ax0.taddy.org/blog/about-us/danny-small-profile-pic.png"

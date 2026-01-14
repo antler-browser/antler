@@ -12,14 +12,14 @@
     <link rel="shortcut icon" href="public/favicon.ico">
     
     <!-- SEO Meta Tags -->
-    <title>IRL Browser Specification - Antler Browser</title>
-    <meta name="description" content="Technical specification for the IRL Browser Specification" />
+    <title>Local First Auth Specification - Antler Browser</title>
+    <meta name="description" content="Technical specification for Local First Auth Specification" />
     <meta name="author" content="Daniel Mathews" />
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="IRL Browser Specification" />
-    <meta property="og:description" content="Technical specification for the IRL Browser Specification" />
-    <meta property="og:url" content="https://antlerbrowser.com/irl-browser-specification.html" />
+    <meta property="og:title" content="Local First Auth Specification" />
+    <meta property="og:description" content="Technical specification for Local First Auth Specification" />
+    <meta property="og:url" content="https://antlerbrowser.com/local-first-auth-specification.html" />
     <meta property="og:type" content="article" />
     <meta property="article:published_time" content="2025-11-18" />
     <meta property="article:author" content="https://bsky.app/profile/dmathewwws.com" />
@@ -34,45 +34,45 @@
       </nav>
       <article class="blog-content">
         <header class="blog-header">
-          <h1>IRL Browser Specification</h1>
+          <h1>Local First Auth Specification</h1>
         </header>
         <div class="blog-body">
           <h2>Overview</h2>
-<p>The IRL Browser Specification defines how an IRL Browser (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using an IRL Browser, this spec defines how their profile and other data get securely passed between the IRL Browser and the mini app.</p>
+<p>The Local First Auth Spec defines how a Local First Auth app (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using a Local First Auth app, this spec defines how their profile and other data get securely passed between the app and the mini app. Antler is a demo app that showcases how apps can integrate this spec.</p>
 <h2>User Benefits</h2>
-<p>When a user downloads an IRL Browser (like Antler), they create a profile that is stored locally on their device. Whenever a user scans a QR code, their profile gets shared with the mini app. This means users don’t have to go through account creation and immediately get logged in. </p>
+<p>When a user downloads a Local First Auth app (like Antler, a demo implementation), they create a profile that is stored locally on their device. Whenever a user scans a QR code, their profile gets shared with the mini app. This means users don&#39;t have to go through account creation and immediately get logged in.</p>
 <h2>Developer Benefits</h2>
-<p>The benefit of integrating with an IRL Browser is it transforms a regular QR code and allows you to:</p>
+<p>The benefit of integrating with the Local First Auth spec is it transforms a regular QR code and allows you to:</p>
 <ul>
-<li><strong>Skip auth</strong> – no auth systems, no user management, no password resets</li>
-<li><strong>Instant UX</strong> – users scan and start using your app immediately</li>
-<li><strong>Deploy a website</strong> – no app store submissions, no native code, no review process</li>
+<li><strong>Skip auth</strong> – no auth systems, no user management, no password resets</li>
+<li><strong>Instant UX</strong> – users scan and start using your app immediately</li>
+<li><strong>Deploy a website</strong> – no app store submissions, no native code, no review process</li>
 </ul>
-<p>There will always be a need for native mobile apps. IRL Browser mini apps fill a gap where building and maintaining a native app doesn’t make sense e.g.) social clubs, local community events, venues, pop-ups, game nights with friends, or any lightweight gathering where people are physically present.</p>
+<p>There will always be a need for native mobile apps. Mini apps fill a gap where building and maintaining a native app doesn&#39;t make sense e.g.) social clubs, local community events, venues, pop-ups, game nights with friends, or any lightweight gathering where people are physically present.</p>
 <h2>Lifecycle</h2>
-<pre><code>1. User scans QR code using an IRL Browser
- 2. IRL Browser loads URL in WebView
- 3. IRL Browser injects window.irlBrowser JavaScript object
- 4. Mini app calls window.irlBrowser.getProfileDetails() when ready
- 5. IRL Browser generates and signs JWT with profile details
+<pre><code>1. User scans QR code using a Local First Auth app
+ 2. App loads URL in WebView
+ 3. App injects window.localFirstAuth JavaScript object
+ 4. Mini app calls window.localFirstAuth.getProfileDetails() when ready
+ 5. App generates and signs JWT with profile details
  6. Mini app verifies JWT &amp; has access to profile details
 
- // Fetches IRL Manifest in the background
- 7. IRL Browser parses HTML for &lt;link rel=&quot;irl-manifest&quot;&gt; tag
- 8. IRL Browser fetches manifest in background
+ // Fetches Local First Auth Manifest in the background
+ 7. App parses HTML for &lt;link rel=&quot;local-first-auth-manifest&quot;&gt; tag
+ 8. App fetches manifest in background
 
  // If you require additional permissions at a later time
- 9. Mini app calls window.irlBrowser.requestPermission(&#39;location&#39;)
- 10. IRL Browser validates permission is declared in manifest
- 11. If declared → IRL Browser shows user consent prompt
+ 9. Mini app calls window.localFirstAuth.requestPermission(&#39;location&#39;)
+ 10. App validates permission is declared in manifest
+ 11. If declared → App shows user consent prompt
  12. If NOT declared → request is rejected (security)
- 13. If user approves → IRL Browser sends location data via postMessage
+ 13. If user approves → App sends location data via postMessage
 </code></pre>
-<h2>IRL Manifest</h2>
-<p>Every IRL mini app has a manifest file. The purpose is to showcase basic details about the mini app and explicitly state which permissions your mini app needs.</p>
+<h2>Local First Auth Manifest</h2>
+<p>Every mini app has a manifest file. The purpose is to showcase basic details about the mini app and explicitly state which permissions your mini app needs.</p>
 <h3>Discovery</h3>
 <p>Mini apps declare their manifest using a <code>&lt;link&gt;</code> tag in the HTML <code>&lt;head&gt;</code>.</p>
-<pre><code class="language-html">&lt;link rel=&quot;irl-manifest&quot; href=&quot;/irl-manifest.json&quot;&gt;
+<pre><code class="language-html">&lt;link rel=&quot;local-first-auth-manifest&quot; href=&quot;/local-first-auth-manifest.json&quot;&gt;
 </code></pre>
 <h3>manifest.json Schema</h3>
 <pre><code class="language-json">{
@@ -121,55 +121,55 @@
 <td><code>type</code></td>
 <td>string</td>
 <td>No</td>
-<td>Context type: “place”, “event”, “club”, etc.</td>
+<td>Context type: &quot;place&quot;, &quot;event&quot;, &quot;club&quot;, etc.</td>
 </tr>
 <tr>
 <td><code>permissions</code></td>
 <td>array</td>
 <td>No</td>
-<td>Requested permissions. “profile” is granted by default.</td>
+<td>Requested permissions. &quot;profile&quot; is granted by default.</td>
 </tr>
 </tbody></table>
-<p><strong>Note:</strong> Currently, this spec just supports the ‘profile’ permission. However, IRL Browsers are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).</p>
+<p><strong>Note:</strong> Currently, this spec just supports the &#39;profile&#39; permission. However, Local First Auth apps are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).</p>
 <h2>Decentralized Identifiers</h2>
-<p>When a user downloads an IRL Browser, they create a profile on the app. Under the hood, each profile is a DID (<a href="https://www.w3.org/TR/did-1.0/" target="_blank" rel="noopener noreferrer">Decentralized Identifier</a> - a W3C standard) with additional details (like name, avatar, and links to socials). </p>
+<p>When a user downloads a Local First Auth app, they create a profile on the app. Under the hood, each profile is a DID (<a href="https://www.w3.org/TR/did-1.0/" target="_blank" rel="noopener noreferrer">Decentralized Identifier</a> - a W3C standard) with additional details (like name, avatar, and links to socials).</p>
 <p>A DID is a text string that is used to identify a user. Here&#39;s an example:</p>
 <p><img src="https://ax0.taddy.org/antler/did-explain.png" alt="did-explain.png"></p>
-<p>IRL Browsers use the <code>did:key</code> method, where the public key is the last part of the DID.</p>
-<p>When you create a profile on an IRL Browser, your DID (which includes a public key) and a corresponding private key are generated and stored locally on your device. Whenever an IRL Browser sends data to a mini app, the payload is signed using the DID&#39;s private key, ensuring it came from the DID owner.</p>
+<p>Local First Auth apps use the <code>did:key</code> method, where the public key is the last part of the DID.</p>
+<p>When you create a profile on a Local First Auth app, your DID (which includes a public key) and a corresponding private key are generated and stored locally on your device. Whenever a Local First Auth app sends data to a mini app, the payload is signed using the DID&#39;s private key, ensuring it came from the DID owner.</p>
 <h2>JavaScript API</h2>
-<p>There are two ways IRL Browsers and mini apps communicate: </p>
+<p>There are two ways Local First Auth apps and mini apps communicate:</p>
 <ol>
-<li><strong><code>window.irlBrowser</code>:</strong> Use when your mini app wants to request data or initiate actions (e.g., get profile details or request permissions)</li>
-<li><strong><code>window.postMessage</code>:</strong> Use when your mini app wants to be notified of events that happened in the IRL Browser (e.g., user closed the WebView)</li>
+<li><strong><code>window.localFirstAuth</code>:</strong> Use when your mini app wants to request data or initiate actions (e.g., get profile details or request permissions)</li>
+<li><strong><code>window.postMessage</code>:</strong> Use when your mini app wants to be notified of events that happened in the Local First Auth app (e.g., user closed the WebView)</li>
 </ol>
-<h3>The <code>window.irlBrowser</code> Object</h3>
-<p>When your mini app loads inside an IRL Browser, a global <code>window.irlBrowser</code> object is injected. This allows you to 1) call methods and get back data and 2) check that the user is using an IRL browser.</p>
-<pre><code class="language-tsx">interface IRLBrowser {
+<h3>The <code>window.localFirstAuth</code> Object</h3>
+<p>When your mini app loads inside a Local First Auth app, a global <code>window.localFirstAuth</code> object is injected. This allows you to 1) call methods and get back data and 2) check that the user is using a Local First Auth app.</p>
+<pre><code class="language-tsx">interface LocalFirstAuth {
   // Get profile details (name, socials)
   getProfileDetails(): Promise&lt;string&gt;;
-  
+
   // Get avatar as base64-encoded string
   getAvatar(): Promise&lt;string | null&gt;;
-  
-  // Get details about the IRL Browser
-  getBrowserDetails(): BrowserDetails;
-  
+
+  // Get details about the Local First Auth host app
+  getAppDetails(): AppDetails;
+
   // Request additional permissions (in the future)
   requestPermission(permission: string): Promise&lt;boolean&gt;;
-  
+
   // Close the WebView (return to QR scanner)
   close(): void;
 }
 </code></pre>
 <h4>Getting profile details</h4>
-<p><code>getProfileDetails()</code> returns the user’s profile details as a signed JWT. </p>
+<p><code>getProfileDetails()</code> returns the user&#39;s profile details as a signed JWT.</p>
 <pre><code class="language-tsx">{
   &quot;did&quot;: &quot;did:key:123456789abcdefghi&quot;,
   &quot;name&quot;: &quot;Danny Mathews&quot;,
   &quot;socials&quot;: [
     { &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }
-  ]  
+  ]
 }
 </code></pre>
 <table>
@@ -201,8 +201,8 @@
 </tr>
 </tbody></table>
 <p>For security reasons, always reconstruct social links client-side rather than trusting URLs. Check out <a href="https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/social-links.ts#L353" target="_blank" rel="noopener noreferrer">this code</a>.</p>
-<h4>Getting a user’s avatar</h4>
-<p><code>getAvatar()</code> returns the user’s base64-encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.</p>
+<h4>Getting a user&#39;s avatar</h4>
+<p><code>getAvatar()</code> returns the user&#39;s base64-encoded avatar as a signed JWT. This image can be up to 1MB in size. If the user has no avatar, this will return null.</p>
 <pre><code class="language-tsx">{
   &quot;did&quot;: &quot;did:key:123456789abcdefghi&quot;,
   &quot;avatar&quot;: &quot;data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...&quot;
@@ -230,8 +230,8 @@
 <td>User&#39;s avatar as base64-encoded string</td>
 </tr>
 </tbody></table>
-<h4>Getting browser details</h4>
-<p><code>getBrowserDetails()</code> returns information about the IRL Browser.</p>
+<h4>Getting app details</h4>
+<p><code>getAppDetails()</code> returns information about the Local First Auth app.</p>
 <pre><code class="language-tsx">{
   &quot;name&quot;: &quot;Antler&quot;,
   &quot;version&quot;: &quot;1.0.0&quot;,
@@ -252,13 +252,13 @@
 <td><code>name</code></td>
 <td>string</td>
 <td>Yes</td>
-<td>IRL Browser name</td>
+<td>App name</td>
 </tr>
 <tr>
 <td><code>version</code></td>
 <td>string</td>
 <td>Yes</td>
-<td>IRL Browser app version</td>
+<td>App version</td>
 </tr>
 <tr>
 <td><code>platform</code></td>
@@ -270,32 +270,32 @@
 <td><code>supportedPermissions</code></td>
 <td>array</td>
 <td>Yes</td>
-<td>The permission that this IRL Browser has implemented.</td>
+<td>The permissions that this app has implemented.</td>
 </tr>
 </tbody></table>
-<h4>Checking for an IRL Browser</h4>
-<p>Your mini app can detect whether it&#39;s running inside an IRL Browser or a regular web browser.</p>
-<pre><code class="language-jsx">if (typeof window.irlBrowser !== &#39;undefined&#39;) {
-  // Running in an IRL Browser 
-  const info = window.irlBrowser.getBrowserDetails();
+<h4>Checking for a Local First Auth app</h4>
+<p>Your mini app can detect whether it&#39;s running inside a Local First Auth app or a regular web browser.</p>
+<pre><code class="language-jsx">if (typeof window.localFirstAuth !== &#39;undefined&#39;) {
+  // Running in a Local First Auth app
+  const info = window.localFirstAuth.getAppDetails();
   console.log(`Running in ${info.name} v${info.version}`);
 } else {
   // Regular web browser
-  console.log(&#39;Not in an IRL Browser&#39;);
+  console.log(&#39;Not in a Local First Auth app&#39;);
 }
 </code></pre>
-<h3>Use <code>window.postMessage</code> to receive data from IRL Browser</h3>
-<p>A user may perform an action inside the IRL Browser that you want to know about. The IRL Browser sends event data to a mini app via <code>window.postMessage</code> using signed JWTs.</p>
+<h3>Use <code>window.postMessage</code> to receive data from Local First Auth app</h3>
+<p>A user may perform an action inside the Local First Auth app that you want to know about. The app sends event data to a mini app via <code>window.postMessage</code> using signed JWTs.</p>
 <pre><code class="language-jsx">window.addEventListener(&#39;message&#39;, async (event) =&gt; {
   try {
     if (!event.data?.jwt) { return }
-    
+
     // verify JWT is valid
     const payload = await decodeAndVerifyJWT(event.data.jwt);
-    
+
     // process message based on the type
     switch (payload.type) {
-      case &#39;irl:profile:disconnected&#39;:
+      case &#39;localFirstAuth:profile:disconnected&#39;:
         const { type, ...profile } = payload.data;
         console.log(&#39;User DID:&#39;, payload.iss);
         console.log(&#39;User Name:&#39;, profile.name);
@@ -319,12 +319,12 @@
 </tr>
 </thead>
 <tbody><tr>
-<td><code>irl:profile:disconnected</code></td>
+<td><code>localFirstAuth:profile:disconnected</code></td>
 <td>User closed WebView</td>
 <td>profile</td>
 </tr>
 <tr>
-<td><code>irl:error</code></td>
+<td><code>localFirstAuth:error</code></td>
 <td>Error data</td>
 <td></td>
 </tr>
@@ -335,17 +335,17 @@
 </tr>
 </tbody></table>
 <h5>Profile Disconnected</h5>
-<p><code>irl:profile:disconnected</code> returns the same profile details mentioned above.</p>
+<p><code>localFirstAuth:profile:disconnected</code> returns the same profile details mentioned above.</p>
 <pre><code class="language-json">{
   &quot;did&quot;: &quot;did:key:123456789abcdefghi&quot;,
   &quot;name&quot;: &quot;Danny Mathews&quot;,
   &quot;socials&quot;: [
     { &quot;platform&quot;: &quot;INSTAGRAM&quot;, &quot;handle&quot;: &quot;dmathewwws&quot; }
-  ]  
+  ]
 }
 </code></pre>
 <h5>Error Handling</h5>
-<p><code>irl:error</code> returns errors from an IRL Browser in the following format.</p>
+<p><code>localFirstAuth:error</code> returns errors from a Local First Auth app in the following format.</p>
 <pre><code class="language-json">{
   &quot;code&quot;: &quot;PERMISSION_NOT_DECLARED&quot;,
   &quot;message&quot;: &quot;Permission not in manifest&quot;
@@ -374,9 +374,9 @@
 </tr>
 </tbody></table>
 <h2>JWT Structure</h2>
-<p>All data passed from the IRL Browser to a mini app is done via signed JWTs (<a href="https://datatracker.ietf.org/doc/html/rfc7519" target="_blank" rel="noopener noreferrer">JSON Web Tokens</a>).</p>
+<p>All data passed from the Local First Auth app to a mini app is done via signed JWTs (<a href="https://datatracker.ietf.org/doc/html/rfc7519" target="_blank" rel="noopener noreferrer">JSON Web Tokens</a>).</p>
 <h3>JWT Header</h3>
-<p>It&#39;s useful to know what algorithm to use to decode the JWT. If you use a JWT library, this part is usually done behind the scenes for you. </p>
+<p>It&#39;s useful to know what algorithm to use to decode the JWT. If you use a JWT library, this part is usually done behind the scenes for you.</p>
 <pre><code class="language-json">{
   &quot;alg&quot;: &quot;EdDSA&quot;,
   &quot;typ&quot;: &quot;JWT&quot;
@@ -395,7 +395,7 @@
 </tr>
 <tr>
 <td><code>typ</code></td>
-<td>Type of the JWT. Always “JWT”.</td>
+<td>Type of the JWT. Always &quot;JWT&quot;.</td>
 </tr>
 </tbody></table>
 <h3>JWT Payload</h3>
@@ -405,8 +405,8 @@
   &quot;aud&quot;: &quot;https://yourdomain.com&quot;,
   &quot;iat&quot;: 1728393600,
   &quot;exp&quot;: 1728397200,
-  &quot;type&quot;: &quot;irl:profile:disconnected&quot;,
-  &quot;data&quot;: 
+  &quot;type&quot;: &quot;localFirstAuth:profile:disconnected&quot;,
+  &quot;data&quot;:
     {
       &quot;did&quot;: &quot;did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK&quot;,
       &quot;name&quot;: &quot;Danny Mathews&quot;,
@@ -423,7 +423,7 @@
 </thead>
 <tbody><tr>
 <td><code>iss</code></td>
-<td>Issuer - Public key of the user’s DID. Use this when verifying the JWT.</td>
+<td>Issuer - Public key of the user&#39;s DID. Use this when verifying the JWT.</td>
 </tr>
 <tr>
 <td><code>aud</code></td>
@@ -439,7 +439,7 @@
 </tr>
 <tr>
 <td><code>type</code></td>
-<td>IRL Browser function or event type</td>
+<td>Local First Auth function or event type</td>
 </tr>
 <tr>
 <td><code>data</code></td>
@@ -448,15 +448,15 @@
 </tbody></table>
 <h3>Best Practices</h3>
 <ol>
-<li><strong>Decoding &amp; verifying the JWT</strong> - Never trust unverified data. Decode JWTs using the <code>alg</code>. Verify that the JWT has been signed by the user’s public key (<code>iss</code> field). </li>
-<li><strong>Validate audience -</strong> Ensure the <code>aud</code> claim matches the domain of the mini app. This is set by the IRL Browser based on the url that launched the WebView.</li>
+<li><strong>Decoding &amp; verifying the JWT</strong> - Never trust unverified data. Decode JWTs using the <code>alg</code>. Verify that the JWT has been signed by the user&#39;s public key (<code>iss</code> field).</li>
+<li><strong>Validate audience -</strong> Ensure the <code>aud</code> claim matches the domain of the mini app. This is set by the Local First Auth app based on the url that launched the WebView.</li>
 <li><strong>Validate expiration</strong> - Reject expired tokens. Check the <code>exp</code> field.</li>
 </ol>
 <h2>Making Authenticated Requests</h2>
-<p>When your mini app needs to make an authenticated request on behalf of a user, call <code>getProfileDetails()</code>to get a valid JWT for them. This can be used directly as a Bearer token to make authenticated requests ie) no need to build session tokens or additional auth infrastructure. </p>
+<p>When your mini app needs to make an authenticated request on behalf of a user, call <code>getProfileDetails()</code>to get a valid JWT for them. This can be used directly as a Bearer token to make authenticated requests ie) no need to build session tokens or additional auth infrastructure.</p>
 <h3>Your Mini App (Client-Side)</h3>
 <pre><code class="language-tsx">// Get profile JWT when you need to make an authenticated request
-const jwt = await window.irlBrowser.getProfileDetails();
+const jwt = await window.localFirstAuth.getProfileDetails();
 
 // Use it as a Bearer token in your requests
 const response = await fetch(&#39;https://yourdomain.com/api/posts&#39;, {
@@ -478,27 +478,27 @@ if (response.ok) {
   try {
     const authHeader = req.headers.authorization;
     const { content } = req.body;
-    
+
     // Get User&#39;s JWT
     if (!authHeader?.startsWith(&#39;Bearer &#39;)) {
       return res.status(401).json({ error: &#39;Invalid authorization header&#39; });
     }
-    
+
     const jwt = authHeader.slice(7).trim();
-    
+
     if (!jwt) { return res.status(401).json({ error: &#39;No token provided&#39; }); }
-    
+
     // Decode and verify JWT signature using DID public key
     const payload = await decodeAndVerifyJWT(jwt);
-    
+
     // Process authenticated request
-    await db.posts.create({ 
+    await db.posts.create({
       content,
       authorId: payload.iss  // User&#39;s DID from JWT
     });
-    
+
     res.json({ success: true });
-    
+
   } catch (error) {
     res.status(401).json({ error: &#39;Invalid JWT&#39; });
   }
@@ -508,7 +508,7 @@ if (response.ok) {
 <p>See <a href="https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/jwt.ts#L23" target="_blank" rel="noopener noreferrer">code example</a> for <code>decodeAndVerifyJWT</code>. We decode &amp; verify JWT signature including making sure the <code>aud</code> claim is for our mini app.</p>
 <p><strong>License</strong>: <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</a></p>
 <p><strong>Author</strong>: <a href="https://dmathewwws.com" target="_blank" rel="noopener noreferrer">Daniel Mathews</a> (<code>danny@antlerbrowser.com</code>)</p>
-<p><strong>Last Modified</strong>: 2025-11-23</p>
+<p><strong>Last Modified</strong>: 2026-01-13</p>
 
         </div>
       </article>

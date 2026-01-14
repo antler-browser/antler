@@ -7,7 +7,7 @@ Antler is a super-powered QR scanner for IRL hangouts. Available on iOS and Andr
 
 For developers, Antler is a mobile SDK that provides a WebView environment for mini apps. Build simple, self-contained web apps that know users are physically present and can scan QR codes — no native code, no app stores, no auth systems needed.
 
-Antler implements the **IRL Browser Specification**, a specification that defines how IRL Browsers communicate with third-party web applications (mini apps) through signed JWTs and a JavaScript API (`window.irlBrowser`). See `/docs/irl-browser-standard.md` for full specification.
+Antler implements the **Local First Auth Specification**, a specification that defines how local first auth browsers communicate with third-party web applications (mini apps) through signed JWTs and a JavaScript API (`window.localFirstAuth`). See `/docs/local-first-auth-spec.md` for full specification.
 
 ## Key Files and Directories
 
@@ -16,7 +16,7 @@ Antler implements the **IRL Browser Specification**, a specification that define
   - `/profile/`: Profile creation and viewing screens (NameScreen, SocialsScreen, AvatarScreen, ProfileScreen)
   - `/onboarding/`: Onboarding flow screens (WelcomeScreen, OnboardingNavigator)
   - `CameraScreen.tsx`: Main camera screen with QR scanning
-  - `WebViewScreen.tsx`: IRL Browser container that injects `window.irlBrowser` API and handles bidirectional communication with mini apps
+  - `WebViewScreen.tsx`: Local First Auth container that injects `window.localFirstAuth` API and handles bidirectional communication with mini apps
   - `SettingsScreen.tsx`: Settings modal with app info and support links (Privacy Policy, Terms of Service, Rate App, Email Support)
   - `ModalStackNavigator.tsx`: Modal navigation stack
   - `root.tsx`: Root navigation configuration
@@ -29,7 +29,7 @@ Antler implements the **IRL Browser Specification**, a specification that define
 - `/lib/`: Utilities and service integrations
   - `camera.ts`: Camera and QR scanning utilities
   - `did.ts`: Decentralized identity (DID) utilities
-  - `send-data.ts`: JWT signing utilities for WebView communication (IRL Browser Specification)
+  - `send-data.ts`: JWT signing utilities for WebView communication (Local First Auth Specification)
   - `secure-storage.ts`: Secure storage operations
   - `social-links.ts`: Social media link validation and formatting
   - `colors.ts`: Color constants
@@ -48,7 +48,7 @@ Antler implements the **IRL Browser Specification**, a specification that define
     - `/migrations/`: SQL migration files
     - `/models/`: Database model operations (AppStateFns, UserProfileFns, ScanHistoryFns)
 - `/docs/`: Documentation
-  - `irl-browser-standard.md`: IRL Browser Specification specification
+  - `local-first-auth-spec.md`: Local First Auth Specification specification
   - `webview-console-forwarding.md`: Guide for re-enabling console log forwarding from WebView
 - `/scripts/`: Build scripts
   - `minify-webview-js.js`: Build script to minify the WebView injected JavaScript
@@ -269,17 +269,17 @@ Database operations are organized into function namespaces by entity:
 - JWT signing and verification supported using Ed25519 algorithm
 
 ### WebView & Mini App Integration
-- Implements the IRL Browser Specification for secure communication with third-party mini apps
+- Implements the Local First Auth Specification for secure communication with third-party mini apps
 - **JavaScript API Injection** (`/app/screens/WebViewScreen.tsx`):
-  - `window.irlBrowser.getProfileDetails()`: Returns signed JWT with user profile (async)
-  - `window.irlBrowser.getAvatar()`: Returns signed JWT with user avatar or null (async)
-  - `window.irlBrowser.getBrowserDetails()`: Returns browser info (name, version, platform, permissions)
-  - `window.irlBrowser.requestPermission(permission)`: Request additional permissions (future)
-  - `window.irlBrowser.close()`: Close WebView and return to camera
+  - `window.localFirstAuth.getProfileDetails()`: Returns signed JWT with user profile (async)
+  - `window.localFirstAuth.getAvatar()`: Returns signed JWT with user avatar or null (async)
+  - `window.localFirstAuth.getBrowserDetails()`: Returns browser info (name, version, platform, permissions)
+  - `window.localFirstAuth.requestPermission(permission)`: Request additional permissions (future)
+  - `window.localFirstAuth.close()`: Close WebView and return to camera
 - **Message Handling**: WebViewScreen listens for messages from mini apps via `window.postMessage`
 - **Manifest Fetching & Scan Tracking** (`/lib/webview/manifest.ts`):
   - Automatically fetches mini app manifest after page loads
-  - Parses HTML for `<link rel="irl-manifest">` tag per IRL Browser Specification
+  - Parses HTML for `<link rel="local-first-auth-manifest">` tag per Local First Auth Specification
   - Validates and sanitizes manifest data (UGC protection):
     - Strips HTML tags to prevent XSS
     - Enforces max length limits (name: 100, description: 500, location: 200, icon: 2048, type: 50)
@@ -300,10 +300,10 @@ Database operations are organized into function namespaces by entity:
   - Uses Ed25519 algorithm with user's DID private key
   - JWTs include claims: `iss` (issuer DID), `iat` (issued at), `exp` (expiration), `type` (message type), `data` (payload)
 - **Event Types**:
-  - `irl:profile:disconnected`: Sent when user closes WebView
-  - `irl:error`: Error data from native app
+  - `localFirstAuth:profile:disconnected`: Sent when user closes WebView
+  - `localFirstAuth:error`: Error data from native app
 - Mini apps verify JWTs using the DID public key (`iss` field) to ensure authenticity
-- See `/docs/irl-browser-standard.md` for full specification
+- See `/docs/local-first-auth-spec.md` for full specification
 - **Security Architecture**:
   - **Dual Signing System**:
     - Profile JWTs: Signed with user's DID private key (Ed25519, long-lived, platform-specific storage)

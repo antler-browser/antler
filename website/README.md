@@ -1,6 +1,6 @@
 # Antler Website
 
-This is the website for Antler, available at antlerbrowser.com. It is a static website that is built with a custom page generation system that converts markdown files to HTML. It shows how to download the Antler app and learn more about Antler and how the open specification for IRL browsers works.
+This is the website for Antler, available at antlerbrowser.com. It is a static website that is built with a custom page generation system that converts markdown files to HTML. It shows how to download the Antler app and learn more about Antler and how the Local First Auth Spec works.
 
 ## To view the website locally
 1. Go to the `src` directory.

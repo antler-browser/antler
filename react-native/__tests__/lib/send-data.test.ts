@@ -77,7 +77,7 @@ describe('sendDataToWebView', () => {
       const decoded = decodeJwt(jwt);
 
       // Verify type field is at root level of JWT payload
-      expect(decoded.type).toBe('irl:profile:disconnected');
+      expect(decoded.type).toBe('localFirstAuth:profile:disconnected');
       expect((decoded.data as any).did).toBe(mockDID);
       expect((decoded.data as any).name).toBe('Charlie');
       // Avatar is no longer included in profile disconnected payload
@@ -104,7 +104,7 @@ describe('sendDataToWebView', () => {
       const jwt = await sendDataToWebView(WebViewDataType.PROFILE_DISCONNECTED, mockDID, mockAudience);
       const decoded = decodeJwt(jwt);
 
-      expect(decoded.type).toBe('irl:profile:disconnected');
+      expect(decoded.type).toBe('localFirstAuth:profile:disconnected');
       expect((decoded.data as any).name).toBe('Alice');
       expect((decoded.data as any).socials).toEqual([
         { platform: 'INSTAGRAM', handle: 'alice' },
@@ -127,8 +127,8 @@ describe('sendDataToWebView', () => {
       const decoded = decodeJwt(jwt);
 
       // Verify type field is at root level of JWT payload
-      expect(decoded.type).toBe('irl:error');
-      // Verify structured error format per IRL Browser Specification
+      expect(decoded.type).toBe('localFirstAuth:error');
+      // Verify structured error format per Local First Auth Specification
       expect((decoded.data as any).code).toBe('UNKNOWN_ERROR');
       expect((decoded.data as any).message).toBe('An error occurred');
     });
@@ -164,7 +164,7 @@ describe('sendDataToWebView', () => {
   });
 
   describe('JWT Claims', () => {
-    it('should include aud claim per IRL Browser Specification', async () => {
+    it('should include aud claim per Local First Auth Specification', async () => {
       const mockProfile = {
         did: mockDID,
         name: 'Test',

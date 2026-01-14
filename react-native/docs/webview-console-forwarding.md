@@ -14,14 +14,14 @@ If you need console logs forwarded to React Native for development, follow these
 
 ### Step 1: Add placeholder to `lib/webview-injected.raw.js`
 
-Find the line with `console.log('[IRL Browser] WebView API injected');` (around line 207) and add the placeholder **before** it:
+Find the line with `console.log('[Local First Auth] WebView API injected');` (around line 207) and add the placeholder **before** it:
 
 ```javascript
   };
 
   __CONSOLE_INTERCEPT_CODE__
 
-  console.log('[IRL Browser] WebView API injected');
+  console.log('[Local First Auth] WebView API injected');
 ```
 
 ### Step 2: Update `lib/webview-injected.ts`

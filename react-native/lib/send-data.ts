@@ -4,17 +4,17 @@ import * as base64 from 'base64-js';
 import * as ed25519 from '@stablelib/ed25519';
 
 /**
- * Data types that can be sent to WebView via IRL Browser Specification
+ * Data types that can be sent to WebView via Local First Auth Specification
  */
 export enum WebViewDataType {
-  PROFILE_DISCONNECTED = 'irl:profile:disconnected',
-  ERROR = 'irl:error',
+  PROFILE_DISCONNECTED = 'localFirstAuth:profile:disconnected',
+  ERROR = 'localFirstAuth:error',
 }
 
 /**
  * Generates a signed JWT with user profile details for getProfileDetails() API
  *
- * This is used when the web app calls window.irlBrowser.getProfileDetails()
+ * This is used when the web app calls window.localFirstAuth.getProfileDetails()
  * to retrieve the user's profile information.
  *
  * @param did - The user's DID (used to fetch profile and as JWT issuer)
@@ -43,13 +43,13 @@ export async function getProfileDetailsJWT(did: string, aud: string): Promise<st
 
   // For getProfileDetails, we don't use a specific event type
   // The method itself indicates the intent
-  return createJWT(did, aud, 'irl:profile:details', payload);
+  return createJWT(did, aud, 'localFirstAuth:profile:details', payload);
 }
 
 /**
  * Generates a signed JWT with user avatar for getAvatar() API
  *
- * This is used when the web app calls window.irlBrowser.getAvatar()
+ * This is used when the web app calls window.localFirstAuth.getAvatar()
  * to retrieve the user's avatar image. Returns a signed JWT containing
  * the DID and avatar data, or null if the user has no avatar.
  *
@@ -81,7 +81,7 @@ export async function getAvatarJWT(did: string, aud: string): Promise<string | n
   };
 
   // Sign and return JWT
-  return createJWT(did, aud, 'irl:avatar', payload);
+  return createJWT(did, aud, 'localFirstAuth:avatar', payload);
 }
 
 /**
@@ -132,7 +132,7 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
     }
 
     case WebViewDataType.ERROR: {
-      // For errors, payload should contain structured error details per IRL Browser Specification
+      // For errors, payload should contain structured error details per Local First Auth Specification
       return {
         code: 'UNKNOWN_ERROR',
         message: 'An error occurred'
@@ -145,11 +145,11 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
 }
 
 /**
- * Signs a JWT with EdDSA algorithm for IRL Browser Specification
+ * Signs a JWT with EdDSA algorithm for Local First Auth Specification
  *
  * @param did - User's DID (used as issuer)
  * @param aud - Audience (mini app URL)
- * @param type - Message type (e.g., 'irl:profile:disconnected')
+ * @param type - Message type (e.g., 'localFirstAuth:profile:disconnected')
  * @param payload - Data payload to sign (will be placed in 'data' claim)
  * @returns Signed JWT string
  *
@@ -157,7 +157,7 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
  * const jwt = await createJWT(
  *   "did:key:z6Mk...",
  *   "https://example.app",
- *   "irl:profile:disconnected",
+ *   "localFirstAuth:profile:disconnected",
  *   { did: "did:key:z6Mk...", name: "Alice", socials: [] }
  * );
  */
@@ -183,7 +183,7 @@ async function createJWT(did: string, aud: string, type: string, payload: Record
     typ: 'JWT',
   };
 
-  // Build JWT payload with claims per IRL Browser Specification
+  // Build JWT payload with claims per Local First Auth Specification
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 120; // 2 minutes
 

@@ -139,19 +139,19 @@ export function WebViewScreen() {
           }
           break;
 
-        case 'irl:api:close':
+        case 'localFirstAuth:api:close':
           // Send disconnect event and close WebView
           await handleDisconnect();
           navigation.goBack();
           break;
 
-        case 'irl:api:getProfileDetails': {
+        case 'localFirstAuth:api:getProfileDetails': {
           // Generate and send profile JWT when web app requests it
           const profileJWT = await SendData.getProfileDetailsJWT(did, url);
 
           // Build response with requestId and timestamp
           const response = {
-            type: 'irl:api:getProfileDetails:response',
+            type: 'localFirstAuth:api:getProfileDetails:response',
             requestId: requestId,
             jwt: profileJWT,
             timestamp: Date.now()
@@ -168,7 +168,7 @@ export function WebViewScreen() {
           break;
         }
 
-        case 'irl:api:getAvatar': {
+        case 'localFirstAuth:api:getAvatar': {
           // Get avatar JWT when web app requests it (returns null if no avatar)
           const avatarJWT = await SendData.getAvatarJWT(did, url);
 
@@ -176,13 +176,13 @@ export function WebViewScreen() {
           // If avatarJWT is null, use 'result', otherwise use 'jwt' (consistent with getProfileDetails)
           const response = avatarJWT
             ? {
-                type: 'irl:api:getAvatar:response',
+                type: 'localFirstAuth:api:getAvatar:response',
                 requestId: requestId,
                 jwt: avatarJWT,
                 timestamp: Date.now()
               }
             : {
-                type: 'irl:api:getAvatar:response',
+                type: 'localFirstAuth:api:getAvatar:response',
                 requestId: requestId,
                 result: null,
                 timestamp: Date.now()
@@ -198,11 +198,11 @@ export function WebViewScreen() {
           break;
         }
 
-        case 'irl:api:requestPermission': {
+        case 'localFirstAuth:api:requestPermission': {
           // For now, respond with permission denied
           // TODO: Implement permission request UI
           const response = {
-            type: 'irl:api:requestPermission:response',
+            type: 'localFirstAuth:api:requestPermission:response',
             requestId: requestId,
             result: false,
             timestamp: Date.now()

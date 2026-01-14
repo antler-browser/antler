@@ -1,6 +1,6 @@
 ---
 title: "Terms of Service"
-description: "Terms of Service for the Antler Browser"
+description: "Terms of Service for Antler"
 date: "2025-11-16"
 author: "Daniel Mathews"
 author_image: "https://ax0.taddy.org/blog/about-us/danny-small-profile-pic.png"
@@ -21,12 +21,12 @@ By downloading, installing, or using Antler, you agree to these Terms and our [P
 
 ## 1. What Antler Is
 
-Antler is a **local-first IRL Browser** that:
+Antler is a **demo app showcasing the Local First Auth Spec** that:
 
 - Runs entirely on your device with no backend servers
 - Allows you to create and manage local profiles using Decentralized Identifiers (DIDs)
 - Enables you to scan QR codes and interact with third-party web applications through a WebView
-- Implements the **IRL Browser Specification** for passing data between your local profile and websites
+- Implements the **Local First Auth Spec** for passing data between your local profile and websites
 
 We do not collect, store, or transmit your data to our servers. 
 
@@ -80,7 +80,7 @@ While Antler operates locally and **we cannot monitor or enforce user behavior**
 
 When you scan a QR code and interact with a website:
 
-- Your profile data may be shared with that website per the IRL Browser Spec
+- Your profile data may be shared with that website per the Local First Auth Spec
 - The website (not Antler) controls what happens to that data
 - We are not responsible for third-party website privacy practices
 

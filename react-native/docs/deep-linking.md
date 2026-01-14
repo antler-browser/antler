@@ -15,7 +15,7 @@ https://antlerbrowser.com/open/[ENCODED_URL]
 https://antlerbrowser.com/open/https%3A%2F%2Fexample.com%2Fmini-app
 ```
 
-Opens `https://example.com/mini-app` in the Antler IRL Browser.
+Opens `https://example.com/mini-app` in Antler.
 
 ---
 
@@ -52,7 +52,7 @@ Add this meta tag to your mini app's `<head>`:
 2. Smart App Banner appears: "Open in Antler"
 3. User taps "Open"
 4. Antler app opens with your mini app loaded
-5. User has full `window.irlBrowser` API access
+5. User has full `window.localFirstAuth` API access
 
 ---
 
@@ -66,7 +66,7 @@ Add this meta tag to your mini app's `<head>`:
 6. App checks if user has profile:
    - **No profile** → Navigate to profile creation
    - **Has profile** → Navigate to WebView
-7. WebView loads mini app with `window.irlBrowser` API
+7. WebView loads mini app with `window.localFirstAuth` API
 
 **Code locations**:
 - Navigation config: `/app/screens/root.tsx:60-68`
@@ -81,4 +81,4 @@ Add this meta tag to your mini app's `<head>`:
 - **iOS Universal Links**: https://developer.apple.com/ios/universal-links/
 - **Smart App Banners**: https://developer.apple.com/documentation/webkit/promoting_apps_with_smart_app_banners
 - **Android App Links**: https://developer.android.com/training/app-links
-- **IRL Browser Specification**: `/docs/irl-browser-standard.md`
+- **Local First Auth Specification**: `/docs/local-first-auth-spec.md`
