@@ -15,6 +15,10 @@ Antler is an [open-source](https://github.com/antler-browser/antler) monorepo wi
 
 [Website](https://github.com/antler-browser/antler/blob/main/website/README.md) - HTML / CSS / Markdown.
 
+## Local First Auth JS Library
+
+[local-first-auth](https://github.com/antler-browser/local-first-auth) - You can use this JavaScript library to easily add auth to your website. Once of the benefits of the Local First Auth Specification is it can be done client-side, without any servers, so this library is a great way to easily add auth to your website.
+
 ## Local First Auth Specification
 
 Antler uses an [open specification](./local-first-auth-specification.html) to pass data between the app to your website. When users scan your QR code, their profile details on Antler get shared to your site - no auth friction, instant login, no account creation.

@@ -13,15 +13,15 @@
     
     <!-- SEO Meta Tags -->
     <title>Local First Auth Specification - Antler Browser</title>
-    <meta name="description" content="Technical specification for Local First Auth Specification" />
+    <meta name="description" content="Technical specification for client-side auth using locally stored profiles" />
     <meta name="author" content="Daniel Mathews" />
     
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Local First Auth Specification" />
-    <meta property="og:description" content="Technical specification for Local First Auth Specification" />
+    <meta property="og:description" content="Technical specification for client-side auth using locally stored profiles" />
     <meta property="og:url" content="https://antlerbrowser.com/local-first-auth-specification.html" />
     <meta property="og:type" content="article" />
-    <meta property="article:published_time" content="2025-11-18" />
+    <meta property="article:published_time" content="2026-03-21" />
     <meta property="article:author" content="https://bsky.app/profile/dmathewwws.com" />
     
     <link rel="stylesheet" href="style.css" />
@@ -38,17 +38,12 @@
         </header>
         <div class="blog-body">
           <h2>Overview</h2>
-<p>The Local First Auth Spec defines how a Local First Auth app (an iOS or Android mobile app) communicates with third-party web applications (mini apps). More specifically, when a user scans a QR code using a Local First Auth app, this spec defines how their profile and other data get securely passed between the app and the mini app. Antler is a demo app that showcases how apps can integrate this spec.</p>
-<h2>User Benefits</h2>
-<p>When a user downloads a Local First Auth app (like Antler, a demo implementation), they create a profile that is stored locally on their device. Whenever a user scans a QR code, their profile gets shared with the mini app. This means users don&#39;t have to go through account creation and immediately get logged in.</p>
+<p>The Local First Auth Spec makes it easy to add auth to your website or mini app — no servers, no passwords, no third-party auth providers.</p>
 <h2>Developer Benefits</h2>
-<p>The benefit of integrating with the Local First Auth spec is it transforms a regular QR code and allows you to:</p>
 <ul>
-<li><strong>Skip auth</strong> – no auth systems, no user management, no password resets</li>
-<li><strong>Instant UX</strong> – users scan and start using your app immediately</li>
-<li><strong>Deploy a website</strong> – no app store submissions, no native code, no review process</li>
+<li><strong>Local-First Authentication</strong> – New users just have to type in a name (and optionally add an avatar). A profile, including a public key and private key is created. A signed JWT is generated on the user&#39;s device to authenticate requests to your website or mini app.</li>
+<li><strong>Skip complex sign-up flow</strong> – no user management, no email verification, no password resets</li>
 </ul>
-<p>There will always be a need for native mobile apps. Mini apps fill a gap where building and maintaining a native app doesn&#39;t make sense e.g.) social clubs, local community events, venues, pop-ups, game nights with friends, or any lightweight gathering where people are physically present.</p>
 <h2>Lifecycle</h2>
 <pre><code>1. User scans QR code using a Local First Auth app
  2. App loads URL in WebView
@@ -132,19 +127,19 @@
 </tbody></table>
 <p><strong>Note:</strong> Currently, this spec just supports the &#39;profile&#39; permission. However, Local First Auth apps are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).</p>
 <h2>Decentralized Identifiers</h2>
-<p>When a user downloads a Local First Auth app, they create a profile on the app. Under the hood, each profile is a DID (<a href="https://www.w3.org/TR/did-1.0/" target="_blank" rel="noopener noreferrer">Decentralized Identifier</a> - a W3C standard) with additional details (like name, avatar, and links to socials).</p>
+<p>When a user creates a profile a DID (<a href="https://www.w3.org/TR/did-1.0/" target="_blank" rel="noopener noreferrer">Decentralized Identifier</a> - a W3C standard) is generated along with additional details (like name, avatar, and links to socials).</p>
 <p>A DID is a text string that is used to identify a user. Here&#39;s an example:</p>
 <p><img src="https://ax0.taddy.org/antler/did-explain.png" alt="did-explain.png"></p>
-<p>Local First Auth apps use the <code>did:key</code> method, where the public key is the last part of the DID.</p>
-<p>When you create a profile on a Local First Auth app, your DID (which includes a public key) and a corresponding private key are generated and stored locally on your device. Whenever a Local First Auth app sends data to a mini app, the payload is signed using the DID&#39;s private key, ensuring it came from the DID owner.</p>
+<p>Local First Auth uses the <code>did:key</code> method, where the public key is the last part of the DID.</p>
+<p>When you create a profile, your DID (which includes a public key) and a corresponding private key are generated and stored on your device. Whenever data is sent to a web app, the payload is signed using the DID&#39;s private key, ensuring that only the user who created the profile could have sent that data.</p>
 <h2>JavaScript API</h2>
-<p>There are two ways Local First Auth apps and mini apps communicate:</p>
+<p>The <code>window.localFirstAuth</code> object is the primary interface for interacting with Local First Auth. It is available via both client-side libraries and native apps.</p>
 <ol>
-<li><strong><code>window.localFirstAuth</code>:</strong> Use when your mini app wants to request data or initiate actions (e.g., get profile details or request permissions)</li>
-<li><strong><code>window.postMessage</code>:</strong> Use when your mini app wants to be notified of events that happened in the Local First Auth app (e.g., user closed the WebView)</li>
+<li><strong><code>window.localFirstAuth</code>:</strong> Use when your app wants to request data or initiate actions (e.g., get profile details or request permissions)</li>
+<li><strong><code>window.postMessage</code>:</strong> Used primarily by native apps to notify your app of events (e.g., user closed the WebView)</li>
 </ol>
 <h3>The <code>window.localFirstAuth</code> Object</h3>
-<p>When your mini app loads inside a Local First Auth app, a global <code>window.localFirstAuth</code> object is injected. This allows you to 1) call methods and get back data and 2) check that the user is using a Local First Auth app.</p>
+<p>When Local First Auth is available a global <code>window.localFirstAuth</code> object is present. This allows you to 1) call methods and get back data and 2) check that the user has Local First Auth.</p>
 <pre><code class="language-tsx">interface LocalFirstAuth {
   // Get profile details (name, socials)
   getProfileDetails(): Promise&lt;string&gt;;
@@ -264,7 +259,7 @@
 <td><code>platform</code></td>
 <td>string</td>
 <td>Yes</td>
-<td><code>ios</code> or <code>android</code></td>
+<td><code>ios</code>, <code>android</code>, or <code>web</code></td>
 </tr>
 <tr>
 <td><code>supportedPermissions</code></td>
@@ -273,19 +268,19 @@
 <td>The permissions that this app has implemented.</td>
 </tr>
 </tbody></table>
-<h4>Checking for a Local First Auth app</h4>
-<p>Your mini app can detect whether it&#39;s running inside a Local First Auth app or a regular web browser.</p>
+<h4>Checking for Local First Auth</h4>
+<p>Your app can detect whether Local First Auth is available.</p>
 <pre><code class="language-jsx">if (typeof window.localFirstAuth !== &#39;undefined&#39;) {
-  // Running in a Local First Auth app
+  // Local First Auth is available
   const info = window.localFirstAuth.getAppDetails();
-  console.log(`Running in ${info.name} v${info.version}`);
+  console.log(`Running in ${info.name} v${info.version} (${info.platform})`);
 } else {
-  // Regular web browser
-  console.log(&#39;Not in a Local First Auth app&#39;);
+  // No Local First Auth available
+  console.log(&#39;Local First Auth not detected&#39;);
 }
 </code></pre>
 <h3>Use <code>window.postMessage</code> to receive data from Local First Auth app</h3>
-<p>A user may perform an action inside the Local First Auth app that you want to know about. The app sends event data to a mini app via <code>window.postMessage</code> using signed JWTs.</p>
+<p>A user may perform an action inside the Local First Auth app that you want to know about. The app sends event data to your app via <code>window.postMessage</code> using signed JWTs.</p>
 <pre><code class="language-jsx">window.addEventListener(&#39;message&#39;, async (event) =&gt; {
   try {
     if (!event.data?.jwt) { return }
@@ -506,9 +501,9 @@ if (response.ok) {
 </code></pre>
 <p><strong>Note</strong>: You will most likely need a new JWT for each request as JWTs expire after 2 minutes.</p>
 <p>See <a href="https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/jwt.ts#L23" target="_blank" rel="noopener noreferrer">code example</a> for <code>decodeAndVerifyJWT</code>. We decode &amp; verify JWT signature including making sure the <code>aud</code> claim is for our mini app.</p>
-<p><strong>License</strong>: <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</a></p>
+<p><strong>License for this specification</strong>: <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)</a></p>
 <p><strong>Author</strong>: <a href="https://dmathewwws.com" target="_blank" rel="noopener noreferrer">Daniel Mathews</a> (<code>danny@antlerbrowser.com</code>)</p>
-<p><strong>Last Modified</strong>: 2026-01-13</p>
+<p><strong>Last Modified</strong>: 2026-02-21</p>
 
         </div>
       </article>
