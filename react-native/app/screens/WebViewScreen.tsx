@@ -36,6 +36,20 @@ export function WebViewScreen() {
   const [currentUrl, setCurrentUrl] = useState(url || '');
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
+  // Safety net so the loading overlay can never stay up permanently. On Android,
+  // hash/pushState navigations (e.g. the mini app's client-side router) often fire
+  // onLoadStart without a matching onLoadEnd, which would otherwise leave the
+  // near-opaque overlay covering an already-rendered page.
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear the loading overlay and cancel any pending safety timeout.
+  const stopLoading = () => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+    setLoading(false);
+  };
 
   // Log component mount timing and clean up ephemeral key pair when WebView unmounts
   useEffect(() => {
@@ -46,6 +60,10 @@ export function WebViewScreen() {
     return () => {
       // Clean up the ephemeral key pair for this session
       WebViewSigning.cleanupKeyPair(webViewPublicKey);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
       if (__DEV__) {
         console.log('[WebView] Cleaned up ephemeral key pair on unmount');
       }
@@ -100,6 +118,12 @@ export function WebViewScreen() {
     setCanGoBack(navState.canGoBack);
     setCanGoForward(navState.canGoForward);
     setCurrentUrl(navState.url);
+    // Same-document (hash / pushState) navigations may not fire onLoadEnd on
+    // Android. navState.loading reliably reflects the final loading state, so use
+    // it to bring the overlay down.
+    if (navState.loading === false) {
+      stopLoading();
+    }
   };
 
   const goBack = async () => {
@@ -232,6 +256,14 @@ export function WebViewScreen() {
       console.log(`[WebView Diagnostics] WebView Load started at ${Date.now()}`);
     }
     setLoading(true);
+    // Force the overlay down if no load/nav event clears it (Android hash-nav guard).
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+    loadingTimeoutRef.current = setTimeout(() => {
+      loadingTimeoutRef.current = null;
+      setLoading(false);
+    }, 8000);
   };
 
   // Handle load end with timing summary
@@ -239,7 +271,41 @@ export function WebViewScreen() {
     if (__DEV__) {
       console.log(`[WebView Diagnostics] WebView Load finished at ${Date.now()}`);
     }
-    setLoading(false);
+    stopLoading();
+  };
+
+  // Bring the overlay down as soon as the page reports full progress. Android fires
+  // onLoadProgress reliably even when onLoadEnd is skipped.
+  const handleLoadProgress = ({ nativeEvent }: any) => {
+    if (nativeEvent?.progress >= 1) {
+      stopLoading();
+    }
+  };
+
+  // Surface load failures instead of leaving a silent white overlay.
+  const handleError = ({ nativeEvent }: any) => {
+    console.error('[WebView] Load error:', nativeEvent);
+    stopLoading();
+  };
+
+  const handleHttpError = ({ nativeEvent }: any) => {
+    console.error(
+      `[WebView] HTTP error ${nativeEvent?.statusCode} for ${nativeEvent?.url}`
+    );
+    stopLoading();
+  };
+
+  // Android renderer crash — without this the WebView goes blank with no signal.
+  const handleRenderProcessGone = ({ nativeEvent }: any) => {
+    console.error('[WebView] Render process gone (Android):', nativeEvent);
+    stopLoading();
+    return true;
+  };
+
+  // iOS content process termination (equivalent to renderProcessGone).
+  const handleContentProcessDidTerminate = ({ nativeEvent }: any) => {
+    console.error('[WebView] Content process terminated (iOS):', nativeEvent);
+    stopLoading();
   };
 
 
@@ -293,13 +359,27 @@ export function WebViewScreen() {
           source={{ uri: route.params?.url as string }}
           onLoadStart={handleLoadStart}
           onLoadEnd={handleLoadEnd}
+          onLoadProgress={handleLoadProgress}
           onNavigationStateChange={handleNavigationStateChange}
           onMessage={handleMessage}
+          onError={handleError}
+          onHttpError={handleHttpError}
+          onRenderProcessGone={handleRenderProcessGone}
+          onContentProcessDidTerminate={handleContentProcessDidTerminate}
           injectedJavaScriptBeforeContentLoaded={getInjectedJavaScript(webViewPublicKey, browserInfo)}
           style={styles.webView}
           startInLoadingState={true}
           javaScriptEnabled={true}
           cacheEnabled={false}
+          // Android hardening (no-ops on iOS):
+          // - setSupportMultipleWindows=false so target="_blank" links (the mini
+          //   app's external GitHub/social links) navigate in-place instead of
+          //   silently doing nothing.
+          // - mixedContentMode so an https page can load http subresources.
+          setSupportMultipleWindows={false}
+          mixedContentMode="compatibility"
+          domStorageEnabled={true}
+          androidLayerType="hardware"
           // renderLoading={() => (
           //   <View style={styles.loadingContainer}>
           //     <ActivityIndicator size="large" />

@@ -2,7 +2,7 @@ export default {
   expo: {
     name: "antler",
     slug: "antler",
-    version: "1.2",
+    version: "1.3",
     orientation: "portrait",
     scheme: "antler",
     userInterfaceStyle: "automatic",
