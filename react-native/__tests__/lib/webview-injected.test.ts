@@ -348,8 +348,8 @@ describe('webview-injected', () => {
 
       const promise = (global.window as any).localFirstAuth.getProfileDetails();
 
-      // Fast-forward time by 6 seconds to trigger timeout
-      jest.advanceTimersByTime(6000);
+      // Fast-forward past the 10s request timeout to trigger rejection
+      jest.advanceTimersByTime(11000);
 
       await expect(promise).rejects.toThrow('Request timed out');
 
@@ -596,8 +596,8 @@ describe('webview-injected', () => {
 
       const promise = (global.window as any).localFirstAuth.getAvatar();
 
-      // Fast-forward time by 6 seconds to trigger timeout
-      jest.advanceTimersByTime(6000);
+      // Fast-forward past the 10s request timeout to trigger rejection
+      jest.advanceTimersByTime(11000);
 
       await expect(promise).rejects.toThrow('Request timed out');
 

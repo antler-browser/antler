@@ -43,17 +43,18 @@ describe('secure-storage', () => {
     });
 
     describe('saveDIDPrivateKey', () => {
-      it('should save private key to SecureStore with biometric protection', async () => {
+      it('should save private key to SecureStore accessible after first unlock', async () => {
         (SecureStore.setItemAsync as jest.Mock).mockResolvedValue(undefined);
 
         await saveDIDPrivateKey(mockDID, mockPrivateKey);
 
+        // No requireAuthentication: keys must stay accessible after first unlock
+        // so they can be backed up to iCloud/iTunes (see lib/secure-storage.ts).
         expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
           expectedKey,
           mockPrivateKey,
           {
             keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
-            requireAuthentication: true,
           }
         );
         expect(AsyncStorage.setItem).not.toHaveBeenCalled();
