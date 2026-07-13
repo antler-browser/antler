@@ -17,6 +17,10 @@ export * as Camera from './camera';
 // Social Links - export as a namespace object
 export * as SocialLinks from './social-links';
 
+// Profile import/export - export as namespace objects
+export * as ProfileTransfer from './profile-transfer';
+export * as ProfileTransferIO from './profile-transfer-io';
+
 // WebView data communication - export as a namespace object
 export * as SendData from './send-data';
 

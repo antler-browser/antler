@@ -28,7 +28,9 @@ Antler implements the **Local First Auth Specification**, a specification that d
   - `useProfile.ts`: Profile data management
 - `/lib/`: Utilities and service integrations
   - `camera.ts`: Camera and QR scanning utilities
-  - `did.ts`: Decentralized identity (DID) utilities
+  - `did.ts`: Decentralized identity (DID) utilities — generation, plus `deriveKeysFromPrivateKey()` / `isValidPrivateKey()` for recovering an identity from an existing key
+  - `profile-transfer.ts`: Import/export of Local First Auth profiles — file format, validation, and the DB/keychain transaction
+  - `profile-transfer-io.ts`: Native I/O for import/export (cache file, share sheet, document picker, clipboard, startup sweep)
   - `send-data.ts`: JWT signing utilities for WebView communication (Local First Auth Specification)
   - `secure-storage.ts`: Secure storage operations
   - `social-links.ts`: Social media link validation and formatting
@@ -49,10 +51,12 @@ Antler implements the **Local First Auth Specification**, a specification that d
     - `/models/`: Database model operations (AppStateFns, UserProfileFns, ScanHistoryFns)
 - `/docs/`: Documentation
   - `local-first-auth-spec.md`: Local First Auth Specification specification
+  - `profile-import-export.md`: Portable profile file format and the interop guarantee with the `local-first-auth` npm packages
   - `webview-console-forwarding.md`: Guide for re-enabling console log forwarding from WebView
 - `/scripts/`: Build scripts
   - `minify-webview-js.js`: Build script to minify the WebView injected JavaScript
 - `/__tests__/`: Test suites
+  - `/lib/profile-transfer.test.ts`: Profile import/export tests (round-trip, tampered-file rejection, platform case mapping, import rollback)
   - `/lib/webview/manifest.test.ts`: Manifest validation tests
   - `/lib/webview/webview-injected.test.ts`: WebView API injection tests (signature verification, XSS protection, API functionality)
   - `/lib/send-data.test.ts`: JWT signing and data transfer tests
@@ -257,10 +261,16 @@ Database operations are organized into function namespaces by entity:
 - QR scanning implemented in `CameraView`
 - Scanned QR codes resolve DIDs to load profiles
 - Camera utilities in `/lib/camera.ts`
-- When a QR code is scanned, if the user has a profile:
+- `Camera.handleScannedData()` classifies every scan as `profile`, `url`, `did` or `text`
+- When a **URL** QR code is scanned, if the user has a profile:
   - App navigates to WebViewScreen with the URL and user's DID
   - The DID is used to fetch profile data and sign JWTs for mini app communication
   - Scan is tracked only if mini app has a valid manifest (regular QR codes not tracked)
+- When a **profile export** QR code is scanned (text matching `ProfileTransfer.isExportPayload()`):
+  - App navigates to ImportProfileScreen with the raw text as the `payload` route param
+  - The screen validates it and opens on the import preview; it works with no profile on the device, since importing is how a fresh device gets one
+  - The payload holds a plaintext private key, so the screen consumes the param once and immediately clears it off the route
+- `did` and `text` scans are ignored
 
 ### DID Integration
 - Decentralized Identity (DID) utilities in `/lib/did.ts`

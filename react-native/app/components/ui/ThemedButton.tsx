@@ -1,6 +1,12 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, ActivityIndicator, StyleProp, ViewStyle, ButtonProps } from 'react-native';
-import { useColorScheme } from 'react-native';
+import {
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  StyleProp,
+  ViewStyle,
+  useColorScheme,
+} from 'react-native';
 import { Colors } from '../../../lib';
 import { ThemedText } from './ThemedText';
 
@@ -26,8 +32,8 @@ export function ThemedButton({
 
   const isPrimary = variant === 'primary';
   const backgroundColor = isPrimary ? colors.button : 'transparent';
-  const textColor = isPrimary ? colors.buttonText : colors.text;
-  const borderColor = isPrimary ? colors.tint : colors.border;
+  const textColor = isPrimary ? colors.buttonText : colors.button;
+  const borderColor = isPrimary ? colors.tint : colors.button;
 
   return (
     <TouchableOpacity

@@ -8,6 +8,8 @@ export const PROFILE_CREATE_OR_EDIT_SCREEN = "ProfileCreateOrEditScreen ";
 export const WEBVIEW_SCREEN = "WebviewScreen";
 export const SETTINGS_SCREEN = "SettingsScreen";
 export const SCAN_HISTORY_SCREEN = "ScanHistoryScreen";
+export const EXPORT_PROFILE_SCREEN = "ExportProfileScreen";
+export const IMPORT_PROFILE_SCREEN = "ImportProfileScreen";
 export const MODAL_STACK = "ModalStack";
 export const WELCOME_SCREEN = "WelcomeScreen";
 
@@ -67,8 +69,17 @@ export type ModalStackParamList = {
   [WEBVIEW_SCREEN]: { url: string; did: string; webViewPublicKey: string };
   [SETTINGS_SCREEN]: undefined;
   [SCAN_HISTORY_SCREEN]: undefined;
+  [EXPORT_PROFILE_SCREEN]: undefined;
+  // `payload` is the raw text of a scanned profile QR code. It holds a plaintext private
+  // key, so the screen consumes it once and clears it back off the route.
+  [IMPORT_PROFILE_SCREEN]: { payload?: string } | undefined;
 };
 
 
 // Navigation prop types
 export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+// Parameterised by route name so a screen's setParams is typed to its own params, rather
+// than to the union of every modal screen's.
+export type ModalStackNavigationProp<
+  T extends keyof ModalStackParamList = keyof ModalStackParamList
+> = NativeStackNavigationProp<ModalStackParamList, T>;

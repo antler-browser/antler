@@ -4,6 +4,8 @@ import { ProfileCreateOrEditNavigator } from './profile/ProfileCreateOrEditNavig
 import { WebViewScreen } from './WebViewScreen';
 import { SettingsScreen } from './SettingsScreen';
 import { ScanHistoryScreen } from './ScanHistoryScreen';
+import { ExportProfileScreen } from './profile/ExportProfileScreen';
+import { ImportProfileScreen } from './profile/ImportProfileScreen';
 import { Navigation } from '../../lib';
 
 const Stack = createNativeStackNavigator<Navigation.ModalStackParamList>();
@@ -31,6 +33,14 @@ export function ModalStackNavigator() {
       <Stack.Screen
         name={Navigation.SCAN_HISTORY_SCREEN}
         component={ScanHistoryScreen}
+      />
+      <Stack.Screen
+        name={Navigation.EXPORT_PROFILE_SCREEN}
+        component={ExportProfileScreen}
+      />
+      <Stack.Screen
+        name={Navigation.IMPORT_PROFILE_SCREEN}
+        component={ImportProfileScreen}
       />
     </Stack.Navigator>
   );

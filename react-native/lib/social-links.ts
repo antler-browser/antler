@@ -222,6 +222,31 @@ export function getPlatforSVGIcon(platform: SocialPlatform): string | undefined 
   }
 }
 
+/**
+ * Platform names as they appear in a Local First Auth export file, which uses the
+ * uppercase form ('INSTAGRAM') where we store the lowercase one ('instagram').
+ *
+ * Built from the enum rather than hand-written so it can never drift from it.
+ */
+const EXPORT_PLATFORMS: Record<string, SocialPlatform> = Object.fromEntries(
+  Object.values(SocialPlatform).map((value) => [value.toUpperCase(), value])
+);
+
+export function toExportPlatform(platform: SocialPlatform): string {
+  return String(platform).toUpperCase();
+}
+
+/**
+ * Resolves a platform name from an export file. Returns null for anything we don't
+ * recognise — a file written by a newer version can legitimately carry a platform we
+ * have no icon or URL template for, and storing it would break every consumer of
+ * `social_links.platform`.
+ */
+export function fromExportPlatform(platform: unknown): SocialPlatform | null {
+  if (typeof platform !== 'string') return null;
+  return EXPORT_PLATFORMS[platform.trim().toUpperCase()] ?? null;
+}
+
 export function sanitizeInput(input: string): string | null {
   if (!input) return null;
 

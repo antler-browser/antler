@@ -14,6 +14,10 @@ const DATABASE_NAME = 'antler.db';
 // Open SQLite database
 const expoDb = SQLite.openDatabaseSync(DATABASE_NAME);
 
+// SQLite disables foreign keys per connection by default; without this the
+// ON DELETE CASCADE in the schema never fires.
+expoDb.execSync('PRAGMA foreign_keys = ON;');
+
 // Create Drizzle instance
 export const db = drizzle(expoDb, { schema });
 

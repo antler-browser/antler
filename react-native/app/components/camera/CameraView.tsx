@@ -28,7 +28,7 @@ export function CameraView({
   const [enableTorch, setEnableTorch] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScannedData, setLastScannedData] = useState<string | null>(null);
-  const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigation = useNavigation<Navigation.RootStackNavigationProp>();
 
   useEffect(() => {
@@ -178,9 +178,22 @@ export function CameraView({
 
     const scannedResult = Camera.handleScannedData(data);
 
-    // Only handle URL type QR codes
-    if (scannedResult.type !== 'url') {
+    if (scannedResult.type !== 'url' && scannedResult.type !== 'profile') {
       // Reset scanning state after interval
+      scanTimeoutRef.current = setTimeout(() => {
+        setIsScanning(false);
+        setLastScannedData(null);
+      }, Camera.CAMERA_SETTINGS.scanInterval);
+      return;
+    }
+
+    // A profile export QR goes straight to the import screen.
+    if (scannedResult.type === 'profile') {
+      navigation.navigate(Navigation.MODAL_STACK, {
+        screen: Navigation.IMPORT_PROFILE_SCREEN,
+        params: { payload: scannedResult.value },
+      });
+
       scanTimeoutRef.current = setTimeout(() => {
         setIsScanning(false);
         setLastScannedData(null);

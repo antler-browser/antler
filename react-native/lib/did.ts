@@ -9,12 +9,34 @@ export interface DIDResult {
   privateKey: string;
 }
 
+/**
+ * A complete identity re-derived from an existing private key.
+ *
+ * The public key is offered in both encodings because they are used in different
+ * places: base58 is what generateDID() has always returned, while the Local First
+ * Auth export format uses base64. They are the same 32 bytes.
+ */
+export interface DerivedKeys {
+  did: string;
+  publicKeyBytes: Uint8Array;
+  publicKeyBase64: string;
+  publicKeyBase58: string;
+  secretKeyBytes: Uint8Array;
+}
+
 // DID format constants
 const DID_KEY_PREFIX = 'did:key:z'; // 'z' indicates base58btc encoding
 const ED25519_MULTICODEC_PREFIX = 0xed01; // Ed25519 public key multicodec identifier
 
 // Key sizes
 const SEED_SIZE = 32; // Ed25519 seed size in bytes
+export const SECRET_KEY_SIZE = 64; // Ed25519 secret key: 32-byte seed + 32-byte public key
+export const PUBLIC_KEY_SIZE = 32;
+
+// base64-js only rejects strings whose length isn't a multiple of 4; out-of-alphabet
+// characters decode to silent garbage. Without this guard a corrupted key could decode
+// to 64 bytes of junk and be adopted as a valid — but wrong — identity.
+const BASE64_PATTERN = /^[A-Za-z0-9+/]+={0,2}$/;
 
 /**
  * Generates a cryptographically secure random seed for key generation
@@ -42,10 +64,57 @@ function addMulticodecPrefix(publicKey: Uint8Array): Uint8Array {
  * Encodes a public key as a DID (Decentralized Identifier)
  * Format: did:key:z<base58-encoded-multicodec-public-key>
  */
-function encodePublicKeyAsDID(publicKey: Uint8Array): string {
+export function encodePublicKeyAsDID(publicKey: Uint8Array): string {
   const multicodecKey = addMulticodecPrefix(publicKey);
   const base58Key = base58.encode(multicodecKey);
   return `${DID_KEY_PREFIX}${base58Key}`;
+}
+
+/**
+ * Checks whether a string is a usable Ed25519 private key: base64 that decodes to
+ * exactly 64 bytes.
+ */
+export function isValidPrivateKey(privateKey: unknown): boolean {
+  if (typeof privateKey !== 'string') {
+    return false;
+  }
+
+  const trimmed = privateKey.trim();
+  if (trimmed.length === 0 || trimmed.length % 4 !== 0 || !BASE64_PATTERN.test(trimmed)) {
+    return false;
+  }
+
+  try {
+    return base64.toByteArray(trimmed).length === SECRET_KEY_SIZE;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Rebuilds a complete identity from an existing private key.
+ *
+ * An Ed25519 secret key is a 32-byte seed followed by the 32-byte public key, so the
+ * private key alone is enough to recover the DID. This is what makes importing a
+ * profile possible: the identity is recovered, never regenerated.
+ *
+ * @throws If the private key is malformed. The message never echoes the key.
+ */
+export function deriveKeysFromPrivateKey(privateKey: string): DerivedKeys {
+  if (!isValidPrivateKey(privateKey)) {
+    throw new Error(`Private key must be base64 encoding exactly ${SECRET_KEY_SIZE} bytes`);
+  }
+
+  const secretKeyBytes = base64.toByteArray(privateKey.trim());
+  const publicKeyBytes = ed25519.extractPublicKeyFromSecretKey(secretKeyBytes);
+
+  return {
+    did: encodePublicKeyAsDID(publicKeyBytes),
+    publicKeyBytes,
+    publicKeyBase64: base64.fromByteArray(publicKeyBytes),
+    publicKeyBase58: base58.encode(publicKeyBytes),
+    secretKeyBytes,
+  };
 }
 
 /**
@@ -62,22 +131,19 @@ function encodePublicKeyAsDID(publicKey: Uint8Array): string {
  */
 
 export async function generateDID(): Promise<DIDResult> {
-  // Generate cryptographic keys
   const seed = await generateRandomSeed();
   const keyPair = ed25519.generateKeyPairFromSeed(seed);
 
-  // Create the DID identifier
-  const did = encodePublicKeyAsDID(keyPair.publicKey);
-
-  // Encode publickey for storage/transmission
-  const publicKey = base58.encode(keyPair.publicKey);
-
-  // Ed25519 secretKey is 64 bytes (includes 32-byte seed + 32-byte public key)
+  // Ed25519 secretKey is 64 bytes (32-byte seed + 32-byte public key)
   const privateKey = base64.fromByteArray(keyPair.secretKey);
 
+  // Derived through the same path an imported key takes, so a generated DID and a
+  // re-derived one can never disagree.
+  const derived = deriveKeysFromPrivateKey(privateKey);
+
   return {
-    did,
-    publicKey,
+    did: derived.did,
+    publicKey: derived.publicKeyBase58,
     privateKey,
   };
 }

@@ -1,5 +1,6 @@
 import { CameraType, useCameraPermissions } from 'expo-camera';
 import { BarcodeScanningResult } from 'expo-camera/build/Camera.types';
+import { isExportPayload } from './profile-transfer';
 
 export interface QRCodeData {
   type: string;
@@ -20,7 +21,7 @@ export const CAMERA_SETTINGS = {
 } as const;
 
 export type ScannedResult = {
-  type: 'url' | 'did' | 'text';
+  type: 'url' | 'did' | 'text' | 'profile';
   value: string;
 }
 
@@ -53,6 +54,10 @@ export function isValidDID(string: string): boolean {
 export function handleScannedData(data: string): ScannedResult {
   if (isValidURL(data)) {
     return { type: 'url', value: data };
+  }
+
+  if (isExportPayload(data)) {
+    return { type: 'profile', value: data };
   }
 
   if (isValidDID(data)) {

@@ -4932,6 +4932,11 @@ expo-camera@~17.0.8:
   dependencies:
     invariant "^2.2.4"
 
+expo-clipboard@~8.0.8:
+  version "8.0.8"
+  resolved "https://registry.yarnpkg.com/expo-clipboard/-/expo-clipboard-8.0.8.tgz#5e52054a4bbaebef090ec6fe5eaa200072ff94f7"
+  integrity sha512-VKoBkHIpZZDJTB0jRO4/PZskHdMNOEz3P/41tmM6fDuODMpqhvyWK053X0ebspkxiawJX9lX33JXHBCvVsTTOA==
+
 expo-constants@~18.0.10:
   version "18.0.10"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-18.0.10.tgz#92d4490d51193fc94bd40590453ce9cab4faf6fb"
@@ -4955,10 +4960,20 @@ expo-crypto@^15.0.7:
   dependencies:
     base64-js "^1.3.0"
 
+expo-document-picker@~14.0.8:
+  version "14.0.8"
+  resolved "https://registry.yarnpkg.com/expo-document-picker/-/expo-document-picker-14.0.8.tgz#ca1d99cc432c48e69a6390eb035f3301557e3699"
+  integrity sha512-3tyQKpPqWWFlI8p9RiMX1+T1Zge5mEKeBuXWp1h8PEItFMUDSiOJbQ112sfdC6Hxt8wSxreV9bCRl/NgBdt+fA==
+
 expo-file-system@~19.0.17:
   version "19.0.17"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-19.0.17.tgz#2555c05c26a19038d005f281b11dbda9722d0c0d"
   integrity sha512-WwaS01SUFrxBnExn87pg0sCTJjZpf2KAOzfImG0o8yhkU7fbYpihpl/oocXBEsNbj58a8hVt1Y4CVV5c1tzu/g==
+
+expo-file-system@~19.0.23:
+  version "19.0.23"
+  resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-19.0.23.tgz#ad2c88ed039ba0fd5a739338818f42304171eddd"
+  integrity sha512-MeGkid9OeNILfT/qonaXHp4f2c15xaB28U/bcN7pqZej0Kx0+6+V7e9ZIXpPHm07zVatxA+QkMTPQEGfmvVOxA==
 
 expo-font@~14.0.9:
   version "14.0.9"
@@ -5071,6 +5086,11 @@ expo-server@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/expo-server/-/expo-server-1.0.2.tgz#673280d5528a77938374f35fc2a16bf5a917f328"
   integrity sha512-QlQLjFuwgCiBc+Qq0IyBBHiZK1RS0NJSsKVB5iECMJrR04q7PhkaF7dON0fhvo00COy4fT9rJ5brrJDpFro/gA==
+
+expo-sharing@~14.0.8:
+  version "14.0.8"
+  resolved "https://registry.yarnpkg.com/expo-sharing/-/expo-sharing-14.0.8.tgz#cfd5fcf77ab5f64cf3d192a40a925abb316d3545"
+  integrity sha512-A1pPr2iBrxypFDCWVAESk532HK+db7MFXbvO2sCV9ienaFXAk7lIBm6bkqgE6vzRd9O3RGdEGzYx80cYlc089Q==
 
 expo-splash-screen@~31.0.10:
   version "31.0.10"

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { initializeDatabase } from '../../lib/db';
-import { AppStateFns } from '../../lib';
+import { AppStateFns, ProfileTransferIO } from '../../lib';
 
 interface UseOnboardingResult {
   isLoading: boolean;
@@ -18,6 +18,10 @@ export function useOnboarding(): UseOnboardingResult {
       try {
         // Initialize database (run migrations)
         initializeDatabase();
+
+        // If a previous run was killed mid-share, an exported profile — and so a plaintext
+        // private key — may still be sitting in the cache directory.
+        ProfileTransferIO.sweepStaleExports();
 
         // Initialize AppState on app launch
         await AppStateFns.initAppState();

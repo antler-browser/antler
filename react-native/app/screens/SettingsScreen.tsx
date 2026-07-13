@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -8,7 +8,7 @@ import {
   Platform,
   useColorScheme,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   Screen,
@@ -17,7 +17,7 @@ import {
   HeaderCloseButton
 } from '../components/ui';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Navigation } from '../../lib';
+import { Colors, Navigation, UserProfileFns } from '../../lib';
 
 type NavigationProp = NativeStackNavigationProp<Navigation.RootStackParamList>;
 
@@ -31,6 +31,36 @@ export function SettingsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+
+  // There is nothing to export until a profile exists. Re-read on focus, since the user
+  // can create or delete a profile and come straight back here.
+  const [hasProfiles, setHasProfiles] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      UserProfileFns.getAllProfiles().then((profiles) => {
+        if (active) setHasProfiles(profiles.length > 0);
+      });
+
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
+  const handleExportProfile = () => {
+    navigation.navigate(Navigation.MODAL_STACK, {
+      screen: Navigation.EXPORT_PROFILE_SCREEN,
+    });
+  };
+
+  const handleImportProfile = () => {
+    navigation.navigate(Navigation.MODAL_STACK, {
+      screen: Navigation.IMPORT_PROFILE_SCREEN,
+    });
+  };
 
   const handlePrivacyPolicy = () => {
     Linking.openURL(PRIVACY_POLICY_URL).catch(err => {
@@ -111,12 +141,15 @@ export function SettingsScreen() {
         <ThemedView style={styles.content}>
           <ThemedText type="title" style={styles.title}>Settings</ThemedText>
 
-          {/* <ThemedView style={styles.section}> */}
+          <ThemedView style={styles.section}>
             {renderSettingsItem('mail-outline', 'Email Support', handleEmailSupport)}
             {renderSettingsItem('star-outline', 'Rate App (5 stars 🙏)', handleRateApp)}
+            {renderSettingsItem('arrow-down-circle-outline', 'Import Profile', handleImportProfile)}
+            {hasProfiles &&
+              renderSettingsItem('arrow-up-circle-outline', 'Export Profile', handleExportProfile)}
             {renderSettingsItem('document-text-outline', 'Privacy Policy', handlePrivacyPolicy)}
             {renderSettingsItem('shield-checkmark-outline', 'Terms of Service', handleTermsOfService)}
-          {/* </ThemedView> */}
+          </ThemedView>
         </ThemedView>
       </ScrollView>
     </Screen>
@@ -144,13 +177,6 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    opacity: 0.6,
-    marginBottom: 12,
-    paddingLeft: 4,
   },
   settingsItem: {
     flexDirection: 'row',
