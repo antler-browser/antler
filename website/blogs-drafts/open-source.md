@@ -1,7 +1,7 @@
 ---
 title: "Open-Source"
 description: "Antler is an open-source project"
-date: "2025-10-20"
+date: "2026-07-14"
 author: "Daniel Mathews"
 author_image: "https://ax0.taddy.org/blog/about-us/danny-small-profile-pic.png"
 author_url: "https://bsky.app/profile/dmathewwws.com"
@@ -15,21 +15,25 @@ Antler is an [open-source](https://github.com/antler-browser/antler) monorepo wi
 
 [Website](https://github.com/antler-browser/antler/blob/main/website/README.md) - HTML / CSS / Markdown.
 
-## Local First Auth JS Library
-
-[local-first-auth](https://github.com/antler-browser/local-first-auth) - You can use this JavaScript library to easily add auth to your website. Once of the benefits of the Local First Auth Specification is it can be done client-side, without any servers, so this library is a great way to easily add auth to your website.
-
 ## Local First Auth Specification
 
 Antler uses an [open specification](./local-first-auth-specification.html) to pass data between the app to your website. When users scan your QR code, their profile details on Antler get shared to your site - no auth friction, instant login, no account creation.
+
+## Local First Auth JS Library
+
+[local-first-auth](https://github.com/antler-browser/local-first-auth) - If you are building a website or mini app, you can use this JavaScript library to easily add auth to your website. Once of the benefits of the Local First Auth Specification is it can be done client-side, without any servers, so this library is a great way to easily add auth to your website.
+
+## Local First Auth Import and Export JS Library
+
+[local-first-auth-import-and-export](https://github.com/antler-browser/local-first-auth-import-and-export) - If you are building a website or mini app, you can use this JavaScript library to easily let users import and export an existing profile. Usually this is used in combination with the Local First Auth JS Library so users they can import an existing profile or make sure they don't lose their profile when they switch devices.
 
 **Why using open specification matters:** Being an open specification means anyone can create an alternative to Antler. This means if you are a developer, you get the benefits of integrating your website with Antler and know you are not locked into a closed platform.
 
 ## Examples:
 
-The easiest way to get started is to fork our [starter projects](https://github.com/antler-browser/starter-projects) and tweak them to your mini app needs.
-
 Here are some example apps you can fork to get started:
+
+[Z-Console](https://github.com/Z-Space-Society/zconsole) - A console for a coworking space called ZSpace and a bunch of mini apps that are useful for the space.
 
 [Check-in into an event (Cloudflare - Recommended)](https://github.com/antler-browser/meetup-cloudflare): Uses Cloudflare Workers, Durable Object and D1 Storage.
 

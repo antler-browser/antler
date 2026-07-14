@@ -11,6 +11,7 @@ import { getRandomBytes } from 'expo-crypto';
 import {
   generateDID,
   deriveKeysFromPrivateKey,
+  deriveOriginKeys,
   isValidPrivateKey,
   encodePublicKeyAsDID,
   SECRET_KEY_SIZE,
@@ -89,6 +90,55 @@ describe('deriveKeysFromPrivateKey', () => {
       expect((err as Error).message).not.toContain(badKey);
       expect((err as Error).message).toContain('64');
     }
+  });
+});
+
+describe('deriveOriginKeys', () => {
+  const rootPrivateKey =
+    'BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwfqSmxj4pxSCr71UHsTLsX5lUd2rr6+e5JCHuppFEbSLA==';
+  const rootDID = 'did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z';
+
+  // These literals are the spec's normative test vectors — the contract with every other
+  // Local First Auth implementation. If a refactor changes any of them, users' identities
+  // on every mini app change with them.
+  it.each([
+    ['https://example.com', 'did:key:z6MksHmq5juqxMRUt6UYxnbCfprSmsEcaLd9riXhYZPB7hCF'],
+    ['https://other.app', 'did:key:z6MkuPzxjqnHVeV3eupgRqjD9Me4EhAyKoohjU6PkkoBhLSt'],
+    ['http://localhost:8787', 'did:key:z6MkoShWB63jPRQAMhWJD3J2Gq5BizC65JnRetMj5uj7EepD'],
+  ])('derives the spec test vector for %s', (origin, expected) => {
+    expect(deriveKeysFromPrivateKey(rootPrivateKey).did).toBe(rootDID);
+    expect(deriveOriginKeys(rootPrivateKey, origin).did).toBe(expected);
+  });
+
+  it('is deterministic for the same root key and origin', () => {
+    const first = deriveOriginKeys(rootPrivateKey, 'https://example.com');
+    const second = deriveOriginKeys(rootPrivateKey, 'https://example.com');
+
+    expect(second.did).toBe(first.did);
+    expect(Array.from(second.secretKeyBytes)).toEqual(Array.from(first.secretKeyBytes));
+  });
+
+  it('derives distinct DIDs per origin, none equal to the root DID', () => {
+    const dids = [
+      deriveOriginKeys(rootPrivateKey, 'https://example.com').did,
+      deriveOriginKeys(rootPrivateKey, 'http://example.com').did, // scheme matters
+      deriveOriginKeys(rootPrivateKey, 'https://other.app').did,
+    ];
+
+    expect(new Set(dids).size).toBe(3);
+    expect(dids).not.toContain(rootDID);
+  });
+
+  it('throws on an invalid root key', () => {
+    expect(() => deriveOriginKeys('AAAA', 'https://example.com')).toThrow('64');
+  });
+
+  it('produces a key pair that signs and verifies', () => {
+    const derived = deriveOriginKeys(rootPrivateKey, 'https://example.com');
+    const message = new TextEncoder().encode('hello');
+    const signature = ed25519.sign(derived.secretKeyBytes, message);
+
+    expect(ed25519.verify(derived.publicKeyBytes, message, signature)).toBe(true);
   });
 });
 

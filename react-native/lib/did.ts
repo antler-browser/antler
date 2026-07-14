@@ -1,5 +1,7 @@
 import * as ed25519 from '@stablelib/ed25519';
 import { getRandomBytes } from 'expo-crypto';
+import { hkdf } from '@noble/hashes/hkdf.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import * as base58 from 'base58-universal';
 import * as base64 from 'base64-js';
 
@@ -115,6 +117,33 @@ export function deriveKeysFromPrivateKey(privateKey: string): DerivedKeys {
     publicKeyBase58: base58.encode(publicKeyBytes),
     secretKeyBytes,
   };
+}
+
+// Pinned by the Local First Auth spec; changing it changes every per-origin DID.
+const ORIGIN_KEY_SALT = 'local-first-auth:origin-key:v1';
+
+/**
+ * Deterministically derives the per-origin identity a mini app sees.
+ *
+ * HKDF-SHA256(ikm = root seed, salt = ORIGIN_KEY_SALT, info = origin) -> Ed25519 seed.
+ * The same root key and origin always yield the same DID, on any device, so a user's
+ * identity on a site survives profile export/import. The origin is the WHATWG origin of
+ * the URL that launched the WebView (e.g. "https://example.com").
+ *
+ * @throws If the root private key is malformed. The message never echoes the key.
+ */
+export function deriveOriginKeys(rootPrivateKey: string, origin: string): DerivedKeys {
+  if (!isValidPrivateKey(rootPrivateKey)) {
+    throw new Error(`Private key must be base64 encoding exactly ${SECRET_KEY_SIZE} bytes`);
+  }
+
+  const rootSeed = base64.toByteArray(rootPrivateKey.trim()).slice(0, SEED_SIZE);
+  const enc = new TextEncoder();
+  const originSeed = hkdf(sha256, rootSeed, enc.encode(ORIGIN_KEY_SALT), enc.encode(origin), SEED_SIZE);
+  const keyPair = ed25519.generateKeyPairFromSeed(originSeed);
+
+  // Route through the canonical path so origin DIDs can never encode differently.
+  return deriveKeysFromPrivateKey(base64.fromByteArray(keyPair.secretKey));
 }
 
 /**

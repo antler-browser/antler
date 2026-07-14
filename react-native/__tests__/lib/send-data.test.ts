@@ -15,6 +15,11 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   },
 }));
 
+// did.ts imports expo-crypto at module scope for key generation, which signing never uses.
+jest.mock('expo-crypto', () => ({
+  getRandomBytes: jest.fn(() => new Uint8Array(32).fill(3)),
+}));
+
 // Mock db/models before import
 jest.mock('../../lib/db/models', () => ({
   UserProfileFns: {
@@ -24,6 +29,7 @@ jest.mock('../../lib/db/models', () => ({
 
 import { sendDataToWebView, WebViewDataType } from '../../lib/send-data';
 import * as SecureStorage from '../../lib/secure-storage';
+import { deriveOriginKeys } from '../../lib/did';
 import { UserProfileFns } from '../../lib/db/models';
 import * as base64 from 'base64-js';
 import * as ed25519 from '@stablelib/ed25519';
@@ -46,6 +52,9 @@ describe('sendDataToWebView', () => {
   const mockAudience = 'https://example.app';
   let mockKeyPair: ed25519.KeyPair;
   let mockPrivateKeyBase64: string;
+  // The per-origin identity the mini app actually sees — signing never uses the root key.
+  let derivedDID: string;
+  let derivedPublicKey: Uint8Array;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -54,6 +63,10 @@ describe('sendDataToWebView', () => {
     const seed = new Uint8Array(32).fill(42); // Deterministic seed for testing
     mockKeyPair = ed25519.generateKeyPairFromSeed(seed);
     mockPrivateKeyBase64 = base64.fromByteArray(mockKeyPair.secretKey);
+
+    const derived = deriveOriginKeys(mockPrivateKeyBase64, mockAudience);
+    derivedDID = derived.did;
+    derivedPublicKey = derived.publicKeyBytes;
 
     // Mock SecureStorage to return our test private key
     jest.spyOn(SecureStorage, 'getDIDPrivateKey').mockResolvedValue(mockPrivateKeyBase64);
@@ -78,7 +91,7 @@ describe('sendDataToWebView', () => {
 
       // Verify type field is at root level of JWT payload
       expect(decoded.type).toBe('localFirstAuth:profile:disconnected');
-      expect((decoded.data as any).did).toBe(mockDID);
+      expect((decoded.data as any).did).toBe(derivedDID);
       expect((decoded.data as any).name).toBe('Charlie');
       // Avatar is no longer included in profile disconnected payload
       expect((decoded.data as any).avatar).toBeUndefined();
@@ -182,11 +195,63 @@ describe('sendDataToWebView', () => {
 
       // Verify aud claim is present and matches the audience
       expect(decoded.aud).toBe(mockAudience);
-      // Verify other standard claims
-      expect(decoded.iss).toBe(mockDID);
+      // iss is the per-origin DID, never the root DID, and data.did matches it
+      expect(decoded.iss).toBe(derivedDID);
+      expect(decoded.iss).not.toBe(mockDID);
+      expect((decoded.data as any).did).toBe(derivedDID);
       expect(decoded.iat).toBeDefined();
       expect(decoded.exp).toBeDefined();
       expect(decoded.exp).toBe(decoded.iat + 120); // 2 minutes
+    });
+
+    it('should reduce a full launch URL to its origin in aud', async () => {
+      const mockProfile = {
+        did: mockDID,
+        name: 'Test',
+        avatar: null,
+        socialLinks: [],
+        position: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
+
+      const jwt = await sendDataToWebView(
+        WebViewDataType.PROFILE_DISCONNECTED,
+        mockDID,
+        'https://example.app/event/42?ref=qr'
+      );
+      const decoded = decodeJwt(jwt);
+
+      expect(decoded.aud).toBe('https://example.app');
+      // Same origin, so the same per-origin DID as a bare-origin launch
+      expect(decoded.iss).toBe(derivedDID);
+    });
+
+    it('should derive a different iss for a different origin', async () => {
+      const mockProfile = {
+        did: mockDID,
+        name: 'Test',
+        avatar: null,
+        socialLinks: [],
+        position: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+
+      (UserProfileFns.getProfileByDID as jest.Mock).mockResolvedValue(mockProfile);
+
+      const jwt = await sendDataToWebView(
+        WebViewDataType.PROFILE_DISCONNECTED,
+        mockDID,
+        'https://other.app'
+      );
+      const decoded = decodeJwt(jwt);
+
+      expect(decoded.aud).toBe('https://other.app');
+      expect(decoded.iss).not.toBe(derivedDID);
+      expect(decoded.iss).not.toBe(mockDID);
     });
   });
 
@@ -222,10 +287,9 @@ describe('sendDataToWebView', () => {
       }
       const signature = base64.toByteArray(signatureBase64);
 
-      // Verify signature using the public key
-      const isValid = ed25519.verify(mockKeyPair.publicKey, signingInputBytes, signature);
-
-      expect(isValid).toBe(true);
+      // Verify signature using the per-origin public key — the root key never signs
+      expect(ed25519.verify(derivedPublicKey, signingInputBytes, signature)).toBe(true);
+      expect(ed25519.verify(mockKeyPair.publicKey, signingInputBytes, signature)).toBe(false);
     });
   });
 
@@ -245,7 +309,7 @@ describe('sendDataToWebView', () => {
 
       await expect(
         sendDataToWebView(WebViewDataType.ERROR, mockDID, mockAudience)
-      ).rejects.toThrow('Invalid private key length. Expected 64 bytes.');
+      ).rejects.toThrow('64');
     });
   });
 

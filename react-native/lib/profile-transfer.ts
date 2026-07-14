@@ -14,6 +14,7 @@
  * act as the user. Never log it, never send it anywhere, never leave it on disk.
  */
 
+import * as base64 from 'base64-js';
 import * as DID from './did';
 import * as SecureStorage from './secure-storage';
 import * as SocialLinks from './social-links';
@@ -52,6 +53,12 @@ export interface ExportedSocialLink {
 export interface ExportedProfile {
   type: typeof EXPORT_FILE_TYPE;
   version: typeof EXPORT_FILE_VERSION;
+  /**
+   * Present on an origin-scoped export: the WHATWG origin this identity is for. The file
+   * then carries the per-origin derived key, not the root key, and is meant to be handed
+   * to that mini app — Antler refuses to import it as a profile.
+   */
+  scope?: string;
   did: string;
   /** base64, 32-byte Ed25519 public key. */
   publicKey: string;
@@ -135,6 +142,17 @@ export function validateExportedProfile(input: unknown): ValidationResult {
     errors.push(
       `This profile was exported by a newer app and can't be read (version ${JSON.stringify(data.version)}).`
     );
+  }
+
+  // A scoped file carries a per-origin derived key. Importing it as a root profile would
+  // derive per-origin keys from an already-derived key — a broken identity everywhere.
+  if (data.scope !== undefined) {
+    const origin =
+      typeof data.scope === 'string' && data.scope.length <= 100 ? data.scope : 'a single mini app';
+    errors.push(
+      `This export is scoped to ${origin}. To move this profile to another device, use a full profile export.`
+    );
+    return { valid: false, errors };
   }
 
   if (!DID.isValidPrivateKey(data.privateKey)) {
@@ -236,10 +254,11 @@ export function parseExportedProfile(raw: string): ValidationResult {
   return validateExportedProfile(parsed);
 }
 
-/** `local-first-auth-profile-z6MkhaXgBZ.json` */
-export function getDefaultExportFileName(did: string): string {
+/** `local-first-auth-profile-z6MkhaXgBZ.json`, or with the origin's host when scoped. */
+export function getDefaultExportFileName(did: string, origin?: string): string {
   const slug = did.replace(/^did:key:/, '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
-  return `local-first-auth-profile-${slug}.json`;
+  const host = origin ? `${new URL(origin).hostname}-` : '';
+  return `local-first-auth-profile-${host}${slug}.json`;
 }
 
 /**
@@ -247,8 +266,12 @@ export function getDefaultExportFileName(did: string): string {
  *
  * The DID and public key come from the stored private key, not from the database, so the
  * file is internally consistent by construction.
+ *
+ * With `origin`, builds an origin-scoped export instead: the file carries the per-origin
+ * derived key (the identity that mini app already knows) and a `scope` field, and never
+ * exposes the root key.
  */
-export async function buildExportedProfile(did: string): Promise<ExportedProfile> {
+export async function buildExportedProfile(did: string, origin?: string): Promise<ExportedProfile> {
   const profile = await UserProfileFns.getProfileByDID(did);
   if (!profile) {
     throw new ProfileTransferError('PROFILE_NOT_FOUND', "That profile isn't on this device.");
@@ -262,20 +285,23 @@ export async function buildExportedProfile(did: string): Promise<ExportedProfile
     );
   }
 
-  const derived = DID.deriveKeysFromPrivateKey(privateKey);
-  if (derived.did !== did) {
+  const rootDerived = DID.deriveKeysFromPrivateKey(privateKey);
+  if (rootDerived.did !== did) {
     throw new ProfileTransferError(
       'KEY_MISMATCH',
       "The stored key doesn't match this profile, so it can't be exported."
     );
   }
 
+  const derived = origin ? DID.deriveOriginKeys(privateKey, origin) : rootDerived;
+
   return {
     type: EXPORT_FILE_TYPE,
     version: EXPORT_FILE_VERSION,
+    ...(origin ? { scope: origin } : {}),
     did: derived.did,
     publicKey: derived.publicKeyBase64,
-    privateKey,
+    privateKey: origin ? base64.fromByteArray(derived.secretKeyBytes) : privateKey,
     name: profile.name,
     socials: (profile.socialLinks ?? []).map((link) => ({
       platform: SocialLinks.toExportPlatform(link.platform),

@@ -1,4 +1,5 @@
 import * as SecureStorage from './secure-storage';
+import { deriveOriginKeys } from './did';
 import { UserProfileFns } from './db/models';
 import * as base64 from 'base64-js';
 import * as ed25519 from '@stablelib/ed25519';
@@ -17,8 +18,8 @@ export enum WebViewDataType {
  * This is used when the web app calls window.localFirstAuth.getProfileDetails()
  * to retrieve the user's profile information.
  *
- * @param did - The user's DID (used to fetch profile and as JWT issuer)
- * @param aud - The audience (mini app URL) for the JWT
+ * @param did - The user's root profile DID (used to fetch profile and derive the per-origin signing key)
+ * @param aud - The mini app URL; its origin becomes the JWT `aud` and scopes the issuer DID
  * @returns Signed JWT string with profile details
  *
  * @example
@@ -53,8 +54,8 @@ export async function getProfileDetailsJWT(did: string, aud: string): Promise<st
  * to retrieve the user's avatar image. Returns a signed JWT containing
  * the DID and avatar data, or null if the user has no avatar.
  *
- * @param did - The user's DID (used to fetch profile and as JWT issuer)
- * @param aud - The audience (mini app URL) for the JWT
+ * @param did - The user's root profile DID (used to fetch profile and derive the per-origin signing key)
+ * @param aud - The mini app URL; its origin becomes the JWT `aud` and scopes the issuer DID
  * @returns Signed JWT string with avatar data, or null if no avatar
  *
  * @example
@@ -94,8 +95,8 @@ export async function getAvatarJWT(did: string, aud: string): Promise<string | n
  * 4. Returns the JWT string to be sent to the WebView
  *
  * @param type - The type of data to send (profile disconnected, error, etc.)
- * @param did - The user's DID (used to fetch private key and as JWT issuer)
- * @param aud - The audience (mini app URL) for the JWT
+ * @param did - The user's root profile DID (used to fetch private key and derive the per-origin signing key)
+ * @param aud - The mini app URL; its origin becomes the JWT `aud` and scopes the issuer DID
  * @returns Signed JWT string ready to be posted to WebView
  *
  * @example
@@ -147,8 +148,12 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
 /**
  * Signs a JWT with EdDSA algorithm for Local First Auth Specification
  *
- * @param did - User's DID (used as issuer)
- * @param aud - Audience (mini app URL)
+ * The mini app never sees the root DID: signing uses the per-origin key derived from the
+ * root key and the origin of `aud`, so `iss` (and `data.did`) is the per-origin DID and
+ * `aud` is the origin.
+ *
+ * @param did - User's root profile DID (used to fetch the root private key)
+ * @param aud - URL that launched the WebView; its origin scopes the key and becomes `aud`
  * @param type - Message type (e.g., 'localFirstAuth:profile:disconnected')
  * @param payload - Data payload to sign (will be placed in 'data' claim)
  * @returns Signed JWT string
@@ -162,20 +167,16 @@ async function createPayload(type: WebViewDataType, did: string): Promise<Record
  * );
  */
 async function createJWT(did: string, aud: string, type: string, payload: Record<string, any>): Promise<string> {
-  // Fetch DID private key from secure storage
+  // Fetch root DID private key from secure storage
   const privateKeyAsBase64 = await SecureStorage.getDIDPrivateKey(did);
 
   if (!privateKeyAsBase64) {
     throw new Error(`No private key found for DID: ${did}`);
   }
 
-  // Decode the private key from base64
-  const privateKeyBytes = base64.toByteArray(privateKeyAsBase64);
-
-  // Ed25519 secret key is 64 bytes (32-byte seed + 32-byte public key)
-  if (privateKeyBytes.length !== 64) {
-    throw new Error('Invalid private key length. Expected 64 bytes.');
-  }
+  const origin = new URL(aud).origin;
+  const derived = deriveOriginKeys(privateKeyAsBase64, origin);
+  if ('did' in payload) payload.did = derived.did; // data.did must match iss
 
   // Build JWT header
   const header = {
@@ -188,8 +189,8 @@ async function createJWT(did: string, aud: string, type: string, payload: Record
   const exp = iat + 120; // 2 minutes
 
   const jwtPayload = {
-    iss: did,
-    aud,
+    iss: derived.did,
+    aud: origin,
     iat,
     exp,
     type,
@@ -204,8 +205,8 @@ async function createJWT(did: string, aud: string, type: string, payload: Record
   const signingInput = `${headerB64}.${payloadB64}`;
   const signingInputBytes = new TextEncoder().encode(signingInput);
 
-  // Sign with Ed25519
-  const signature = ed25519.sign(privateKeyBytes, signingInputBytes);
+  // Sign with the per-origin Ed25519 key
+  const signature = ed25519.sign(derived.secretKeyBytes, signingInputBytes);
 
   // Encode signature as base64url
   const signatureB64 = base64url.encode(signature);

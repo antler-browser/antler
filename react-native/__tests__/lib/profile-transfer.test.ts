@@ -332,6 +332,31 @@ describe('buildExportedProfile', () => {
       code: 'PROFILE_NOT_FOUND',
     });
   });
+
+  describe('origin-scoped', () => {
+    const ORIGIN = 'https://example.com';
+    // The spec's test vector for this root key and origin.
+    const SCOPED_DID = 'did:key:z6MksHmq5juqxMRUt6UYxnbCfprSmsEcaLd9riXhYZPB7hCF';
+
+    it('carries the derived per-origin key and scope, never the root key', async () => {
+      const exported = await ProfileTransfer.buildExportedProfile(DID, ORIGIN);
+
+      expect(exported.scope).toBe(ORIGIN);
+      expect(exported.did).toBe(SCOPED_DID);
+      expect(exported.privateKey).not.toBe(PRIVATE_KEY);
+      expect(deriveKeysFromPrivateKey(exported.privateKey).did).toBe(SCOPED_DID);
+      expect(deriveKeysFromPrivateKey(exported.privateKey).publicKeyBase64).toBe(exported.publicKey);
+    });
+
+    it('is refused by import validation, pointing at the full export', async () => {
+      const exported = await ProfileTransfer.buildExportedProfile(DID, ORIGIN);
+      const result = ProfileTransfer.validateExportedProfile(exported);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.join(' ')).toContain(ORIGIN);
+      expect(result.errors.join(' ')).toContain('full profile export');
+    });
+  });
 });
 
 describe('round trip', () => {
@@ -444,5 +469,10 @@ describe('getDefaultExportFileName', () => {
     const name = ProfileTransfer.getDefaultExportFileName(DID);
     expect(name).toBe('local-first-auth-profile-z6MkvDqGT54c.json');
     expect(name).not.toContain(':');
+  });
+
+  it('includes the origin host when scoped', () => {
+    const name = ProfileTransfer.getDefaultExportFileName(DID, 'https://example.com');
+    expect(name).toBe('local-first-auth-profile-example.com-z6MkvDqGT54c.json');
   });
 });

@@ -1,7 +1,7 @@
 ---
 title: "Local First Auth Specification"
 description: "Technical specification for client-side auth using locally stored profiles"
-date: "2026-03-21"
+date: "2026-07-14"
 author: "Daniel Mathews"
 author_image: "https://ax0.taddy.org/blog/about-us/danny-small-profile-pic.png"
 author_url: "https://bsky.app/profile/dmathewwws.com"
@@ -9,72 +9,38 @@ author_url: "https://bsky.app/profile/dmathewwws.com"
 
 # Local First Auth Specification
 
-## Overview
-
 The Local First Auth Spec makes it easy to add auth to your website or mini app — no servers, no passwords, no third-party auth providers.
+
+A practical use case: You can pass in your identity when you scan a QR code. If you pass in your identity, the website never asks you to log in or sign up, so you can start using it right away as a logged in user.
+
+This is highly inspired by how WeChat works in China. WeChat is a super app. When a user opens it up and scans a QR code, it passes in their WeChat identity so they can interact with the website instantly — no login, no signup. This might sound like a minor UX improvement, but the real innovation is that users in China don't have to download an app for everything — they just scan a QR code and get most of the practical benefits of a native app. **The idea behind this spec is simple: Can we deliver the same great UX as WeChat using an open standard instead of a super app?**
 
 ## Developer Benefits
 
-- **Local-First Authentication** – New users just have to type in a name (and optionally add an avatar). A profile, including a public key and private key is created. A signed JWT is generated on the user's device to authenticate requests to your website or mini app.
+- **Local-First Authentication** – New users type in a name (and optionally add an avatar). A profile, including a public key and private key is created. A signed JWT is generated on the user's device to authenticate requests to your website or mini app.
 - **Skip complex sign-up flow** – no user management, no email verification, no password resets
 
 ## Lifecycle
 
 ```
-1. User scans QR code using a Local First Auth app
- 2. App loads URL in WebView
- 3. App injects window.localFirstAuth JavaScript object
- 4. Mini app calls window.localFirstAuth.getProfileDetails() when ready
- 5. App generates and signs JWT with profile details
- 6. Mini app verifies JWT & has access to profile details
+1.  User scans QR code using a Local First Auth app.
+ 2.  App loads URL in WebView
+ 3.  App injects window.localFirstAuth JavaScript object
+ 4.  Mini app calls window.localFirstAuth.getProfileDetails() when ready
+ 5.  App generates and signs JWT with profile details
+ 6.  Mini app verifies JWT & has access to profile details
 
- // Fetches Local First Auth Manifest in the background
- 7. App parses HTML for <link rel="local-first-auth-manifest"> tag
- 8. App fetches manifest in background
+ // Manifest & permissions
+ 7.  App parses HTML for <link rel="local-first-auth-manifest"> tag
+ 8.  App fetches manifest in background
 
  // If you require additional permissions at a later time
- 9. Mini app calls window.localFirstAuth.requestPermission('location')
+ 9.  Mini app calls window.localFirstAuth.requestPermission('location')
  10. App validates permission is declared in manifest
  11. If declared → App shows user consent prompt
  12. If NOT declared → request is rejected (security)
  13. If user approves → App sends location data via postMessage
 ```
-
-## Local First Auth Manifest
-
-Every mini app has a manifest file. The purpose is to showcase basic details about the mini app and explicitly state which permissions your mini app needs.
-
-### Discovery
-
-Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
-
-```html
-<link rel="local-first-auth-manifest" href="/local-first-auth-manifest.json">
-```
-
-### manifest.json Schema
-
-```json
-{
-  "name": "Coffee Shop",
-  "description": "Cozy little bakery and coffee shop",
-  "location": "123 Davie Street, Vancouver, BC",
-  "icon": "https://yourdomain.com/icon.png",
-  "type": "place",
-  "permissions": ["profile"] //profile is granted by default
-}
-```
-
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `name` | string | Yes | Display name of the mini app |
-| `description` | string | No | Short description of the mini app |
-| `location` | string | No | Location of the experience |
-| `icon` | string (URL) | No | App icon URL (recommended: 512x512px). **Note:** You can use an absolute url or a relative path like ./icon.png (which resolves to https://yourdomain.com/icon.png) |
-| `type` | string | No | Context type: "place", "event", "club", etc. |
-| `permissions` | array | No | Requested permissions. "profile" is granted by default. |
-
-**Note:** Currently, this spec just supports the 'profile' permission. However, Local First Auth apps are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).
 
 ## Decentralized Identifiers
 
@@ -97,7 +63,7 @@ The `window.localFirstAuth` object is the primary interface for interacting with
 
 ### The `window.localFirstAuth` Object
 
-When Local First Auth is available a global `window.localFirstAuth` object is present. This allows you to 1) call methods and get back data and 2) check that the user has Local First Auth.
+When your mini app loads inside a Local First Auth app, a global `window.localFirstAuth` object is injected. This allows you to 1) call methods and get back data and 2) check that the user is using a Local First Auth app.
 
 ```tsx
 interface LocalFirstAuth {
@@ -211,11 +177,11 @@ window.addEventListener('message', async (event) => {
         console.log('User Name:', profile.name);
         break;
       default:
-	      console.warn('Unknown message type:', payload.data.type);
-	  }
-	} catch (error) {
-	  console.error('Error processing message:', error);
-	}
+        console.warn('Unknown message type:', payload.data.type);
+    }
+  } catch (error) {
+    console.error('Error processing message:', error);
+  }
 });
 ```
 
@@ -226,8 +192,7 @@ Check out this [example code](https://github.com/antler-browser/meetup-cloudflar
 | Type | Description | Required Permission |
 | --- | --- | --- |
 | `localFirstAuth:profile:disconnected` | User closed WebView | profile |
-| `localFirstAuth:error` | Error data |
- |
+| `localFirstAuth:error` | Error data | — |
 
 ##### Profile Disconnected
 
@@ -301,8 +266,8 @@ Decoded data inside the JWT Payload.
 
 | Claim | Description |
 | --- | --- |
-| `iss` | Issuer - Public key of the user's DID. Use this when verifying the JWT. |
-| `aud` | Intended Audience - The mini app that requested the JWT.  |
+| `iss` | Issuer - The user's per-origin DID for this mini app. Use this when verifying the JWT. It is stable for your origin and portable across the user's devices, but different on every other site. |
+| `aud` | Intended Audience - The origin of the URL that launched the WebView (e.g. `https://yourdomain.com`). |
 | `iat` | Issued at timestamp |
 | `exp` | Expiration timestamp (default is 2 minutes) |
 | `type` | Local First Auth function or event type |
@@ -311,12 +276,13 @@ Decoded data inside the JWT Payload.
 ### Best Practices
 
 1. **Decoding & verifying the JWT** - Never trust unverified data. Decode JWTs using the `alg`. Verify that the JWT has been signed by the user's public key (`iss` field).
-2. **Validate audience -** Ensure the `aud` claim matches the domain of the mini app. This is set by the Local First Auth app based on the url that launched the WebView.
+2. **Validate audience -** Ensure the `aud` claim equals your origin. This is set by the Local First Auth app from the origin of the url that launched the WebView.
 3. **Validate expiration** - Reject expired tokens. Check the `exp` field.
+4. **`iss` is per-site** - Use `iss` as your durable per-user identifier for your site only. Do not expect it to match a DID seen by any other mini app — every origin sees a different DID for the same user.
 
 ## Making Authenticated Requests
 
-When your mini app needs to make an authenticated request on behalf of a user, call `getProfileDetails()`to get a valid JWT for them. This can be used directly as a Bearer token to make authenticated requests ie) no need to build session tokens or additional auth infrastructure.
+When your mini app needs to make an authenticated request on behalf of a user, call `getProfileDetails()` to get a valid JWT for them. This can be used directly as a Bearer token to make authenticated requests, i.e., no need to build session tokens or additional auth infrastructure.
 
 ### Your Mini App (Client-Side)
 
@@ -379,8 +345,103 @@ app.post('/api/posts', async (req, res) => {
 
 See [code example](https://github.com/antler-browser/meetup-cloudflare/blob/main/shared/src/jwt.ts#L23) for `decodeAndVerifyJWT`. We decode & verify JWT signature including making sure the `aud` claim is for our mini app.
 
-**License for this specification**: [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
+## Privacy: Per-Origin Key Derivation
+
+When you create a profile on a Local First Auth app, your DID (which includes a public key) and a corresponding private key are generated and stored locally on your device. This is the profile's **root key**, and it never signs data shown to mini apps. Instead, each website gets its own DID, derived deterministically from the root key and the website's origin. The payload a mini app receives is signed with that per-origin key, ensuring it came from the DID owner — and because the derivation is deterministic, the same user always reappears as the same DID on the same site (including after moving devices via profile export/import), while different sites see unrelated DIDs and cannot correlate the user with each other.
+
+Local First Auth apps MUST NOT sign mini-app payloads with the profile's root key. Instead, for each origin they MUST derive an Ed25519 keypair as:
+
+```
+originSeed = HKDF-SHA256(
+  ikm  = rootSeed,                                 // first 32 bytes of the 64-byte Ed25519 secret key
+  salt = UTF-8("local-first-auth:origin-key:v1"),
+  info = UTF-8(origin),
+  length = 32
+)
+```
+
+where `rootSeed` is the 32-byte Ed25519 seed of the profile's root key, and `origin` is the [WHATWG origin](https://url.spec.whatwg.org/#origin) of the URL that launched the WebView, serialized as `scheme://host[:port]` (lowercase, default ports omitted, no trailing slash). `originSeed` is used as an Ed25519 seed and the resulting public key is encoded as a `did:key` exactly as the root DID is.
+
+This construction is normative: two implementations holding the same root key MUST derive identical per-origin DIDs, so a user's identity on every site survives profile export/import between apps.
+
+Because the origin is the boundary, subdomains, schemes, and ports each scope a **distinct** DID: `https://app.acme.com`, `https://www.acme.com`, and `https://acme.com` are three different identities. Mini apps should publish one canonical origin in their QR codes — moving origins (e.g. `www` to apex) means returning users reappear with new DIDs.
+
+**Test vectors** — root private key (base64) `BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwfqSmxj4pxSCr71UHsTLsX5lUd2rr6+e5JCHuppFEbSLA==`, root DID `did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z`:
+
+| Origin | Per-origin DID |
+| --- | --- |
+| `https://example.com` | `did:key:z6MksHmq5juqxMRUt6UYxnbCfprSmsEcaLd9riXhYZPB7hCF` |
+| `https://other.app` | `did:key:z6MkuPzxjqnHVeV3eupgRqjD9Me4EhAyKoohjU6PkkoBhLSt` |
+| `http://localhost:8787` | `did:key:z6MkoShWB63jPRQAMhWJD3J2Gq5BizC65JnRetMj5uj7EepD` |
+
+## Profile Export Format
+
+A profile can be exported as a JSON file, either to move a whole identity to another device/app or to hand a single site's identity to that site. Both use the same v1 envelope; the optional `scope` field distinguishes them:
+
+```json
+{
+  "type": "local-first-auth:export",
+  "version": 1,
+  "scope": "https://example.com",
+  "did": "did:key:z6Mk...",
+  "publicKey": "<base64 32-byte Ed25519 public key>",
+  "privateKey": "<base64 64-byte Ed25519 secret key>",
+  "name": "...",
+  "socials": [],
+  "avatar": "...",
+  "exportedAt": "..."
+}
+```
+
+- `did` and `publicKey` MUST re-derive from `privateKey` — a file that is not internally consistent MUST be rejected.
+- **No `scope`** — the file is a **root identity** (a full profile export for moving devices). Holders MUST derive per-origin keys from it as defined above and MUST NOT sign mini-app payloads with it directly.
+- **`scope` present** — the file is an **origin-scoped identity**: it carries the already-derived key for that one origin. The holder MUST use it only for that origin and sign with the key directly. Importing a scoped file as a full/root profile MUST be rejected — deriving per-origin keys from an already-derived key would create an identity unrelated to the user's.
+
+An origin-scoped export lets a user hand a website the exact key that website already knows them by, without ever exposing the root key.
+
+## Local First Auth Manifest
+
+Every mini app has a manifest file. The purpose is to showcase basic details about the mini app and explicitly state which permissions your mini app needs.
+
+### Discovery
+
+Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
+
+```html
+<link rel="local-first-auth-manifest" href="/local-first-auth-manifest.json">
+```
+
+### manifest.json Schema
+
+```json
+{
+  "name": "Coffee Shop",
+  "description": "Cozy little bakery and coffee shop",
+  "location": "123 Davie Street, Vancouver, BC",
+  "icon": "https://yourdomain.com/icon.png",
+  "type": "place",
+  "permissions": ["profile"]
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Display name of the mini app |
+| `description` | string | No | Short description of the mini app |
+| `location` | string | No | Location of the experience |
+| `icon` | string (URL) | No | App icon URL (recommended: 512x512px). **Note:** You can use an absolute url or a relative path like ./icon.png (which resolves to https://yourdomain.com/icon.png) |
+| `type` | string | No | Context type: "place", "event", "club", etc. |
+| `permissions` | array | No | Requested permissions. "profile" is granted by default. |
+
+**Note:** Currently, this spec just supports the 'profile' permission. However, Local First Auth apps are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).
+
+## Useful Libraries
+
+- [local-first-auth](https://github.com/antler-browser/local-first-auth): If a user does not have a Local First Auth app, this library allows you to create one client-side in the browser.
+- [local-first-auth-import-export](https://github.com/antler-browser/local-first-auth-import-export): This library allows you to import and export a profile / keys from a JSON file.
+
+**License**: [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 **Author**: [Daniel Mathews](https://dmathewwws.com) (`danny@antlerbrowser.com`)
 
-**Last Modified**: 2026-02-21
+**Last Modified**: 2026-07-14

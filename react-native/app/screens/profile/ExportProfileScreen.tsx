@@ -4,12 +4,24 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, ThemedView, ThemedText, HeaderCloseButton } from '../../components/ui';
 import { ProfileAvatar } from '../../components/profile';
-import { Colors, ProfileTransfer, ProfileTransferIO, UserProfile, UserProfileFns } from '../../../lib';
+import { Colors, ProfileTransfer, ProfileTransferIO, ScanHistoryFns, UserProfile, UserProfileFns } from '../../../lib';
 
 const EXPORT_WARNING_TITLE = 'Export this profile?';
 const EXPORT_WARNING_BODY =
   'The exported file contains your private key in plain text. Anyone who opens it can permanently act as you.\n\n' +
   'Only send it to yourself — AirDrop it to your other device, or save it to a password manager. Never post it anywhere public.';
+
+const SCOPED_WARNING_TITLE = 'Export this mini app key?';
+const scopedWarningBody = (origin: string) =>
+  `The exported file contains the private key for this profile on ${origin} only. It can't be used on any other website and doesn't reveal your main profile key.\n\n` +
+  'Anyone who opens it can still act as you on that website, so only send it somewhere you trust.';
+
+type ExportMethod = 'share' | 'copy';
+
+interface MiniApp {
+  origin: string;
+  name: string | null;
+}
 
 export function ExportProfileScreen() {
   const colors = Colors[useColorScheme() ?? 'light'];
@@ -17,6 +29,7 @@ export function ExportProfileScreen() {
   const [profiles, setProfiles] = useState<Partial<UserProfile>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [busyDid, setBusyDid] = useState<string | null>(null);
+  const [picker, setPicker] = useState<{ did: string; method: ExportMethod; apps: MiniApp[] } | null>(null);
 
   // If a previous run was killed mid-share, a file holding a private key may still be in
   // the cache. Clear it before we write another one.
@@ -42,11 +55,20 @@ export function ExportProfileScreen() {
     }, [])
   );
 
-  const runExport = async (did: string, deliver: (json: string) => Promise<void>) => {
+  const runExport = async (did: string, method: ExportMethod, origin?: string) => {
     setBusyDid(did);
     try {
-      const exported = await ProfileTransfer.buildExportedProfile(did);
-      await deliver(ProfileTransfer.serializeExportedProfile(exported));
+      const exported = await ProfileTransfer.buildExportedProfile(did, origin);
+      const json = ProfileTransfer.serializeExportedProfile(exported);
+      if (method === 'share') {
+        await ProfileTransferIO.shareExportedProfile(json, ProfileTransfer.getDefaultExportFileName(did, origin));
+      } else {
+        await ProfileTransferIO.copyExportedProfile(json);
+        Alert.alert(
+          'Copied',
+          'Your profile is on the clipboard. Other apps can read the clipboard — paste it where you need it and then copy something else.'
+        );
+      }
     } catch (error) {
       // Report the message only. The profile object holds a plaintext private key and
       // must never reach a log.
@@ -60,34 +82,68 @@ export function ExportProfileScreen() {
     }
   };
 
-  const confirmThenExport = (did: string, deliver: (json: string) => Promise<void>, confirmLabel: string) => {
-    Alert.alert(EXPORT_WARNING_TITLE, EXPORT_WARNING_BODY, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: confirmLabel, style: 'destructive', onPress: () => runExport(did, deliver) },
-    ]);
-  };
-
-  const handleShare = (did: string) => {
-    confirmThenExport(
-      did,
-      (json) => ProfileTransferIO.shareExportedProfile(json, ProfileTransfer.getDefaultExportFileName(did)),
-      'Export'
+  const confirmThenExport = (did: string, method: ExportMethod, origin?: string) => {
+    Alert.alert(
+      origin ? SCOPED_WARNING_TITLE : EXPORT_WARNING_TITLE,
+      origin ? scopedWarningBody(origin) : EXPORT_WARNING_BODY,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: method === 'share' ? 'Export' : 'Copy', style: 'destructive', onPress: () => runExport(did, method, origin) },
+      ]
     );
   };
 
-  const handleCopy = (did: string) => {
-    confirmThenExport(
-      did,
-      async (json) => {
-        await ProfileTransferIO.copyExportedProfile(json);
-        Alert.alert(
-          'Copied',
-          'Your profile is on the clipboard. Other apps can read the clipboard — paste it where you need it and then copy something else.'
-        );
-      },
-      'Copy'
+  const openMiniAppPicker = async (did: string, method: ExportMethod) => {
+    const scans = await ScanHistoryFns.getScans(did, 500);
+    const byOrigin = new Map<string, MiniApp>();
+    for (const scan of scans) {
+      const origin = new URL(scan.url).origin;
+      if (!byOrigin.has(origin)) byOrigin.set(origin, { origin, name: scan.name });
+    }
+    const apps = [...byOrigin.values()];
+    if (apps.length === 0) {
+      Alert.alert('No mini apps yet', "This profile hasn't visited any mini apps, so there's no site key to export.");
+      return;
+    }
+    setPicker({ did, method, apps });
+  };
+
+  const chooseScope = (did: string, method: ExportMethod) => {
+    Alert.alert(
+      'What do you want to export?',
+      'A full profile can move your identity to another device. A mini app key only works on that one website.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Key for one mini app…', onPress: () => openMiniAppPicker(did, method) },
+        { text: 'Full profile', onPress: () => confirmThenExport(did, method) },
+      ]
     );
   };
+
+  const handleShare = (did: string) => chooseScope(did, 'share');
+
+  const handleCopy = (did: string) => chooseScope(did, 'copy');
+
+  const renderMiniApp = (app: MiniApp) => (
+    <TouchableOpacity
+      key={app.origin}
+      style={[styles.profileRow, styles.profileMain, { borderColor: colors.border }]}
+      onPress={() => {
+        const { did, method } = picker!;
+        setPicker(null);
+        confirmThenExport(did, method, app.origin);
+      }}
+      activeOpacity={0.7}
+    >
+      <ThemedView style={styles.profileText}>
+        <ThemedText style={styles.profileName}>{app.name ?? new URL(app.origin).hostname}</ThemedText>
+        <ThemedText style={styles.profileDid} numberOfLines={1}>
+          {app.origin}
+        </ThemedText>
+      </ThemedView>
+      <Ionicons name="chevron-forward" size={18} color={colors.text} style={{ opacity: 0.5 }} />
+    </TouchableOpacity>
+  );
 
   const renderProfile = (profile: Partial<UserProfile>) => {
     const did = profile.did!;
@@ -149,6 +205,16 @@ export function ExportProfileScreen() {
 
           {isLoading ? (
             <ActivityIndicator style={styles.loading} color={colors.text} />
+          ) : picker ? (
+            <>
+              <ThemedText style={styles.instruction}>
+                Choose the mini app to export a key for.
+              </ThemedText>
+              {picker.apps.map(renderMiniApp)}
+              <TouchableOpacity style={styles.copyButton} onPress={() => setPicker(null)} activeOpacity={0.7}>
+                <ThemedText style={styles.copyText}>Cancel</ThemedText>
+              </TouchableOpacity>
+            </>
           ) : profiles.length === 0 ? (
             <ThemedText style={styles.empty}>
               You don&apos;t have any profiles to export yet.

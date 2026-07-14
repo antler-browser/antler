@@ -4,6 +4,8 @@ A user's Antler identity is an Ed25519 keypair whose private key never leaves th
 
 The **DID is preserved**. Importing recovers an existing identity — it never mints a new keypair.
 
+Per-origin DIDs — the identities mini apps actually see — are derived deterministically from the root private key (see the Per-Origin Key Derivation section of the spec), so importing a profile onto a new device reproduces the user's identity on every mini app they have used. Nothing per-site is exported because nothing per-site is stored.
+
 ## Interoperability
 
 The file format is defined by the [`local-first-auth-import-export`](https://www.npmjs.com/package/local-first-auth-import-export) npm package. That package is browser-only (it depends on `localStorage`, `window`, `<a download>`), so Antler does not depend on it — `lib/profile-transfer.ts` reimplements the same format natively.
@@ -56,6 +58,17 @@ Three details are easy to get wrong:
 6. `name` / `socials` / `avatar` are well-typed
 
 `parseExportedProfile()` also accepts a **bare base64 private key** with no envelope — the key alone is a complete identity, so the envelope is synthesized and the name defaults to `anonymous`.
+
+## Origin-scoped exports
+
+Next to the full export, Antler can export the key for **one mini app**: the same v1 envelope with an extra `"scope": "<origin>"` field, carrying the per-origin *derived* key instead of the root key (`did`/`publicKey`/`privateKey` are all the derived values, so the file is still internally consistent). Handing a website its scoped file gives it exactly the identity it already knows the user by — and nothing else; the root key cannot be recovered from a derived key.
+
+Semantics of `scope`:
+
+- **With `scope`** — an origin-scoped identity. The holder must use it only for that origin and sign with the key directly. The browser-side `local-first-auth-import-export` package ignores unknown fields and signs with the stored key as-is, which is exactly right for that origin, so the handoff works without a package update.
+- **Without `scope`** — a root identity, from which per-origin keys must be derived. (Web-context implementations holding a root export should derive for their own origin; that npm-package change is out of scope for this repo.)
+
+Antler itself **refuses to import** a scoped file: importing a site key as a root profile would derive per-origin keys from an already-derived key — a broken identity everywhere. `validateExportedProfile()` rejects it with a message pointing at the full export. Scoped files are for handing out only.
 
 ## Transfer by QR code
 
