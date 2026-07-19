@@ -435,13 +435,14 @@ Mini apps declare their manifest using a `<link>` tag in the HTML `<head>`.
 
 **Note:** Currently, this spec just supports the 'profile' permission. However, Local First Auth apps are designed to be native containers that pass data to 3rd party mini apps. In the future, additional native capabilities could be exposed e.g.) location, bluetooth, or push notifications (if user explicitly grants permission).
 
-## Useful Libraries
+## Useful Resources
 
 - [local-first-auth](https://github.com/antler-browser/local-first-auth): If a user does not have a Local First Auth app, this library allows you to create one client-side in the browser.
 - [local-first-auth-import-export](https://github.com/antler-browser/local-first-auth-import-export): This library allows you to import and export a profile / keys from a JSON file.
+- [Antler Mobile app](https://github.com/antler-browser/antler/tree/main/react-native): Open source mobile app that implements the Local First Auth spec. It is available on the App Store and Google Play. It is a wallet that allows you to manage your Local First Auth profiles and keys.
 
 **License**: [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 **Author**: [Daniel Mathews](https://dmathewwws.com) (`danny@antlerbrowser.com`)
 
-**Last Modified**: 2026-07-14
+**Last Modified**: 2026-07-18
